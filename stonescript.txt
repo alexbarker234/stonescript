@@ -1,0 +1,38 @@
+var shouldHarvest
+?loc.begin
+    shouldHarvest = true
+
+func OnPressed()
+    shouldHarvest = !shouldHarvest
+
+var button
+?loc.begin
+    button = ui.AddButton()
+    button.y = 1
+    button.SetPressed(OnPressed)
+
+// Set button text
+var buttonText = "Enable Harvesting"
+?!shouldHarvest
+    buttonText = "Disable Harvesting"
+
+button.text = buttonText
+
+?loc = deadwood
+    ?hp < 7
+        activate potion
+    
+    equipL sword
+    equipR shield
+    ?foe = mosquito
+        equipL aether wand
+        equipR aether wand
+    
+    ?harvest.distance < 10 & shouldHarvest
+        equip hatchet
+
+    ?foe ! boss & foe.distance > 8
+        equipL ouroboros
+    
+    ?pickup.distance < 10
+        equipL star

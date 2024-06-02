@@ -62,8 +62,8 @@ equipR ouroboros
     // Fighting
     ?foe.distance < 16
         // General
-        equipL ice wand
-        equipR ice wand
+        equipL vigor wand
+        equipR experience
 
     // Boss
     ?foe = boss & foe.distance < 20
@@ -82,4 +82,6 @@ equipR ouroboros
 
     // Boss
     ?foe = boss & foe.distance < 20
-        equip blade
+        // does this even work
+        equipL poison wand
+        equipR poison wand

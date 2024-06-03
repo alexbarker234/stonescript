@@ -90,7 +90,7 @@ equipR ouroboros
         //     equip_dash()
         // :
         equip bardiche
-        ?foe.distance < 10 & bardCD <= 0 & item.CanActivate()
+        ?foe.distance <= 10 & bardCD <= 0
             activate R
 
     

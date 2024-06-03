@@ -2,6 +2,8 @@ var shouldHarvest
 ?loc.begin
     shouldHarvest = false
 
+var offhandMode = "heal"
+
 // var button
 // func OnPressed()
 //     shouldHarvest = !shouldHarvest
@@ -20,6 +22,14 @@ var shouldHarvest
 func equip_dash()
     equipL sword 
     equipR shield dashing
+
+func offhand_stone()
+    ?offhandMode = "heal"
+        equipR ouroboros
+    :?offhandMode = "xp"
+        equipR experience
+    :?offhandMode = "speed"
+        equipR triskelion
 
 // Default 
 equipL triskelion
@@ -41,7 +51,7 @@ equipR ouroboros
         // General
         ?foe = mosquito
             equipL vigor wand
-            equipR experience // swap with oro for healing
+            offhand_stone()
         :
             equipL sword
             equipR ouroboros
@@ -55,19 +65,30 @@ equipR ouroboros
     // healing potions are infinite here
     ?loc.begin
         brew tar
-
     ?hp < 7
         activate potion
+
+    ?foe.distance >= 16 & foe.distance < 20 
+        ^& foe ! medium_bat
+        equip_dash()
 
     // Fighting
     ?foe.distance < 16
         // General
         equipL vigor wand
-        equipR experience
+        offhand_stone()
 
     // Boss
     ?foe = boss & foe.distance < 20
-        equip blade
+
+        ?foe.distance > 10
+            equip_dash()
+        :
+            equip bardiche
+            ?item.GetCooldown("bardiche") <= 0
+                activate R
+
+    
 
 ?loc = Mushroom
     // ?foe.distance >= 16 & foe.distance < 20
@@ -78,7 +99,7 @@ equipR ouroboros
             equip blade
         :
             equipL poison wand
-            equipR ouroboros
+            offhand_stone()
 
     // Boss
     ?foe = boss & foe.distance < 20

@@ -45,8 +45,10 @@ equipR ouroboros
     equipL star
 
 ?loc = deadwood
-    // ?hp < 7
-    //     activate potion
+    ?loc.begin
+        brew tar
+    ?hp < 7
+        activate potion
 
     // Harvesting
     ?harvest.distance < 10 & shouldHarvest
@@ -59,12 +61,13 @@ equipR ouroboros
             equipL vigor wand
             offhand_stone()
         :
-            equipL sword
-            equipR ouroboros
+            equip bardiche
     
     // Boss
     ?foe = boss & foe.distance < 20
-        equip blade
+        equip bardiche
+        ?foe.distance <= 10 & bardCD <= 0
+            activate R
 
 ?loc = Caves
 
@@ -86,9 +89,6 @@ equipR ouroboros
 
     // Boss
     ?foe = boss & foe.distance < 20
-        // ?foe.distance > 10
-        //     equip_dash()
-        // :
         equip bardiche
         ?foe.distance <= 10 & bardCD <= 0
             activate R

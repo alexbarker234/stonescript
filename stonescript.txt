@@ -1,3 +1,7 @@
+// General vars
+ var bardCD = item.GetCooldown("bardiche")
+
+
 var shouldHarvest
 ?loc.begin
     shouldHarvest = false
@@ -18,6 +22,8 @@ var offhandMode = "heal"
 //     button.text = "Disable Harvesting"
 //     button.SetPressed(OnPressed)
 
+?foe = bos
+    >State: @foe.state@
 
 func equip_dash()
     equipL sword 
@@ -80,13 +86,12 @@ equipR ouroboros
 
     // Boss
     ?foe = boss & foe.distance < 20
-
-        ?foe.distance > 10
-            equip_dash()
-        :
-            equip bardiche
-            ?item.GetCooldown("bardiche") <= 0
-                activate R
+        // ?foe.distance > 10
+        //     equip_dash()
+        // :
+        equip bardiche
+        ?foe.distance < 10 & bardCD <= 0 & item.CanActivate()
+            activate R
 
     
 

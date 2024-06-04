@@ -1,0 +1,226 @@
+// Weapon setups
+var vigorWands = [
+    ^"vigor wand +7", 
+    ^"vigor wand +5"]
+var aetherWands = [
+    ^"aether wand *8", 
+    ^"aether wand *7"]
+
+// General vars
+var shouldHarvest = false
+var offhandMode = "heal"
+
+// Find weak rune to use later
+var weak_rune = stone
+?foe = vigor
+    weak_rune = poison
+?foe = poison
+    weak_rune = ice
+?foe = ice
+    weak_rune = fire
+?foe = fire
+    weak_rune = aether
+?foe = aether
+    weak_rune = vigor
+
+?foe = boss
+    >`0,6,State: @foe.state@ Time: @foe.time@
+
+func equip_dash()
+    equipL sword 
+    ?item.GetCooldown("bash") <= 0
+        equipR bashing shield
+    :
+        equipR dashing shield
+
+func equip_set(set) 
+    equipL @set[0]@
+    equipR @set[1]@
+
+func offhand_stone()
+    ?offhandMode = "heal"
+        equipR ouroboros
+    :?offhandMode = "xp"
+        equipR experience
+    :?offhandMode = "speed"
+        equipR triskelion
+
+func try_bardiche_ability()
+    ?foe.distance <= 10 &
+    ^item.GetCooldown("bardiche") <= 0 |
+    ^item.GetCooldown("bardiche") > 870
+        equip bardiche
+        activate R
+
+func try_blade_ability()
+    ?foe.distance <= 10 &
+    ^item.GetCooldown("blade") <= 0 &
+    ^foe.count > 6
+        equip blade
+        activate R
+
+func brew_and_use_health(hp_threshold)
+    ?loc.begin
+        brew tar
+    ?hp < hp_threshold
+        activate potion
+
+// Default 
+equipL triskelion
+equipR ouroboros
+?pickup.distance < 10
+    equipL star
+
+?loc = Rocky
+    Rocky_Plateaus()
+:?loc = deadwood
+    Deadwood_Canyon()
+:?loc = Caves
+    Caves()
+:?loc = Mushroom
+    Mushroom()
+:?loc = Mine
+    Mine()
+
+/* Functions and their variables DO reset
+every frame, unlike vars outside of funcs
+*/
+// LOCATIONS
+func Rocky_Plateaus()
+    brew_and_use_health(7)
+
+    ?foe.distance > 20
+        return
+
+    // Phase 1 - Weak to fire
+    ?foe = dysangelos_bearer
+        ?foe.distance > 10
+            equip_dash()
+        equip bardiche
+
+    // Phase 2
+    ?foe = dysangelos_elementalist
+        // Use runes against current eye
+        equipL @weak_rune@ wand
+        equipR @weak_rune@ shield
+
+    // Phase 3
+    ?foe = dysangelos_perfected
+        equip bardiche
+        // yikers attack, TODO: dodge
+        ?(hp + armor) < 31
+            activate potion
+
+    // slam his ass
+    try_bardiche_ability()
+
+func Deadwood_Canyon()
+    brew_and_use_health(7)
+
+    // Harvesting
+    ?harvest.distance < 10 & shouldHarvest
+        equip hatchet
+
+    // Fighting
+    ?foe.distance <= 16
+        // General
+        ?foe = mosquito
+            equipL vigor wand
+            offhand_stone()
+        :
+            equip bardiche
+    
+    // Boss
+    ?foe = boss & foe.distance < 20
+        equip bardiche
+        ?foe.distance <= 10 & 
+        ^item.GetCooldown("bardiche") <= 0
+            activate R
+
+        ?foe = poena
+            ?foe.state = 32
+                equipL mind
+
+func Caves()
+    brew_and_use_health(7)
+
+    ?foe.distance >= 16 & foe.distance < 20 
+        ^& foe ! medium_bat
+        equip_dash()
+
+    // Fighting
+    ?foe.distance <= 16
+        // General
+        equipL vigor wand
+        offhand_stone()
+
+    // Boss
+    ?foe = boss & foe.distance < 20
+        equip bardiche
+        try_bardiche_ability()
+
+func Mushroom()
+    // ?foe.distance >= 16 & foe.distance < 20
+    //     equip_dash()
+
+    ?foe.distance <= 16
+        ?foe = epic_snail | foe = colossal_snail 
+            equip blade
+        :
+            equipL poison wand
+            offhand_stone()
+
+    // Boss
+    ?foe = boss & foe.distance < 20
+        // TODO fix
+        equipL poison wand *
+        equipR poison wand * -@item.left.id
+
+func Mine()
+    brew_and_use_health(7)
+
+    ?foe.distance >= 16 & foe.distance < 20
+        equip_dash()
+
+    ?foe.distance <= 16
+        ?loc.stars > 6
+            equip bardiche
+        :
+            equip_set(aetherWands)
+            ?foe = mine_walker
+                equipL aether hammer
+                equipR dashing shield
+                
+    try_blade_ability()
+
+    // Boss
+    ?foe = boss & foe.distance < 30
+        Mine_Boss()
+
+// BOSS AI
+
+func Mine_Boss() 
+    ?hp = maxhp
+        equip_set(aetherWands)
+    :
+        equip_set(vigorWands)
+
+    var aiState = 0
+
+    // Attack
+    ?foe.state = 32
+        ?foe.time > 15
+            equipL mind
+            equipR ouroboros
+            aiState = 1
+    // Cooldown - can melee
+    :?foe.state = 33
+        ?aiState = 1
+            equip_dash()
+            ?item.GetCooldown("dash") > 0
+                aiState = 2
+        :
+            equip bardiche
+            try_bardiche_ability()
+    :
+        aiState = 0

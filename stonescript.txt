@@ -3,12 +3,17 @@ var bardCD = item.GetCooldown("bardiche")
 
 var bestVigorWand
 
+var setupStatus = 0
 
 var shouldHarvest
 ?loc.begin
     shouldHarvest = false
 
 var offhandMode = "heal"
+
+?setupStatus = 1
+    bestVigorWand = item.left.id
+    setupStatus = 2
 
 // var button
 // func OnPressed()
@@ -141,5 +146,4 @@ equipR ouroboros
 // Setup
 ?loc.begin
     equipL vigor wand
-    > @item.left.id@
-    bestVigorWand = @item.left.id@
+    setupStatus = 1

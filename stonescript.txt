@@ -110,22 +110,21 @@ equipR ouroboros
 
     // Boss
     ?foe = boss & foe.distance < 20
-        // does this even work
-        equipL poison wand
-        equipR poison wand
+        equipL poison wand *
+        equipR poison wand * -@item.left.id 
 
 ?loc = Mine
     ?foe.distance >= 16 & foe.distance < 20
         equip_dash()
 
     ?foe.distance <= 16
-        equipL vigor wand
-        equipR vigor wand
+        equipL vigor wand * 
+        equipR vigor wand * -@item.left.id // 2nd best
 
     // Boss
     ?foe = boss & foe.distance < 20
-        equipL vigor wand
-        equipR vigor wand
+        equipL vigor wand * 
+        equipR vigor wand * -@item.left.id // 2nd best
 
         // Attack
         ?foe.state = 32

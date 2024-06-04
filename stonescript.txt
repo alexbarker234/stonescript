@@ -12,7 +12,7 @@ var shouldHarvest
 var offhandMode = "heal"
 
 ?setupStatus = 1
-    bestVigorWand = item.left.id
+    bestVigorWand = item.left
     setupStatus = 2
 
 // var button
@@ -126,9 +126,8 @@ equipR ouroboros
 
     ?foe.distance <= 16
         equipL vigor wand 
-        >  best wand @bestVigorWand@
-        > num @item.GetCount(bestVigorWand)@
-        equipR vigor wand -@bestVigorWand@ 
+        >  best wand @bestVigorWand@ num @item.GetCount(bestVigorWand)@
+        equipR -@bestVigorWand@ vigor wand
  
     // Boss
     ?foe = boss & foe.distance < 20

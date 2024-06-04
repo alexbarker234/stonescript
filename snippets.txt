@@ -1,0 +1,15 @@
+
+// Equp based on type
+var rune = stone
+?foe = vigor
+ rune = poison
+?foe = poison
+ rune = ice
+?foe = ice
+ rune = fire
+?foe = fire
+ rune = aether
+?foe = aether
+ rune = vigor
+equipL @rune@ sword
+equipR @rune@ shield

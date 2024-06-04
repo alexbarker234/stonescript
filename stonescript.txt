@@ -121,6 +121,9 @@ equipR ouroboros
         equipL vigor wand * 
         equipR vigor wand * -@item.left.id@ 
 
+
+    >  Left ID: @item.left.id@ Right ID: @item.right.id@ 
+    
     // Boss
     ?foe = boss & foe.distance < 20
         equipL vigor wand * 

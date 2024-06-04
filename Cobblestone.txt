@@ -1,27 +1,15 @@
 // General vars
 var bardCD = item.GetCooldown("bardiche")
 
-var bestVigorWand
+// Weapon setups
+var vigorWands = ["vigor wand +7", "vigor wand +5"]
 
-var setupStatus = 0
 
 var shouldHarvest
 ?loc.begin
     shouldHarvest = false
 
 var offhandMode = "heal"
-
-?setupStatus = 1
-    var startIndex = string.IndexOf(
-        ^@item.left@, 
-        ^*
-    ^)
-    bestVigorWand = string.Sub(
-        ^@item.left@, 
-        ^@startIndex@
-    ^)
-    ^@bestVigorWand@
-    setupStatus = 2
 
 // var button
 // func OnPressed()
@@ -43,6 +31,10 @@ var offhandMode = "heal"
 func equip_dash()
     equipL sword 
     equipR shield dashing
+
+func equip_set(set) 
+    equipL @set[0]@
+    equipR @set[1]@
 
 func offhand_stone()
     ?offhandMode = "heal"
@@ -133,25 +125,26 @@ equipR ouroboros
         equip_dash()
 
     ?foe.distance <= 16
-        equipL vigor wand 
-        > @bestVigorWand@
-        equipR -@bestVigorWand@ vigor wand
+        equip_set(vigorWands)
  
     // Boss
-    ?foe = boss & foe.distance < 20
-        equipL vigor wand 
-        equipR vigor wand -@item.left.id@ 
+    ?foe = boss & foe.distance < 30
+         equip_set(vigorWands)
+
+        var aiState = 0
 
         // Attack
         ?foe.state = 32
             equipL mind
+            aiState = 1
         // Cooldown - can melee
         :?foe.state = 33
-            equip bardiche
-            ?foe.distance <= 10 & bardCD <= 0
-                activate R
-
-// Setup
-?loc.begin
-    equipL vigor wand
-    setupStatus = 1
+            ?aiState = 1
+                equip_dash()
+                aiState = 2
+            :
+                equip bardiche
+                ?foe.distance <= 10 & bardCD <= 0
+                    activate R
+        :
+            aiState = 0

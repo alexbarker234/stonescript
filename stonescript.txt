@@ -118,7 +118,7 @@ equipR ouroboros
     // Boss
     ?foe = boss & foe.distance < 20
         equipL poison wand *
-        equipR poison wand * -@item.left.id 
+        equipR poison wand * -@item.left.
 
 ?loc = Mine
     ?foe.distance >= 16 & foe.distance < 20
@@ -127,7 +127,7 @@ equipR ouroboros
     ?foe.distance <= 16
         equipL vigor wand 
         >  best wand @bestVigorWand@
-        equipR vigor wand -@item.left.id@ 
+        equipR vigor wand -@bestVigorWand@ 
  
     // Boss
     ?foe = boss & foe.distance < 20

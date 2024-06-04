@@ -81,6 +81,8 @@ equipR ouroboros
     Mushroom()
 :?loc = Mine
     Mine()
+:?loc = Icy
+    Mine()
 
 /* Functions and their variables DO reset
 every frame, unlike vars outside of funcs
@@ -150,9 +152,12 @@ func Caves()
 
     // Fighting
     ?foe.distance <= 16
-        // General
-        equipL vigor wand
-        offhand_stone()
+        ?loc.stars < 8
+            equipL vigor wand
+            offhand_stone()
+        :
+            equip bardiche
+            try_blade_ability()
 
     // Boss
     ?foe = boss & foe.distance < 20
@@ -160,22 +165,32 @@ func Caves()
         try_bardiche_ability()
 
 func Mushroom()
-    // ?foe.distance >= 16 & foe.distance < 20
-    //     equip_dash()
+    brew_and_use_health(7)
+
+    ?foe.distance >= 16 & foe.distance < 20
+        equip_dash()
 
     ?foe.distance <= 16
-        ?foe = epic_snail | foe = colossal_snail 
-            equip blade
-        :
+        ?loc.stars < 5
+            ?foe = epic_snail | 
+            ^foe = colossal_snail 
+                equip bardiche
             equipL poison wand
             offhand_stone()
+        : 
+            equip bardiche
+
+    try_blade_ability()
 
     // Boss
     ?foe = boss & foe.distance < 20
-        // TODO fix
-        equipL poison wand *
-        equipR poison wand * -@item.left.id
-
+        ?foe.distance >= 10 
+            equip_dash()
+        :
+            ?foe = mushroom_boss_fat
+                equip poison staff
+            try_bardiche_ability()   
+                    
 func Mine()
     brew_and_use_health(7)
 
@@ -193,11 +208,44 @@ func Mine()
                 
     try_blade_ability()
 
+    // Mini Boss
+    ?foe = boss & foe.distance < 30 &
+    ^foe = bomb_cart
+        Mine_Miniboss()
+
     // Boss
-    ?foe = boss & foe.distance < 30
+    ?foe = boss & foe.distance < 30 &
+    ^foe = bronze_guardian
         Mine_Boss()
 
+func Icy()
+    brew_and_use_health(7)
+
+    ?foe.distance >= 16 & foe.distance < 20
+        equip_dash()
+
+    // General
+    ?foe.distance <= 16
+        equip bardiche
+
+    // Boss
+    ?foe = boss & foe.distance < 30 
+        equip bardiche
+        ?foe.armor <= 0
+            try_bardiche_ability()
+
 // BOSS AI
+func Mine_Miniboss()
+    equip_set(aetherWands)
+
+    ?foe.distance < 10
+        try_bardiche_ability()
+
+        // RUH ROH RAGGY
+        ?item.GetCooldown("bardiche") < 870 & 
+        ^item.GetCooldown("bardiche") > 0
+            equipL mind
+
 
 func Mine_Boss() 
     ?hp = maxhp

@@ -1,5 +1,7 @@
 // General vars
- var bardCD = item.GetCooldown("bardiche")
+var bardCD = item.GetCooldown("bardiche")
+
+var bestVigorWand
 
 
 var shouldHarvest
@@ -119,7 +121,7 @@ equipR ouroboros
 
     ?foe.distance <= 16
         equipL vigor wand 
-        >  Left ID: @item.left.id@
+        >  best wand @bestVigorWand@
         equipR vigor wand -@item.left.id@ 
  
     // Boss
@@ -135,3 +137,9 @@ equipR ouroboros
             equip bardiche
             ?foe.distance <= 10 & bardCD <= 0
                 activate R
+
+// Setup
+?loc.begin
+    equipL vigor wand
+    > @item.left.id@
+    bestVigorWand = @item.left.id@

@@ -119,12 +119,12 @@ equipR ouroboros
 
     ?foe.distance <= 16
         equipL vigor wand * 
-        equipR vigor wand * -@item.left.id // 2nd best
+        equipR vigor wand * -@item.left.id@ 
 
     // Boss
     ?foe = boss & foe.distance < 20
         equipL vigor wand * 
-        equipR vigor wand * -@item.left.id // 2nd best
+        equipR vigor wand * -@item.left.id@ 
 
         // Attack
         ?foe.state = 32

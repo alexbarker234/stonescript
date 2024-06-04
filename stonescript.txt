@@ -127,6 +127,7 @@ equipR ouroboros
     ?foe.distance <= 16
         equipL vigor wand 
         >  best wand @bestVigorWand@
+        > num @item.GetCount(bestVigorWand)@
         equipR vigor wand -@bestVigorWand@ 
  
     // Boss

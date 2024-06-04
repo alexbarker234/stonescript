@@ -55,7 +55,7 @@ equipR ouroboros
         equip hatchet
 
     // Fighting
-    ?foe.distance < 16
+    ?foe.distance <= 16
         // General
         ?foe = mosquito
             equipL vigor wand
@@ -68,6 +68,10 @@ equipR ouroboros
         equip bardiche
         ?foe.distance <= 10 & bardCD <= 0
             activate R
+
+        ?foe = poena
+            ?foe.state = 32
+                equipL mind
 
 ?loc = Caves
 
@@ -82,7 +86,7 @@ equipR ouroboros
         equip_dash()
 
     // Fighting
-    ?foe.distance < 16
+    ?foe.distance <= 16
         // General
         equipL vigor wand
         offhand_stone()
@@ -93,13 +97,11 @@ equipR ouroboros
         ?foe.distance <= 10 & bardCD <= 0
             activate R
 
-    
-
 ?loc = Mushroom
     // ?foe.distance >= 16 & foe.distance < 20
     //     equip_dash()
 
-    ?foe.distance < 16
+    ?foe.distance <= 16
         ?foe = epic_snail | foe = colossal_snail 
             equip blade
         :
@@ -111,3 +113,25 @@ equipR ouroboros
         // does this even work
         equipL poison wand
         equipR poison wand
+
+?loc = Mine
+    ?foe.distance >= 16 & foe.distance < 20
+        equip_dash()
+
+    ?foe.distance <= 16
+        equipL vigor wand
+        equipR vigor wand
+
+    // Boss
+    ?foe = boss & foe.distance < 20
+        equipL vigor wand
+        equipR vigor wand
+
+        // Attack
+        ?foe.state = 32
+            equipL mind
+        // Cooldown - can melee
+        :?foe.state = 33
+            equip bardiche
+            ?foe.distance <= 10 & bardCD <= 0
+                activate R

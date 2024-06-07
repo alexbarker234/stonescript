@@ -10,6 +10,9 @@ var aetherWands = [
 var shouldHarvest = false
 var offhandMode = "heal"
 
+// Globals
+var hasEncountedBoss = false
+
 // Find weak rune to use later
 var weak_rune = stone
 ?foe = vigor
@@ -25,6 +28,7 @@ var weak_rune = stone
 
 ?foe = boss
     >`0,6,State: @foe.state@ Time: @foe.time@
+    hasEncountedBoss = true
 
 func equip_dash()
     equipL sword 
@@ -39,7 +43,8 @@ func equip_set(set)
 
 func offhand_stone()
     ?offhandMode = "heal"
-        equipR ouroboros
+        //equipR ouroboros
+        equipR vigor wand
     :?offhandMode = "xp"
         equipR experience
     :?offhandMode = "speed"
@@ -79,6 +84,8 @@ equipR ouroboros
     Caves()
 :?loc = Mushroom
     Mushroom()
+:?loc = Halls
+    Halls()
 :?loc = Mine
     Mine()
 :?loc = Icy
@@ -172,11 +179,7 @@ func Mushroom()
 
     ?foe.distance <= 16
         ?loc.stars < 5
-            ?foe = epic_snail | 
-            ^foe = colossal_snail 
-                equip bardiche
-            equipL poison wand
-            offhand_stone()
+            equip_set(vigorWands)
         : 
             equip bardiche
 
@@ -187,10 +190,35 @@ func Mushroom()
         ?foe.distance >= 10 
             equip_dash()
         :
-            ?foe = mushroom_boss_fat
-                equip poison staff
+            // ?foe = mushroom_boss_fat
+            //     equip poison staff
+
+            equip bardiche
             try_bardiche_ability()   
-                    
+
+func Halls()
+    brew_and_use_health(7)
+
+    ?foe.distance >= 16 & foe.distance < 20
+        equip_dash()
+
+    ?foe.distance <= 16
+        ?foe.hp >= 100 & 
+        ^foe ! immune_to_physical
+            equip bardiche
+        :
+            equip_set(vigorWands)
+
+    try_blade_ability()
+
+    // Boss
+    ?foe = boss & foe.distance < 20
+        ?foe.distance >= 10 
+            equip_dash()
+        :
+            equip bardiche
+            try_bardiche_ability()   
+            
 func Mine()
     brew_and_use_health(7)
 
@@ -225,14 +253,12 @@ func Icy()
         equip_dash()
 
     // General
-    ?foe.distance <= 16
+    ?!hasEncountedBoss & foe.distance <= 16
         equip bardiche
 
     // Boss
-    ?foe = boss & foe.distance < 30 
-        equip bardiche
-        ?foe.armor <= 0
-            try_bardiche_ability()
+    ?hasEncountedBoss & foe.distance < 20 
+        Ice_Boss()
 
 // BOSS AI
 func Mine_Miniboss()
@@ -272,3 +298,23 @@ func Mine_Boss()
             try_bardiche_ability()
     :
         aiState = 0
+
+func Ice_Boss() 
+    >`0,7,Dist:@foe.distance@
+
+    ?foe.armor > 0
+        equip bardiche
+    :
+        // blow me
+        ?foe.state = 133
+            equipL fire wand
+        :
+            ?foe.distance <= 2
+                equip bardiche
+                try_bardiche_ability()
+            :?foe.distance <= 5
+                // Shovel moves close enough
+                // to avoid everything
+                equip shovel
+            :?foe.distance > 5
+                equip_dashing()

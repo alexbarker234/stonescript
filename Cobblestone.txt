@@ -5,6 +5,12 @@ var vigorWands = [
 var aetherWands = [
     ^"aether wand *8", 
     ^"aether wand *7"]
+var fireWands = [
+    ^"fire wand *8", 
+    ^"fire wand *7"]
+// var unmakeSwords = [
+//     ^"fire wand *8", 
+//     ^"fire wand *7"]
 
 // General vars
 var shouldHarvest = false
@@ -28,10 +34,8 @@ var weak_rune = stone
 
 ?foe = boss
     >`0,6,State: @foe.state@ Time: @foe.time@
-    hasEncountedBoss = true
 
 func equip_dash()
-    equipL sword 
     ?item.GetCooldown("bash") <= 0
         equipR bashing shield
     :
@@ -70,6 +74,13 @@ func brew_and_use_health(hp_threshold)
     ?hp < hp_threshold
         activate potion
 
+func summon_aether()
+    ?summon.count = 0
+        equipR fire talisman
+        ?item.GetCooldown("fire_talisman") <= 0
+        ^ & item.CanActivate()
+        activate R
+
 // Default 
 equipL triskelion
 equipR ouroboros
@@ -89,7 +100,7 @@ equipR ouroboros
 :?loc = Mine
     Mine()
 :?loc = Icy
-    Mine()
+    Icy()
 
 /* Functions and their variables DO reset
 every frame, unlike vars outside of funcs
@@ -159,12 +170,15 @@ func Caves()
 
     // Fighting
     ?foe.distance <= 16
-        ?loc.stars < 8
+        ?loc.stars >= 8 | encounter.isElite | 
+        ^foe.hp > 100
+            equip bardiche
+        :
             equipL vigor wand
             offhand_stone()
-        :
-            equip bardiche
-            try_blade_ability()
+
+
+    try_blade_ability()
 
     // Boss
     ?foe = boss & foe.distance < 20
@@ -246,15 +260,21 @@ func Mine()
     ^foe = bronze_guardian
         Mine_Boss()
 
+// TODO
+// aether swords to unmake ice pillars
+// fire swords could be better for boss
 func Icy()
     brew_and_use_health(7)
 
-    ?foe.distance >= 16 & foe.distance < 20
-        equip_dash()
-
     // General
-    ?!hasEncountedBoss & foe.distance <= 16
-        equip bardiche
+    ?!hasEncountedBoss
+        ?foe.distance >= 16 & foe.distance < 20
+            equip_dash()
+        :?foe.distance < 16
+            equip bardiche
+
+    ?foe = yeti
+        hasEncountedBoss = true
 
     // Boss
     ?hasEncountedBoss & foe.distance < 20 
@@ -299,8 +319,13 @@ func Mine_Boss()
     :
         aiState = 0
 
+// can we fire shield the cold
+// shovel strat doesnt work on yellow
 func Ice_Boss() 
     >`0,7,Dist:@foe.distance@
+
+    // ?foe = ice_pillar | foe = ice_wall
+    //     equip_set(unmake_swords)
 
     ?foe.armor > 0
         equip bardiche
@@ -308,6 +333,8 @@ func Ice_Boss()
         // blow me
         ?foe.state = 133
             equipL fire wand
+            equipR fire shield
+            //equip_set(fireWands)
         :
             ?foe.distance <= 2
                 equip bardiche
@@ -317,4 +344,4 @@ func Ice_Boss()
                 // to avoid everything
                 equip shovel
             :?foe.distance > 5
-                equip_dashing()
+                equip_dash()

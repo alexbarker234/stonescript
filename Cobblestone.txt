@@ -17,79 +17,69 @@ var stunlock = [
 
 // General vars
 var shouldHarvest = false
-var offhandMode = "heal"
 
 // Globals
 var hasEncountedBoss = false
 
 // Find weak rune to use later
-var weak_rune = stone
+var weakRune = stone
 ?foe = vigor
-    weak_rune = poison
+    weakRune = poison
 ?foe = poison
-    weak_rune = ice
+    weakRune = ice
 ?foe = ice
-    weak_rune = fire
+    weakRune = fire
 ?foe = fire
-    weak_rune = aether
+    weakRune = aether
 ?foe = aether
-    weak_rune = vigor
+    weakRune = vigor
 
 ?foe = boss
     >`0,6,State: @foe.state@ Time: @foe.time@
 
 // Helper Functions
-func between(value, min, max)
+func Between(value, min, max)
     return value >= min & value <= max
 
 // Misc Functions
-func equip_dash()
+func EquipDash()
     ?item.GetCooldown("bash") <= 0
         equipR bashing shield
     :
         equipR dashing shield
 
-func equip_set(set) 
+func EquipSet(set) 
     equipL @set[0]@
     equipR @set[1]@
 
-func offhand_stone()
-    ?offhandMode = "heal"
-        //equipR ouroboros
-        equipR vigor wand
-    :?offhandMode = "xp"
-        equipR experience
-    :?offhandMode = "speed"
-        equipR triskelion
-
-func try_bardiche_ability()
+func TryBardicheAbility()
     ?foe.distance <= 10 &
     ^item.GetCooldown("bardiche") <= 0 |
     ^item.GetCooldown("bardiche") > 870
         equip bardiche
         activate R
 
-func try_blade_ability()
+func TryBladeAbility()
     ?foe.distance <= 10 &
     ^item.GetCooldown("blade") <= 0 &
     ^foe.count > 6
         equip blade
         activate R
 
-func brew_and_use_health(hp_threshold)
+func UseHealth(hp_threshold)
     ?loc.begin
         brew tar
     ?hp < hp_threshold
         activate potion
 
-func summon_fire()
+func FireTalisman()
     ?summon.count = 0
         equipR fire talisman
         ?item.GetCooldown("fire_talisman") <= 0
         ^ & item.CanActivate()
             activate R
 
-func do_anim_cancel()
+func DoAnimCancel()
   var isTwoHanded = !item.left // bit jank
   var leftItem = item.left
   var rightItem = item.right
@@ -113,7 +103,7 @@ func do_anim_cancel()
       equipL @leftItem@
 
 // Always run animation cancel
-do_anim_cancel()
+DoAnimCancel()
 
 // Default 
 equipL triskelion
@@ -140,7 +130,7 @@ equipR ouroboros
 
 // LOCATIONS
 func Rocky()
-    brew_and_use_health(7)
+    UseHealth(7)
 
     ?foe.distance > 20
         return
@@ -148,14 +138,14 @@ func Rocky()
     // Phase 1 - Weak to fire
     ?foe = dysangelos_bearer
         ?foe.distance > 10
-            equip_dash()
+            EquipDash()
         equip bardiche
 
     // Phase 2
     ?foe = dysangelos_elementalist
         // Use runes against current eye
-        equipL @weak_rune@ wand
-        equipR @weak_rune@ shield
+        equipL @weakRune@ wand
+        equipR @weakRune@ shield
 
     // Phase 3
     ?foe = dysangelos_perfected
@@ -165,7 +155,7 @@ func Rocky()
             activate potion
 
     // slam his ass
-    try_bardiche_ability()
+    TryBardicheAbility()
 
 // ===================
 // Deadwood Canyon
@@ -175,10 +165,10 @@ func Deadwood()
     ?loc.stars <= 5
         brew wood
         ?item.potion ! empty & 
-        ^between(time, 60, 500)
+        ^Between(time, 60, 500)
             activate potion
     :
-        brew_and_use_health(7)
+        UseHealth(7)
 
     // Harvesting
     ?harvest.distance < 10 & shouldHarvest
@@ -186,50 +176,50 @@ func Deadwood()
 
     // Boss
     ?foe = boss & foe.distance < 20
-        Deadwood_Boss()
+        DeadwoodBoss()
         return
 
     // General
-    try_blade_ability()
+    TryBladeAbility()
     ?foe.distance < 20
         // Oro stone should heal enough
         ?loc.stars <= 5
             ?foe.distance > 10
-                equip_dash()
+                EquipDash()
                 return
             equipL stone sword +6
             equipR experience           
         :
             equip heavy hammer 
 
-func Deadwood_Boss()
+func DeadwoodBoss()
     ?foe = poena
-        equip_set(stunlock)
+        EquipSet(stunlock)
         ?foe.state = 32
             equipL mind
     :?foe = tree_boss
         equip bardiche
-        try_bardiche_ability()
+        TryBardicheAbility()
 
 // ===================
 // Caves of Fear
 // ===================
 func Caves()
-    brew_and_use_health(7)
+    UseHealth(7)
 
     // Miniboss - whys it called that
     ?foe = cool_bat & foe.distance < 20
-        Caves_MiniBoss()
+        CavesMiniBoss()
         return
     // Boss
     ?foe = spider_boss & foe.distance < 20
-        Caves_Boss()
+        CavesBoss()
         return
 
     // General
     ?foe.distance >= 16 & foe.distance < 20 
     ^& foe ! medium_bat
-        equip_dash()
+        EquipDash()
 
     // Fighting
     ?foe.distance <= 16
@@ -237,21 +227,20 @@ func Caves()
         ^foe.hp > 100
             equip bardiche
         :
-            equipL vigor wand
-            offhand_stone()
+            EquipSet(vigorWands)
 
-    try_blade_ability()
+    TryBladeAbility()
 
-func Caves_MiniBoss()
+func CavesMiniBoss()
     ?foe.distance > 10
-        equip_dash()
+        EquipDash()
     :
-        equip_set(stunlock)
+        EquipSet(stunlock)
 
-func Caves_Boss()
+func CavesBoss()
     ?loc.stars <= 5
         equip bardiche
-        try_bardiche_ability()
+        TryBardicheAbility()
     :
         // 
         ?foe.state = 142
@@ -259,7 +248,7 @@ func Caves_Boss()
             return
         
         ?foe.distance > 5
-            equip_dash()
+            EquipDash()
 
         // try chill
         equip ice crossbow
@@ -268,102 +257,102 @@ func Caves_Boss()
 // Mushroom forest
 // ===================
 func Mushroom()
-    brew_and_use_health(7)
+    UseHealth(7)
 
     ?foe.distance >= 16 & foe.distance < 20
-        equip_dash()
+        EquipDash()
 
     ?foe.distance <= 16
         ?loc.stars < 5
-            equip_set(vigorWands)
+            EquipSet(vigorWands)
         : 
             equip bardiche
 
-    try_blade_ability()
+    TryBladeAbility()
 
     // Boss
     ?foe = boss & foe.distance < 20
         ?foe.distance >= 10 
-            equip_dash()
+            EquipDash()
         :
             // ?foe = mushroom_boss_fat
             //     equip poison staff
 
             equip bardiche
-            try_bardiche_ability()   
+            TryBardicheAbility()   
 
 // ===================
 // Haunted Halls
 // ===================
 func Halls()
-    brew_and_use_health(7)
+    UseHealth(7)
 
     ?foe.distance >= 16 & foe.distance < 20
-        equip_dash()
+        EquipDash()
 
     ?foe.distance <= 16
         ?foe.hp >= 100 & 
         ^foe ! immune_to_physical
             equip bardiche
         :
-            equip_set(vigorWands)
+            EquipSet(vigorWands)
 
-    try_blade_ability()
+    TryBladeAbility()
 
     // Boss
     ?foe = boss & foe.distance < 20
         ?foe.distance >= 10 
-            equip_dash()
+            EquipDash()
         :
             equip bardiche
-            try_bardiche_ability()   
+            TryBardicheAbility()   
 
 // ===================
 // Boiling Mine
 // ===================       
 func Mine()
-    brew_and_use_health(7)
+    UseHealth(7)
 
     ?foe.distance >= 16 & foe.distance < 20
-        equip_dash()
+        EquipDash()
 
     ?foe.distance <= 16
         ?loc.stars > 6
             equip bardiche
         :
-            equip_set(aetherWands)
+            EquipSet(aetherWands)
             ?foe = mine_walker
                 equipL aether hammer
                 equipR dashing shield
                 
-    try_blade_ability()
+    TryBladeAbility()
 
     // Mini Boss
     ?foe = boss & foe.distance < 30 &
     ^foe = bomb_cart
-        Mine_Miniboss()
+        MineMiniboss()
 
     // Boss
     ?foe = boss & foe.distance < 30 &
     ^foe = bronze_guardian
-        Mine_Boss()
+        MineBoss()
 
-func Mine_Miniboss()
-    equip_set(aetherWands)
+func MineMiniboss()
+    EquipSet(aetherWands)
 
     ?foe.distance < 10
-        try_bardiche_ability()
+        TryBardicheAbility()
 
         // RUH ROH RAGGY
         ?item.GetCooldown("bardiche") < 870 & 
         ^item.GetCooldown("bardiche") > 0
             equipL mind
 
-func Mine_Boss() 
+func MineBoss() 
     ?hp = maxhp
-        equip_set(aetherWands)
+        EquipSet(aetherWands)
     :
-        equip_set(vigorWands)
+        EquipSet(vigorWands)
 
     var aiState = 0
 
@@ -376,12 +365,12 @@ func Mine_Boss()
     // Cooldown - can melee
     :?foe.state = 33
         ?aiState = 1
-            equip_dash()
+            EquipDash()
             ?item.GetCooldown("dash") > 0
                 aiState = 2
         :
             equip bardiche
-            try_bardiche_ability()
+            TryBardicheAbility()
     :
         aiState = 0
 
@@ -392,12 +381,12 @@ func Icy()
     // TODO
     // aether swords to unmake ice pillars
     // fire swords could be better for boss
-    brew_and_use_health(7)
+    UseHealth(7)
 
     // General
     ?!hasEncountedBoss
         ?foe.distance >= 16 & foe.distance < 20
-            equip_dash()
+            EquipDash()
         :?foe.distance < 16
             equip bardiche
 
@@ -406,15 +395,15 @@ func Icy()
 
     // Boss
     ?hasEncountedBoss & foe.distance < 20 
-        Ice_Boss()
+        IceBoss()
         
-func Ice_Boss() 
+func IceBoss() 
     // can we fire shield the cold
     // shovel strat doesnt work on yellow?
     >`0,7,Dist:@foe.distance@
 
     // ?foe = ice_pillar | foe = ice_wall
-    //     equip_set(unmake_swords)
+    //     EquipSet(unmake_swords)
 
     ?foe.armor > 0
         equip bardiche
@@ -423,17 +412,17 @@ func Ice_Boss()
         ?foe.state = 133
             equipL fire wand
             equipR fire shield
-            //equip_set(fireWands)
+            //EquipSet(fireWands)
         :
             ?foe.distance <= 2
                 equip bardiche
-                try_bardiche_ability()
+                TryBardicheAbility()
             :?foe.distance <= 5
                 // Shovel moves close enough
                 // to avoid everything
                 equip shovel
             :?foe.distance > 5
-                equip_dash()
+                EquipDash()
 
 // ===================
 // TODO Temple 

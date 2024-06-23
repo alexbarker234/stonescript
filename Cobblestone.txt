@@ -38,6 +38,11 @@ var weak_rune = stone
 ?foe = boss
     >`0,6,State: @foe.state@ Time: @foe.time@
 
+// Helper Functions
+func between(value, min, max)
+    return value >= min & value <= max
+
+// Misc Functions
 func equip_dash()
     ?item.GetCooldown("bash") <= 0
         equipR bashing shield
@@ -84,6 +89,32 @@ func summon_fire()
         ^ & item.CanActivate()
             activate R
 
+func do_anim_cancel()
+  var isTwoHanded = !item.left // bit jank
+  var leftItem = item.left
+  var rightItem = item.right
+  
+  // equip trash
+  ?item.right.state = 3
+    equipR shield *0 +0
+  ?item.left.state = 3
+    equipL wand *0 +0
+
+  // re equip
+  ?isTwoHanded
+    ?rightItem
+      equip @rightItem@
+    :?leftItem
+      equip @leftItem@
+  :
+    ?rightItem
+      equipR @rightItem@
+    ?leftItem
+      equipL @leftItem@
+
+// Always run animation cancel
+do_anim_cancel()
+
 // Default 
 equipL triskelion
 equipR ouroboros
@@ -106,7 +137,7 @@ equipR ouroboros
     Icy()
 :?loc = Temple
     Temple()
-    
+
 // LOCATIONS
 func Rocky()
     brew_and_use_health(7)
@@ -141,9 +172,13 @@ func Rocky()
 // ===================
 func Deadwood()
     // Experience Potion
-    brew wood
-    ?item.potion ! empty & time < 500
-        activate potion
+    ?loc.stars <= 5
+        brew wood
+        ?item.potion ! empty & 
+        ^between(time, 60, 500)
+            activate potion
+    :
+        brew_and_use_health(7)
 
     // Harvesting
     ?harvest.distance < 10 & shouldHarvest
@@ -155,17 +190,15 @@ func Deadwood()
         return
 
     // General
+    try_blade_ability()
     ?foe.distance < 20
+        // Oro stone should heal enough
         ?loc.stars <= 5
             ?foe.distance > 10
                 equip_dash()
                 return
-            ?hp > maxhp - 5
-                equipL stone sword +6
-            :
-                equipL vigor wand
-            equipR experience  
-            
+            equipL stone sword +6
+            equipR experience           
         :
             equip heavy hammer 
 
@@ -174,7 +207,7 @@ func Deadwood_Boss()
         equip_set(stunlock)
         ?foe.state = 32
             equipL mind
-    :foe = tree_boss
+    :?foe = tree_boss
         equip bardiche
         try_bardiche_ability()
 

@@ -31,3 +31,32 @@ import Cobblestone
 - [livercat - scribble](https://github.com/livercat/scribble/tree/main)
 - [TheMatjaz](https://github.com/TheMatjaz/StoneScript/tree/master)
 - [Eunomiac](https://github.com/Eunomiac/stone-story)
+
+## Explanation
+> [!WARNING]  
+> This might not be fully up to date with what the script actually does
+### Rocky Plateau
+#### Miniboss - Arconian Scout
+TODO
+#### Boss - Dysangelos
+##### Phase 1
+- Use bardiche
+##### Phase 2
+- Use wand & shield that current state is weak to
+##### Phase 3
+- Use bardiche
+
+### Deadwood Canyon
+- <= 5★ will XP farm using experience potion
+- \> 5★ will run normally using HP potion
+#### Boss - Xyloalgia
+- Bardiche
+#### Boss - Poena
+- Stunlock & mindstone dodge if must
+
+### Caves of Fear 
+### Mushroom Forest
+### Haunted Halls
+### Boiling Mine
+### Icy Ridge
+### Temple

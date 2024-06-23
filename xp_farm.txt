@@ -1,0 +1,52 @@
+// Helper funcs
+func equip_dash()
+    ?item.GetCooldown("bash") <= 0
+        equipR bashing shield
+    :
+        equipR dashing shield
+
+func try_blade_ability()
+    ?foe.distance <= 10 &
+    ^item.GetCooldown("blade") <= 0 &
+    ^foe.count > 6
+        equip blade
+        activate R
+
+// Actual script
+?loc = deadwood
+    Deadwood_Farm()
+
+func Deadwood_Farm()
+    // XP potion
+    brew wood
+    ?item.potion ! empty
+        activate potion
+
+    // Boss
+    ?foe = boss & foe.distance < 20
+        Deadwood_Boss()
+        return
+
+    // General
+    try_blade_ability()
+
+    >@foe.distance@
+    ?foe.distance < 20
+        ?foe.distance > 10
+            equip_dash()
+            return
+
+        equipL stone sword +6
+        equipR experience
+        return
+
+    equipL triskelion
+    equipR ouroboros
+    ?pickup.distance < 10
+        equipL star
+
+func Deadwood_Boss()
+    equip bardiche
+    ?foe.distance <= 10 & 
+    ^item.GetCooldown("bardiche") <= 0
+        activate R

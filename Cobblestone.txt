@@ -376,6 +376,3 @@ func Ice_Boss()
                 equip shovel
             :?foe.distance > 5
                 equip_dash()
-
-
->@foe.debuffs.string@

@@ -28,6 +28,6 @@ import Cobblestone
 ```
 
 ## Other Stonescript Repos
-[livercat - scribble](https://github.com/livercat/scribble/tree/main)
-
-[TheMatjaz](https://github.com/TheMatjaz/StoneScript/tree/master)
+- [livercat - scribble](https://github.com/livercat/scribble/tree/main)
+- [TheMatjaz](https://github.com/TheMatjaz/StoneScript/tree/master)
+- [Eunomiac](https://github.com/Eunomiac/stone-story)

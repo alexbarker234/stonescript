@@ -91,9 +91,9 @@ equipR ouroboros
     equipL star
 
 ?loc = Rocky
-    Rocky_Plateaus()
-:?loc = deadwood
-    Deadwood_Canyon()
+    Rocky()
+:?loc = Deadwood
+    Deadwood()
 :?loc = Caves
     Caves()
 :?loc = Mushroom
@@ -104,12 +104,11 @@ equipR ouroboros
     Mine()
 :?loc = Icy
     Icy()
-
-/* Functions and their variables DO reset
-every frame, unlike vars outside of funcs
-*/
+:?loc = Temple
+    Temple()
+    
 // LOCATIONS
-func Rocky_Plateaus()
+func Rocky()
     brew_and_use_health(7)
 
     ?foe.distance > 20
@@ -137,33 +136,51 @@ func Rocky_Plateaus()
     // slam his ass
     try_bardiche_ability()
 
-func Deadwood_Canyon()
-    brew_and_use_health(7)
+// ===================
+// Deadwood Canyon
+// ===================
+func Deadwood()
+    // Experience Potion
+    brew wood
+    ?item.potion ! empty & time < 500
+        activate potion
 
     // Harvesting
     ?harvest.distance < 10 & shouldHarvest
         equip hatchet
 
-    // Fighting
-    ?foe.distance <= 16
-        // General
-        ?foe = mosquito
-            equipL vigor wand
-            offhand_stone()
-        :
-            equip bardiche
-    
     // Boss
     ?foe = boss & foe.distance < 20
+        Deadwood_Boss()
+        return
+
+    // General
+    ?foe.distance < 20
+        ?loc.stars <= 5
+            ?foe.distance > 10
+                equip_dash()
+                return
+            ?hp > maxhp - 5
+                equipL stone sword +6
+            :
+                equipL vigor wand
+            equipR experience  
+            
+        :
+            equip heavy hammer 
+
+func Deadwood_Boss()
+    ?foe = poena
+        equip_set(stunlock)
+        ?foe.state = 32
+            equipL mind
+    :foe = tree_boss
         equip bardiche
-        ?foe.distance <= 10 & 
-        ^item.GetCooldown("bardiche") <= 0
-            activate R
+        try_bardiche_ability()
 
-        ?foe = poena
-            ?foe.state = 32
-                equipL mind
-
+// ===================
+// Caves of Fear
+// ===================
 func Caves()
     brew_and_use_health(7)
 
@@ -192,7 +209,31 @@ func Caves()
 
     try_blade_ability()
 
+func Caves_MiniBoss()
+    ?foe.distance > 10
+        equip_dash()
+    :
+        equip_set(stunlock)
 
+func Caves_Boss()
+    ?loc.stars <= 5
+        equip bardiche
+        try_bardiche_ability()
+    :
+        // 
+        ?foe.state = 142
+            equipL mind
+            return
+        
+        ?foe.distance > 5
+            equip_dash()
+
+        // try chill
+        equip ice crossbow
+
+// ===================
+// Mushroom forest
+// ===================
 func Mushroom()
     brew_and_use_health(7)
 
@@ -218,6 +259,9 @@ func Mushroom()
             equip bardiche
             try_bardiche_ability()   
 
+// ===================
+// Haunted Halls
+// ===================
 func Halls()
     brew_and_use_health(7)
 
@@ -240,7 +284,10 @@ func Halls()
         :
             equip bardiche
             try_bardiche_ability()   
-            
+
+// ===================
+// Boiling Mine
+// ===================       
 func Mine()
     brew_and_use_health(7)
 
@@ -268,50 +315,6 @@ func Mine()
     ^foe = bronze_guardian
         Mine_Boss()
 
-// TODO
-// aether swords to unmake ice pillars
-// fire swords could be better for boss
-func Icy()
-    brew_and_use_health(7)
-
-    // General
-    ?!hasEncountedBoss
-        ?foe.distance >= 16 & foe.distance < 20
-            equip_dash()
-        :?foe.distance < 16
-            equip bardiche
-
-    ?foe = yeti
-        hasEncountedBoss = true
-
-    // Boss
-    ?hasEncountedBoss & foe.distance < 20 
-        Ice_Boss()
-
-// BOSS AI
-
-func Caves_MiniBoss()
-    ?foe.distance > 10
-        equip_dash()
-    :
-        equip_set(stunlock)
-
-func Caves_Boss()
-    ?loc.stars <= 5
-        equip bardiche
-        try_bardiche_ability()
-    :
-        // 
-        ?foe.state = 142
-            equipL mind
-            return
-        
-        ?foe.distance > 5
-            equip_dash()
-
-        // try chill
-        equip ice crossbow
-
 func Mine_Miniboss()
     equip_set(aetherWands)
 
@@ -322,7 +325,6 @@ func Mine_Miniboss()
         ?item.GetCooldown("bardiche") < 870 & 
         ^item.GetCooldown("bardiche") > 0
             equipL mind
-
 
 func Mine_Boss() 
     ?hp = maxhp
@@ -350,9 +352,32 @@ func Mine_Boss()
     :
         aiState = 0
 
-// can we fire shield the cold
-// shovel strat doesnt work on yellow
+// ===================
+// Icy Ridge
+// ===================
+func Icy()
+    // TODO
+    // aether swords to unmake ice pillars
+    // fire swords could be better for boss
+    brew_and_use_health(7)
+
+    // General
+    ?!hasEncountedBoss
+        ?foe.distance >= 16 & foe.distance < 20
+            equip_dash()
+        :?foe.distance < 16
+            equip bardiche
+
+    ?foe = yeti
+        hasEncountedBoss = true
+
+    // Boss
+    ?hasEncountedBoss & foe.distance < 20 
+        Ice_Boss()
+        
 func Ice_Boss() 
+    // can we fire shield the cold
+    // shovel strat doesnt work on yellow?
     >`0,7,Dist:@foe.distance@
 
     // ?foe = ice_pillar | foe = ice_wall
@@ -376,3 +401,9 @@ func Ice_Boss()
                 equip shovel
             :?foe.distance > 5
                 equip_dash()
+
+// ===================
+// TODO Temple 
+// ===================
+func Temple()
+    return

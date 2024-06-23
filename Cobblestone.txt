@@ -8,6 +8,9 @@ var aetherWands = [
 var fireWands = [
     ^"fire wand *8", 
     ^"fire wand *7"]
+var stunlock = [
+    ^"stone hammer +9", 
+    ^"aether hammer"]
 // var unmakeSwords = [
 //     ^"fire wand *8", 
 //     ^"fire wand *7"]
@@ -74,12 +77,12 @@ func brew_and_use_health(hp_threshold)
     ?hp < hp_threshold
         activate potion
 
-func summon_aether()
+func summon_fire()
     ?summon.count = 0
         equipR fire talisman
         ?item.GetCooldown("fire_talisman") <= 0
         ^ & item.CanActivate()
-        activate R
+            activate R
 
 // Default 
 equipL triskelion
@@ -164,8 +167,18 @@ func Deadwood_Canyon()
 func Caves()
     brew_and_use_health(7)
 
+    // Miniboss - whys it called that
+    ?foe = cool_bat & foe.distance < 20
+        Caves_MiniBoss()
+        return
+    // Boss
+    ?foe = spider_boss & foe.distance < 20
+        Caves_Boss()
+        return
+
+    // General
     ?foe.distance >= 16 & foe.distance < 20 
-        ^& foe ! medium_bat
+    ^& foe ! medium_bat
         equip_dash()
 
     // Fighting
@@ -177,13 +190,8 @@ func Caves()
             equipL vigor wand
             offhand_stone()
 
-
     try_blade_ability()
 
-    // Boss
-    ?foe = boss & foe.distance < 20
-        equip bardiche
-        try_bardiche_ability()
 
 func Mushroom()
     brew_and_use_health(7)
@@ -281,6 +289,29 @@ func Icy()
         Ice_Boss()
 
 // BOSS AI
+
+func Caves_MiniBoss()
+    ?foe.distance > 10
+        equip_dash()
+    :
+        equip_set(stunlock)
+
+func Caves_Boss()
+    ?loc.stars <= 5
+        equip bardiche
+        try_bardiche_ability()
+    :
+        // 
+        ?foe.state = 142
+            equipL mind
+            return
+        
+        ?foe.distance > 5
+            equip_dash()
+
+        // try chill
+        equip ice crossbow
+
 func Mine_Miniboss()
     equip_set(aetherWands)
 
@@ -345,3 +376,6 @@ func Ice_Boss()
                 equip shovel
             :?foe.distance > 5
                 equip_dash()
+
+
+>@foe.debuffs.string@

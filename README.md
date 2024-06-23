@@ -4,6 +4,11 @@ My StoneScript code used in the ASCII-art game Stone Story (iOS version) to auto
 
 Stone Story RPG includes a custom scripting language [Stonescript](https://stonestoryrpg.com/stonescript/) allowing automating player actions based on the game's state. This is done through the "Mind Stone" which is unlocked after beating the semi-final boss.
 
+> [!WARNING]  
+> I am still learning the mechanics of the game, this code is constantly changing and is likely not the best strategy
+
+Feel free to use & modify as you please
+
 ## Disclaimers
 Stone Story RPG on Mobile (iOS & Android) has some minor differences, in particular no loading of external scripts.
 

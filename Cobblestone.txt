@@ -1,7 +1,7 @@
 // Weapon setups
 var vigorWands = [
-    ^"vigor wand +7", 
-    ^"vigor wand +5"]
+    ^"vigor wand +11", 
+    ^"vigor wand +10"]
 var aetherWands = [
     ^"aether wand *8", 
     ^"aether wand *7"]
@@ -11,11 +11,22 @@ var fireWands = [
 var stunlock = [
     ^"stone hammer +9", 
     ^"aether hammer"]
-// var unmakeSwords = [
-//     ^"fire wand *8", 
-//     ^"fire wand *7"]
+var unmakeSwords = [
+    ^"aether sword dU +5", 
+    ^"aether sword dU +4"]
 
-// General vars
+// Data vars
+var allAbilities = [
+  "mind","hammer","bardiche","blade",
+  "skeleton_arm","mask","fire_talisman",
+  "cinderwisp","quarterstaff","dash","bash",
+]
+var abilityHUDNames = [
+    "mind","ham","bard", "bfg","arm","mask",
+    "tali","wisp","qtr","dash","bash"
+]
+
+// Config vars
 var shouldHarvest = false
 
 // Globals
@@ -34,18 +45,31 @@ var weakRune = stone
 ?foe = aether
     weakRune = vigor
 
-?foe = boss
-    >`0,6,State: @foe.state@ Time: @foe.time@
-
 // Helper Functions
 func Between(value, min, max)
     return value >= min & value <= max
 
+func ItemCD(itemName)
+    return item.GetCooldown(itemName)
+
+func FormatTime(timeVal)
+    return time.FormatCasual(timeVal)
+
+// Cross lookup
+func xLookup(val, arr1, arr2)
+    var index = arr1.IndexOf(val)
+    ?index > -1
+        return arr2[index]
+    :
+        return false
+
 // Misc Functions
 func EquipDash()
-    ?item.GetCooldown("bash") <= 0
+    ?ItemCD("bash") <= 0 &
+    ^item.CanActivate("bash")
         equipR bashing shield
-    :
+    :?ItemCD("dash") <= 0 &
+    ^item.CanActivate("dash")
         equipR dashing shield
 
 func EquipSet(set) 
@@ -54,17 +78,35 @@ func EquipSet(set)
 
 func TryBardicheAbility()
     ?foe.distance <= 10 &
-    ^item.GetCooldown("bardiche") <= 0 |
-    ^item.GetCooldown("bardiche") > 870
+    ^ItemCD("bardiche") <= 0 |
+    ^ItemCD("bardiche") > 870
         equip bardiche
         activate R
 
 func TryBladeAbility()
     ?foe.distance <= 10 &
-    ^item.GetCooldown("blade") <= 0 &
+    ^ItemCD("blade") <= 0 &
     ^foe.count > 6
         equip blade
         activate R
+
+// Double-screen BFG/Smite
+var scrolling = 0
+func DoubleBlade()
+    var bladeReady = ItemCD("blade") <= 0
+    ?bladeReady & foe.count > 3
+        scrolling++
+        screen.Next()
+    :
+        scrolling = 0
+        screen.ResetOffset()
+    ?bladeReady & 
+    ^foe.distance < 25 & 
+    ^(foe.count > 5 | scrolling > 15)
+        equip blade
+        activate R
+        return true
+    return scrolling > 0
 
 func UseHealth(hp_threshold)
     ?loc.begin
@@ -75,7 +117,7 @@ func UseHealth(hp_threshold)
 func FireTalisman()
     ?summon.count = 0
         equipR fire talisman
-        ?item.GetCooldown("fire_talisman") <= 0
+        ?ItemCD("fire_talisman") <= 0
         ^ & item.CanActivate()
             activate R
 
@@ -101,32 +143,6 @@ func DoAnimCancel()
       equipR @rightItem@
     ?leftItem
       equipL @leftItem@
-
-// Always run animation cancel
-DoAnimCancel()
-
-// Default 
-equipL triskelion
-equipR ouroboros
-?pickup.distance < 10
-    equipL star
-
-?loc = Rocky
-    Rocky()
-:?loc = Deadwood
-    Deadwood()
-:?loc = Caves
-    Caves()
-:?loc = Mushroom
-    Mushroom()
-:?loc = Halls
-    Halls()
-:?loc = Mine
-    Mine()
-:?loc = Icy
-    Icy()
-:?loc = Temple
-    Temple()
 
 // LOCATIONS
 func Rocky()
@@ -180,7 +196,8 @@ func Deadwood()
         return
 
     // General
-    TryBladeAbility()
+    // TryBladeAbility()
+    DoubleBlade()
     ?foe.distance < 20
         // Oro stone should heal enough
         ?loc.stars <= 5
@@ -195,8 +212,8 @@ func Deadwood()
 func DeadwoodBoss()
     ?foe = poena
         EquipSet(stunlock)
-        ?foe.state = 32
-            equipL mind
+        // ?foe.state = 32
+        //     equipL mind
     :?foe = tree_boss
         equip bardiche
         TryBardicheAbility()
@@ -205,6 +222,8 @@ func DeadwoodBoss()
 // Caves of Fear
 // ===================
 func Caves()
+    // TODO move next screen and
+    // use the snake on bolesh 
     UseHealth(7)
 
     // Miniboss - whys it called that
@@ -344,8 +363,8 @@ func MineMiniboss()
         TryBardicheAbility()
 
         // RUH ROH RAGGY
-        ?item.GetCooldown("bardiche") < 870 & 
-        ^item.GetCooldown("bardiche") > 0
+        ?ItemCD("bardiche") < 870 & 
+        ^ItemCD("bardiche") > 0
             equipL mind
 
 func MineBoss() 
@@ -366,7 +385,7 @@ func MineBoss()
     :?foe.state = 33
         ?aiState = 1
             EquipDash()
-            ?item.GetCooldown("dash") > 0
+            ?ItemCD("dash") > 0
                 aiState = 2
         :
             equip bardiche
@@ -378,54 +397,176 @@ func MineBoss()
 // Icy Ridge
 // ===================
 func Icy()
-    // TODO
-    // aether swords to unmake ice pillars
-    // fire swords could be better for boss
-    UseHealth(7)
+    //UseHealth(7)
+    brew wood bronze // beserk
 
-    // General
-    ?!hasEncountedBoss
-        ?foe.distance >= 16 & foe.distance < 20
-            EquipDash()
-        :?foe.distance < 16
-            equip bardiche
+    equipL triskelion
+    equipR fire shield
 
+    // Mark boss
     ?foe = yeti
         hasEncountedBoss = true
+
+    // Unmake pillar
+    ?(foe = ice_pillar | foe = ice_wall) & 
+    ^foe.distance < 20
+        EquipSet(unmakeSwords)
+        return
 
     // Boss
     ?hasEncountedBoss & foe.distance < 20 
         IceBoss()
-        
+        return
+
+    // General
+    DoubleBlade()
+
+    ?foe.distance < 20
+        ?foe.distance >= 16 
+            EquipDash()
+            return
+        equip bardiche
+
 func IceBoss() 
-    // can we fire shield the cold
-    // shovel strat doesnt work on yellow?
+    // ice sword until fully chilled then
+    // fire sword
     >`0,7,Dist:@foe.distance@
 
-    // ?foe = ice_pillar | foe = ice_wall
-    //     EquipSet(unmake_swords)
+    ?item.potion ! empty
+        activate potion
 
     ?foe.armor > 0
         equip bardiche
     :
         // blow me
         ?foe.state = 133
-            equipL fire wand
-            equipR fire shield
-            //EquipSet(fireWands)
-        :
+            EquipSet(fireWands)
+            return
+        // Shovel strat
+        ?loc.stars <= 5
             ?foe.distance <= 2
                 equip bardiche
                 TryBardicheAbility()
             :?foe.distance <= 5
-                // Shovel moves close enough
-                // to avoid everything
                 equip shovel
             :?foe.distance > 5
                 EquipDash()
+        :
+            ?foe.distance > 10
+                EquipDash()
+            :
+                equip bardiche
+                TryBardicheAbility()
+
+            
 
 // ===================
-// TODO Temple 
+// Temple 
 // ===================
 func Temple()
-    return
+    UseHealth(7)
+
+    // Boss
+    ?foe = boss & foe.distance < 20
+        TempleBoss()
+        return
+
+    // General
+    TryBladeAbility()
+    ?foe.distance < 20
+        ?foe.distance > 16
+            EquipDash()
+        :
+            equip ice crossbow
+
+func TempleBoss()
+    // TODO double ice sword
+    equip ice crossbow
+
+func ColorCD(cd)
+    ?cd > 0
+        return "red"
+    return "green"
+
+func HUD()
+    // Disable utility belt
+    disable hud u 
+
+    var bottom = screen.h - 2
+
+    // CD HUD
+    var x = screen.w - 10
+    var x2 = screen.w - 5
+    var y = 1
+    for abi : allAbilities
+        var cd = ItemCD(abi)     
+        var text = xLookup(abi,allAbilities,
+        ^abilityHUDNames)
+        var textCol = ColorCD(cd)
+
+        >`@x@,@y@,#@textCol@,
+        ^@string.Capitalize(text)@
+
+        >`@x2@,@y@,#@textCol@,
+        ^@time.FormatDigital(cd)@
+        y++
+    >`@x@,@y@,
+
+    // Boss state
+    ?foe = boss
+        >`0,6,State: @foe.state@ 
+        ^Time: @foe.time@
+
+    // Time
+    var current = 
+        ^FormatTime(time) + " " + 
+        ^time + "F"
+    var best = 
+        ^FormatTime(loc.bestTime) + " " + 
+        ^loc.bestTime + "F"
+    var average = 
+        ^FormatTime(loc.averageTime) + " " + 
+        ^loc.averageTime + "F"
+
+    >`0,@bottom - 2@,Cur:
+    >`7,@bottom - 2@,@current@
+
+    >`0,@bottom - 1@,Best:
+    >`7,@bottom - 1@,@best@
+
+    >`0,@bottom@,Avg:
+    >`7,@bottom@,@average@
+
+
+func Main()
+    // Always run animation cancel
+    DoAnimCancel()
+
+    FireTalisman()
+
+    // Default 
+    equipL triskelion
+    equipR ouroboros
+    ?pickup.distance < 10
+        equipL star
+
+    ?loc = Rocky
+        Rocky()
+    :?loc = Deadwood
+        Deadwood()
+    :?loc = Caves
+        Caves()
+    :?loc = Mushroom
+        Mushroom()
+    :?loc = Halls
+        Halls()
+    :?loc = Mine
+        Mine()
+    :?loc = Icy
+        Icy()
+    :?loc = Temple
+        Temple()
+
+    HUD()
+
+Main()

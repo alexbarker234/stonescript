@@ -44,9 +44,11 @@ var ingredients = [
 ]
 // Config vars
 var shouldHarvest = false
+var shouldPauseSkip = true
 
 // Globals
 var hasEncountedBoss = false
+var hasPauseSkipped = false
 
 // Find weak rune to use later
 var weakRune = stone
@@ -97,8 +99,27 @@ func TryBardicheAbility()
         equip bardiche
         activate R
 
-func brew(potion)
-    brew xLookup(potion,ingredients,potions)
+func brewPot(potion)
+    ?potion = "experience"
+        brew wood + wood
+    :?potion = "strength"
+        brew stone + stone
+    :?potion = "healing"
+        brew tar + tar
+    :?potion = "lightning"
+        brew bronze + bronze
+    :?potion = "invisibility"
+        brew wood + stone
+    :?potion = "cleansing"
+        brew wood + tar
+    :?potion = "berserk"
+        brew wood + bronze
+    :?potion = "defensive"
+        brew stone + tar
+    :?potion = "lucky"
+        brew stone + bronze
+    :?potion = "vampiric"
+        brew tar + bronze
 
 func TryBladeAbility()
     ?foe.distance <= 10 &
@@ -132,11 +153,17 @@ func UseHealth(hp_threshold)
         activate potion
 
 func FireTalisman()
-    ?summon.count = 0
+    var cooldown = ItemCD("fire_talisman")
+    ?summon.count = 0 | cooldown > 280
         equipR fire talisman
-        ?ItemCD("fire_talisman") <= 0
+        ?cooldown <= 0
         ^ & item.CanActivate()
             activate R
+
+func MaskAbility()
+    ?ItemCD("mask") <= 0 
+        equip mask
+        activate R
 
 func DoAnimCancel()
   var isTwoHanded = !item.left // bit jank
@@ -414,7 +441,7 @@ func MineBoss()
 // Icy Ridge
 // ===================
 func Icy()
-    brew("beserk")
+    brewPot("beserk")
 
     equipL triskelion
     equipR fire shield
@@ -448,37 +475,46 @@ func IceBoss()
     // fire sword
     >`0,7,Dist:@foe.distance@
 
+    // intro state
+    ?foe.armor > 0
+        equip bardiche
+        return
+
     ?item.potion ! empty
         activate potion
 
-    ?foe.armor > 0
-        equip bardiche
+    // Pause skip
+    ?shouldPauseSkip & !hasPauseSkipped
+        hasPauseSkipped = true
+        loc.Pause()
+
+    // blowing
+    ?foe.state = 133
+        EquipSet(fireWands)
+        return
+
+    // Shovel strat
+    ?loc.stars <= 5
+        ?foe.distance <= 2
+            equip bardiche
+            TryBardicheAbility()
+        :?foe.distance <= 5
+            equip shovel
+        :?foe.distance > 5
+            EquipDash()
+    // normal
     :
-        // blow me
-        ?foe.state = 133
-            EquipSet(fireWands)
-            return
-        // Shovel strat
-        ?loc.stars <= 5
-            ?foe.distance <= 2
-                equip bardiche
-                TryBardicheAbility()
-            :?foe.distance <= 5
-                equip shovel
-            :?foe.distance > 5
-                EquipDash()
+        ?foe.distance > 10
+            EquipDash()
         :
-            ?foe.distance > 10
-                EquipDash()
-            :
-                equip bardiche
-                TryBardicheAbility()
+            equip bardiche
+            TryBardicheAbility()
 
 // ===================
 // Temple 
 // ===================
 func Temple()
-    brew("berserk")
+    brewPot("berserk")
 
     // Boss
     ?foe = boss & foe.distance < 20
@@ -497,7 +533,7 @@ func TempleBoss()
     // TODO double ice sword
     ?item.potion ! empty
         activate potion
-        
+
     equip ice crossbow
 
 func ColorCD(cd)
@@ -527,7 +563,6 @@ func HUD()
         >`@x2@,@y@,#@textCol@,
         ^@time.FormatDigital(cd)@
         y++
-    >`@x@,@y@,
 
     // Boss state
     ?foe = boss
@@ -558,7 +593,6 @@ func HUD()
 func Main()
     // Always run animation cancel
     DoAnimCancel()
-
 
     // Default 
     equipL triskelion

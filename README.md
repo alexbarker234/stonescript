@@ -1,4 +1,4 @@
-# Cobblestone Stonescript for Stone Story RPG
+# Cobblestone - Stonescript for Stone Story RPG
 
 My StoneScript code used in the ASCII-art game Stone Story (iOS version) to automate it.
 

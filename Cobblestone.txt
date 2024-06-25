@@ -25,7 +25,23 @@ var abilityHUDNames = [
     "mind","ham","bard", "bfg","arm","mask",
     "tali","wisp","qtr","dash","bash"
 ]
-
+var potions = ["experience","strength",
+    "healing","lightning","invisibility",
+    "cleansing","berserk","defensive","lucky",
+    "vampiric"
+]
+var ingredients = [
+    "wood + wood",
+    "stone + stone",
+    "tar + tar",
+    "bronze + bronze",
+    "wood + stone",
+    "wood + tar",
+    "wood + bronze",
+    "stone + tar",
+    "stone + bronze",
+    "tar + bronze"
+]
 // Config vars
 var shouldHarvest = false
 
@@ -65,11 +81,9 @@ func xLookup(val, arr1, arr2)
 
 // Misc Functions
 func EquipDash()
-    ?ItemCD("bash") <= 0 &
-    ^item.CanActivate("bash")
+    ?ItemCD("bash") <= 0 
         equipR bashing shield
-    :?ItemCD("dash") <= 0 &
-    ^item.CanActivate("dash")
+    :?ItemCD("dash") <= 0
         equipR dashing shield
 
 func EquipSet(set) 
@@ -82,6 +96,9 @@ func TryBardicheAbility()
     ^ItemCD("bardiche") > 870
         equip bardiche
         activate R
+
+func brew(potion)
+    brew xLookup(potion,ingredients,potions)
 
 func TryBladeAbility()
     ?foe.distance <= 10 &
@@ -397,8 +414,7 @@ func MineBoss()
 // Icy Ridge
 // ===================
 func Icy()
-    //UseHealth(7)
-    brew wood bronze // beserk
+    brew("beserk")
 
     equipL triskelion
     equipR fire shield
@@ -458,13 +474,11 @@ func IceBoss()
                 equip bardiche
                 TryBardicheAbility()
 
-            
-
 // ===================
 // Temple 
 // ===================
 func Temple()
-    UseHealth(7)
+    brew("berserk")
 
     // Boss
     ?foe = boss & foe.distance < 20
@@ -472,7 +486,7 @@ func Temple()
         return
 
     // General
-    TryBladeAbility()
+    DoubleBlade()
     ?foe.distance < 20
         ?foe.distance > 16
             EquipDash()
@@ -481,6 +495,9 @@ func Temple()
 
 func TempleBoss()
     // TODO double ice sword
+    ?item.potion ! empty
+        activate potion
+        
     equip ice crossbow
 
 func ColorCD(cd)
@@ -542,7 +559,6 @@ func Main()
     // Always run animation cancel
     DoAnimCancel()
 
-    FireTalisman()
 
     // Default 
     equipL triskelion
@@ -566,6 +582,8 @@ func Main()
         Icy()
     :?loc = Temple
         Temple()
+
+    FireTalisman()
 
     HUD()
 

@@ -73,6 +73,38 @@ func ItemCD(itemName)
 func FormatTime(timeVal)
     return time.FormatCasual(timeVal)
 
+// Item Equip Helper
+var toEquipL = ""
+var toEquipR = ""
+var toEquip = ""
+var shouldActivate = false
+
+func SetEquipL(itemName)
+    toEquipL = itemName
+
+func SetEquipR(itemName)
+    toEquipR = itemName
+
+func SetEquip(itemName)
+    toEquipL = ""
+    toEquipR = ""
+    toEquip = itemName
+
+func ActivateItem()
+    shouldActivate = true
+
+func EquipItems()
+    ?toEquipL
+        equipL @toEquipL@
+    ?toEquipR
+        equipR @toEquipR@
+    ?toEquip
+        equip @toEquip@
+
+func ActivateItems()
+    ?shouldActivate & item.CanActivate()
+        activate R
+
 // Cross lookup
 func xLookup(val, arr1, arr2)
     var index = arr1.IndexOf(val)
@@ -84,22 +116,22 @@ func xLookup(val, arr1, arr2)
 // Misc Functions
 func EquipDash()
     ?ItemCD("bash") <= 0 
-        equipR bashing shield
+        SetEquipR("bashing shield")
     :?ItemCD("dash") <= 0
-        equipR dashing shield
+        SetEquipR("dashing shield")
 
 func EquipSet(set) 
-    equipL @set[0]@
-    equipR @set[1]@
+    SetEquipL(set[0])
+    SetEquipR(set[1])
 
 func TryBardicheAbility()
     ?foe.distance <= 10 &
     ^ItemCD("bardiche") <= 0 |
     ^ItemCD("bardiche") > 870
-        equip bardiche
-        activate R
+        SetEquip("bardiche")
+        ActivateItem()
 
-func brewPot(potion)
+func BrewPot(potion)
     ?potion = "experience"
         brew wood + wood
     :?potion = "strength"
@@ -125,8 +157,8 @@ func TryBladeAbility()
     ?foe.distance <= 10 &
     ^ItemCD("blade") <= 0 &
     ^foe.count > 6
-        equip blade
-        activate R
+        SetEquip("blade")
+        ActivateItem()
 
 // Double-screen BFG/Smite
 var scrolling = 0
@@ -141,8 +173,8 @@ func DoubleBlade()
     ?bladeReady & 
     ^foe.distance < 25 & 
     ^(foe.count > 5 | scrolling > 15)
-        equip blade
-        activate R
+        SetEquip("blade")
+        ActivateItem()
         return true
     return scrolling > 0
 
@@ -155,15 +187,15 @@ func UseHealth(hp_threshold)
 func FireTalisman()
     var cooldown = ItemCD("fire_talisman")
     ?summon.count = 0 | cooldown > 130
-        equipR fire talisman
+        SetEquipR("fire talisman")
         ?cooldown <= 0
         ^ & item.CanActivate()
-            activate R
+            ActivateItem()
 
 func MaskAbility()
     ?ItemCD("mask") <= 0 
-        equip mask
-        activate R
+        SetEquip("mask")
+        ActivateItem()
 
 func DoAnimCancel()
   var isTwoHanded = !item.left // bit jank
@@ -199,17 +231,17 @@ func Rocky()
     ?foe = dysangelos_bearer
         ?foe.distance > 10
             EquipDash()
-        equip bardiche
+        SetEquip("bardiche")
 
     // Phase 2
     ?foe = dysangelos_elementalist
-        // Use runes against current eye
-        equipL @weakRune@ wand
-        equipR @weakRune@ shield
+        // Use weak
+        SetEquipL(weakRune + " wand")
+        SetEquipR(weakRune + " shield")
 
     // Phase 3
     ?foe = dysangelos_perfected
-        equip bardiche
+        SetEquip("bardiche")
         // yikers attack, TODO: dodge
         ?(hp + armor) < 31
             activate potion
@@ -232,7 +264,7 @@ func Deadwood()
 
     // Harvesting
     ?harvest.distance < 10 & shouldHarvest
-        equip hatchet
+        SetEquip("hatchet")
 
     // Boss
     ?foe = boss & foe.distance < 20
@@ -248,18 +280,18 @@ func Deadwood()
             ?foe.distance > 10
                 EquipDash()
                 return
-            equipL stone sword +6
-            equipR experience           
+            SetEquipL("stone sword +6")
+            SetEquipR("experience")
         :
-            equip heavy hammer 
+            SetEquip("heavy hammer ")
 
 func DeadwoodBoss()
     ?foe = poena
         EquipSet(stunlock)
         // ?foe.state = 32
-        //     equipL mind
+        //     SetEquipL("mind")
     :?foe = tree_boss
-        equip bardiche
+        SetEquip("bardiche")
         TryBardicheAbility()
 
 // ===================
@@ -288,7 +320,7 @@ func Caves()
     ?foe.distance <= 16
         ?loc.stars >= 8 | encounter.isElite | 
         ^foe.hp > 100
-            equip bardiche
+            SetEquip("bardiche")
         :
             EquipSet(vigorWands)
 
@@ -302,19 +334,19 @@ func CavesMiniBoss()
 
 func CavesBoss()
     ?loc.stars <= 5
-        equip bardiche
+        SetEquip("bardiche")
         TryBardicheAbility()
     :
         // 
         ?foe.state = 142
-            equipL mind
+            SetEquipL("mind")
             return
         
         ?foe.distance > 5
             EquipDash()
 
         // try chill
-        equip ice crossbow
+        SetEquip("ice crossbow")
 
 // ===================
 // Mushroom forest
@@ -329,7 +361,7 @@ func Mushroom()
         ?loc.stars < 5
             EquipSet(vigorWands)
         : 
-            equip bardiche
+            SetEquip("bardiche")
 
     TryBladeAbility()
 
@@ -339,9 +371,9 @@ func Mushroom()
             EquipDash()
         :
             // ?foe = mushroom_boss_fat
-            //     equip poison staff
+            //     SetEquip("poison staff")
 
-            equip bardiche
+            SetEquip("bardiche")
             TryBardicheAbility()   
 
 // ===================
@@ -356,7 +388,7 @@ func Halls()
     ?foe.distance <= 16
         ?foe.hp >= 100 & 
         ^foe ! immune_to_physical
-            equip bardiche
+            SetEquip("bardiche")
         :
             EquipSet(vigorWands)
 
@@ -367,7 +399,7 @@ func Halls()
         ?foe.distance >= 10 
             EquipDash()
         :
-            equip bardiche
+            SetEquip("bardiche")
             TryBardicheAbility()   
 
 // ===================
@@ -381,12 +413,12 @@ func Mine()
 
     ?foe.distance <= 16
         ?loc.stars > 6
-            equip bardiche
+            SetEquip("bardiche")
         :
             EquipSet(aetherWands)
             ?foe = mine_walker
-                equipL aether hammer
-                equipR dashing shield
+                SetEquipL("aether hammer")
+                SetEquipR("dashing shield")
                 
     TryBladeAbility()
 
@@ -409,7 +441,7 @@ func MineMiniboss()
         // RUH ROH RAGGY
         ?ItemCD("bardiche") < 870 & 
         ^ItemCD("bardiche") > 0
-            equipL mind
+            SetEquipL("mind")
 
 func MineBoss() 
     ?hp = maxhp
@@ -422,8 +454,8 @@ func MineBoss()
     // Attack
     ?foe.state = 32
         ?foe.time > 15
-            equipL mind
-            equipR ouroboros
+            SetEquipL("mind")
+            SetEquipR("ouroboros")
             aiState = 1
     // Cooldown - can melee
     :?foe.state = 33
@@ -432,7 +464,7 @@ func MineBoss()
             ?ItemCD("dash") > 0
                 aiState = 2
         :
-            equip bardiche
+            SetEquip("bardiche")
             TryBardicheAbility()
     :
         aiState = 0
@@ -441,10 +473,10 @@ func MineBoss()
 // Icy Ridge
 // ===================
 func Icy()
-    brewPot("beserk")
+    BrewPot("beserk")
 
-    equipL triskelion
-    equipR fire shield
+    SetEquipL("triskelion")
+    SetEquipR("fire shield")
 
     // Mark boss
     ?foe = yeti
@@ -468,7 +500,7 @@ func Icy()
         ?foe.distance >= 16 
             EquipDash()
             return
-        equip bardiche
+        SetEquip("bardiche")
 
 func IceBoss() 
     // ice sword until fully chilled then
@@ -477,7 +509,7 @@ func IceBoss()
 
     // intro state
     ?foe.armor > 0
-        equip bardiche
+        SetEquip("bardiche")
         return
 
     ?item.potion ! empty
@@ -487,6 +519,9 @@ func IceBoss()
     ?shouldPauseSkip & !hasPauseSkipped
         hasPauseSkipped = true
         loc.Pause()
+        return
+
+    MaskAbility()
 
     // blowing
     ?foe.state = 133
@@ -496,10 +531,10 @@ func IceBoss()
     // Shovel strat
     ?loc.stars <= 5
         ?foe.distance <= 2
-            equip bardiche
+            SetEquip("bardiche")
             TryBardicheAbility()
         :?foe.distance <= 5
-            equip shovel
+            SetEquip("shovel")
         :?foe.distance > 5
             EquipDash()
     // normal
@@ -507,14 +542,14 @@ func IceBoss()
         ?foe.distance > 10
             EquipDash()
         :
-            equip bardiche
+            SetEquip("bardiche")
             TryBardicheAbility()
 
 // ===================
 // Temple 
 // ===================
 func Temple()
-    brewPot("berserk")
+    BrewPot("berserk")
 
     // Boss
     ?foe = boss & foe.distance < 20
@@ -527,14 +562,14 @@ func Temple()
         ?foe.distance > 16
             EquipDash()
         :
-            equip ice crossbow
+            SetEquip("ice crossbow")
 
 func TempleBoss()
     // TODO double ice sword
     ?item.potion ! empty
         activate potion
 
-    equip ice crossbow
+    SetEquip("ice crossbow")
 
 func ColorCD(cd)
     ?cd > 0
@@ -594,11 +629,16 @@ func Main()
     // Always run animation cancel
     DoAnimCancel()
 
+    toEquipL = ""
+    toEquipR = ""
+    toEquip = ""
+    shouldActivate = false
+
     // Default 
-    equipL triskelion
-    equipR ouroboros
+    SetEquipL("triskelion")
+    SetEquipR("ouroboros")
     ?pickup.distance < 10
-        equipL star
+        SetEquipL("star")
 
     ?loc = Rocky
         Rocky()
@@ -618,6 +658,9 @@ func Main()
         Temple()
 
     FireTalisman()
+
+    EquipItems()
+    ActivateItems()
 
     HUD()
 

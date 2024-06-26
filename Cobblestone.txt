@@ -519,13 +519,13 @@ func IceBoss()
     // fire sword
     >`0,7,Dist:@foe.distance@
 
+    ?item.potion ! empty
+        activate potion
+
     // intro state
     ?foe.armor > 0
         SetEquip("bardiche")
         return
-
-    ?item.potion ! empty
-        activate potion
 
     // Pause skip
     ?shouldPauseSkip & !hasPauseSkipped

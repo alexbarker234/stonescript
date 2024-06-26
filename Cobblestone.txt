@@ -154,7 +154,7 @@ func UseHealth(hp_threshold)
 
 func FireTalisman()
     var cooldown = ItemCD("fire_talisman")
-    ?summon.count = 0 | cooldown > 280
+    ?summon.count = 0 | cooldown > 130
         equipR fire talisman
         ?cooldown <= 0
         ^ & item.CanActivate()

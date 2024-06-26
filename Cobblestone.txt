@@ -50,6 +50,10 @@ var shouldPauseSkip = true
 var hasEncountedBoss = false
 var hasPauseSkipped = false
 
+func ResetGlobals()
+    hasEncountedBoss = false
+    hasPauseSkipped = false
+
 // Find weak rune to use later
 var weakRune = stone
 ?foe = vigor
@@ -158,6 +162,14 @@ func TryBladeAbility()
     ^ItemCD("blade") <= 0 &
     ^foe.count > 6
         SetEquip("blade")
+        ActivateItem()
+
+func QtrDash()
+    ?foe.count ! 0
+        return
+    var cooldown = ItemCD("quarterstaff")
+    ?cooldown <= 0 | cooldown > 175
+        SetEquip("quarterstaff")
         ActivateItem()
 
 // Double-screen BFG/Smite
@@ -629,16 +641,22 @@ func Main()
     // Always run animation cancel
     DoAnimCancel()
 
+    // Reset variables
     toEquipL = ""
     toEquipR = ""
     toEquip = ""
     shouldActivate = false
+    ?loc.begin | loc.loop
+        ResetGlobals()
 
     // Default 
     SetEquipL("triskelion")
     SetEquipR("ouroboros")
     ?pickup.distance < 10
         SetEquipL("star")
+
+    // always dash
+    QtrDash()
 
     ?loc = Rocky
         Rocky()

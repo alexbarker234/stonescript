@@ -28,26 +28,10 @@ var abilityHUDNames = [
     "mind","ham","bard", "bfg","arm","mask",
     "tali","wisp","qtr","dash","bash"
 ]
-var potions = ["experience","strength",
-    "healing","lightning","invisibility",
-    "cleansing","berserk","defensive","lucky",
-    "vampiric"
-]
-var ingredients = [
-    "wood + wood",
-    "stone + stone",
-    "tar + tar",
-    "bronze + bronze",
-    "wood + stone",
-    "wood + tar",
-    "wood + bronze",
-    "stone + tar",
-    "stone + bronze",
-    "tar + bronze"
-]
 // Config vars
 var shouldHarvest = false
 var shouldPauseSkip = true
+var xpFarm = false
 
 // Globals
 var hasEncountedBoss = false
@@ -73,6 +57,8 @@ var weakRune = stone
     weakRune = vigor
 
 var foeDebuffs = foe.debuffs.string
+var smiteStack = 
+    ^GetEffectStack(buffs.string,"smite")
 
 // Helper Functions
 func Between(value, min, max)
@@ -144,7 +130,7 @@ func GetEffectStack(str, uid)
         ^string.Split(str, ":", ",", false)
     var i = parts.IndexOf(uid)
     // return duration for stun
-    ?is(uid, "stun")
+    ?uid = "stun"
         return int.Parse(parts[i+2])
     // stacks
     return int.Parse(parts[i+1])
@@ -156,26 +142,29 @@ func TryBardicheAbility()
         SetEquip("bardiche")
         ActivateItem()
 
-func BrewPot(potion)
-    ?potion = "experience"
+func BrewPot(toBrew)
+    ?!loc.begin
+        return
+    >@toBrew@
+    ?toBrew = "experience"
         brew wood + wood
-    :?potion = "strength"
+    :?toBrew = "strength"
         brew stone + stone
-    :?potion = "healing"
+    :?toBrew = "healing"
         brew tar + tar
-    :?potion = "lightning"
+    :?toBrew = "lightning"
         brew bronze + bronze
-    :?potion = "invisibility"
+    :?toBrew = "invisibility"
         brew wood + stone
-    :?potion = "cleansing"
+    :?toBrew = "cleansing"
         brew wood + tar
-    :?potion = "berserk"
+    :?toBrew = "berserk"
         brew wood + bronze
-    :?potion = "defensive"
+    :?toBrew = "defensive"
         brew stone + tar
-    :?potion = "lucky"
+    :?toBrew = "lucky"
         brew stone + bronze
-    :?potion = "vampiric"
+    :?toBrew = "vampiric"
         brew tar + bronze
 
 func TryBladeAbility()
@@ -230,28 +219,13 @@ func MaskAbility()
         SetEquip("mask")
         ActivateItem()
 
-func DoAnimCancel()
-  var isTwoHanded = !item.left // bit jank
-  var leftItem = item.left
-  var rightItem = item.right
-  
-  // equip trash
-  ?item.right.state = 3
-    equipR shield *0 +0
-  ?item.left.state = 3
-    equipL wand *0 +0
-
-  // re equip
-  ?isTwoHanded
-    ?rightItem
-      equip @rightItem@
-    :?leftItem
-      equip @leftItem@
-  :
-    ?rightItem
-      equipR @rightItem@
-    ?leftItem
-      equipL @leftItem@
+func RunAAC()
+    ?item.left.state = 3
+        equipL *0 wand //trash
+        equipL @item.left@
+    ?item.right.state = 3
+        equipR *0 shield //trash
+        equip @item.right@
 
 // LOCATIONS
 func Rocky()
@@ -260,12 +234,17 @@ func Rocky()
     ?foe.distance > 20
         return
 
+    var chillStack = 
+    ^GetEffectStack(foeDebuffs,"debuff_chill")
+
+    MaskAbility()
+
     // Phase 1 - Weak to fire
     ?foe = dysangelos_bearer
+        EquipSet(iceSwords)
         ?foe.distance > 10
             EquipDash()
-        SetEquip("bardiche")
-
+            
     // Phase 2
     ?foe = dysangelos_elementalist
         // Use weak
@@ -274,26 +253,50 @@ func Rocky()
 
     // Phase 3
     ?foe = dysangelos_perfected
-        SetEquip("bardiche")
+        EquipSet(iceSwords)
+        ?foe.distance > 10
+            EquipDash()
+
         // yikers attack, TODO: dodge
+        ?foe.state = 115 & foe.time > 70
+            SetEquipR("mind")
+            return
         ?(hp + armor) < 31
             activate potion
 
     // slam his ass
     TryBardicheAbility()
 
+// For Phase 3 - gets strong to some elements
+func FindDysaWeakness()
+  ?foe.buffs.string ! "ice"
+    return "ice"
+  :?foe.buffs.string ! "fire"
+    return "fire"
+  :?foe.buffs.string ! "aether"
+    return "aether"
+  :?foe.buffs.string ! "vigor"
+    return "vigor"
+  :
+    return "poison"
+
 // ===================
 // Deadwood Canyon
 // ===================
 func Deadwood()
     // Experience Potion
-    ?loc.stars <= 5
+    ?loc.stars <= 5 & xpFarm
         brew wood
         ?item.potion ! empty & 
         ^Between(time, 60, 500)
             activate potion
     :
         UseHealth(7)
+
+    SetEquipL("triskelion")
+    SetEquipR("ice shield")
+    ?pickup.distance < 10
+        SetEquipR("star")
 
     // Harvesting
     ?harvest.distance < 10 & shouldHarvest
@@ -306,16 +309,11 @@ func Deadwood()
 
     // General
     DoubleBlade()
-    ?foe.distance < 20
-        // Oro stone should heal enough
-        ?loc.stars <= 5
-            ?foe.distance > 10
-                EquipDash()
-                return
-            SetEquipL("stone sword +6")
-            SetEquipR("experience")
+    ?foe.distance < 20     
+        ?foe.distance > 10
+            EquipDash()
         :
-            SetEquip("heavy hammer ")
+            SetEquip("ice staff")
 
 func DeadwoodBoss()
     ?foe = poena
@@ -442,7 +440,7 @@ func Halls()
     ?foe.distance >= 16 & foe.distance < 20
         EquipDash()
 
-    ?foe.distance <= 16
+    ?foe.distance <= 16 
         SetEquip("ice staff")
 
 func HallsBoss()
@@ -462,25 +460,29 @@ func HallsBoss()
         EquipDash()
         return
     var chillStack = 
-        ^GetEffectStack(foeDebuffs,"debuff_chill")
-    >`0,8,@chillStack@
+    ^GetEffectStack(foeDebuffs,"debuff_chill")
+    
     ?chillStack < 6
         EquipSet(iceSwords)
     :
         EquipSet(vigorWands)
+
+    // deal with skellys
+    ?foe.count > 1
+        SetEquip("bardiche")
+
     TryBardicheAbility()   
 
 // ===================
 // Boiling Mine
 // ===================       
 func Mine()
-    ?loc.stars <= 10
-        BrewPot("beserk")
-    :
-        UseHealth(7)
+    BrewPot("beserk")
 
     SetEquipL("triskelion")
     SetEquipR("aether shield")
+    ?pickup.distance < 10
+        SetEquipR("star")
 
     // Mini Boss
     ?foe = explode
@@ -499,8 +501,12 @@ func Mine()
     ?foe.distance >= 16 & foe.distance < 20
         EquipDash()
 
-    ?foe.distance < 10
-        SetEquip("ice staff")
+    ?foe.distance < 16
+        ?foe.GetCount(10) = 1 & smiteStack = 0
+            // todo aether swords
+            EquipSet(iceSwords)
+        :
+            SetEquip("ice staff")
                 
 func MineMiniboss()
     ?foe.distance <= 16 & foe.distance >= 11
@@ -512,10 +518,7 @@ func MineBoss()
     ?item.potion ! empty
         activate potion
 
-    ?hp = maxhp
-        EquipSet(aetherWands)
-    :
-        EquipSet(vigorWands)
+    MaskAbility()
 
     // Attack
     ?foe.state = 32
@@ -527,13 +530,17 @@ func MineBoss()
     :?foe.state = 33
         ?aiState = 1
             EquipDash()
-            ?ItemCD("dash") > 0
+            ?ItemCD("dash") > 0 |
+            ^ItemCD("bash") > 0
                 aiState = 2
         :
-            SetEquip("bardiche")
+            EquipSet(unmakeSwords)
             TryBardicheAbility()
     :
         aiState = 0
+        // todo: aether crossbow speed enchant
+        EquipSet(aetherWands)
+
 
 // ===================
 // Icy Ridge
@@ -669,7 +676,7 @@ func HUD()
     ?foe = boss
         >`0,6,State: @foe.state@ 
         ^Time: @foe.time@
-
+    >`0,7,Dist: @foe.distance@
     // Time
     var current = 
         ^FormatTime(totaltime) + " " + 
@@ -693,7 +700,7 @@ func HUD()
 
 func Main()
     // Always run animation cancel
-    DoAnimCancel()
+    RunAAC()
 
     // Reset variables
     toEquipL = ""
@@ -701,6 +708,9 @@ func Main()
     toEquip = ""
     shouldActivate = false
     foeDebuffs = foe.debuffs.string
+    var smiteStack = 
+        ^GetEffectStack(buffs.string,"smite")
+
     ?loc.begin | loc.loop
         ResetGlobals()
 
@@ -730,7 +740,9 @@ func Main()
     :?loc = Temple
         Temple()
 
-    FireTalisman()
+    // No deadwood - poena bites 
+    :?loc ! Deadwood
+        FireTalisman()
 
     EquipItems()
     ActivateItems()

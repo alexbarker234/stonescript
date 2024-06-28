@@ -14,6 +14,9 @@ var stunlock = [
 var unmakeSwords = [
     ^"aether sword dU +5", 
     ^"aether sword dU +4"]
+var iceSwords = [
+    ^"ice sword", 
+    ^"ice sword -gold"]
 
 // Data vars
 var allAbilities = [
@@ -49,10 +52,12 @@ var shouldPauseSkip = true
 // Globals
 var hasEncountedBoss = false
 var hasPauseSkipped = false
+var aiState = 0
 
 func ResetGlobals()
     hasEncountedBoss = false
     hasPauseSkipped = false
+    aiState = 0
 
 // Find weak rune to use later
 var weakRune = stone
@@ -66,6 +71,8 @@ var weakRune = stone
     weakRune = aether
 ?foe = aether
     weakRune = vigor
+
+var foeDebuffs = foe.debuffs.string
 
 // Helper Functions
 func Between(value, min, max)
@@ -128,10 +135,24 @@ func EquipSet(set)
     SetEquipL(set[0])
     SetEquipR(set[1])
 
+func GetEffectStack(str, uid)
+    // Does not have
+    ?!(str = uid)
+        return 0
+    // Split
+    var parts = 
+        ^string.Split(str, ":", ",", false)
+    var i = parts.IndexOf(uid)
+    // return duration for stun
+    ?is(uid, "stun")
+        return int.Parse(parts[i+2])
+    // stacks
+    return int.Parse(parts[i+1])
+
 func TryBardicheAbility()
+    var cooldown = ItemCD("bardiche")
     ?foe.distance <= 10 &
-    ^ItemCD("bardiche") <= 0 |
-    ^ItemCD("bardiche") > 870
+    ^cooldown <= 0 | cooldown > 870
         SetEquip("bardiche")
         ActivateItem()
 
@@ -284,7 +305,6 @@ func Deadwood()
         return
 
     // General
-    // TryBladeAbility()
     DoubleBlade()
     ?foe.distance < 20
         // Oro stone should heal enough
@@ -324,6 +344,8 @@ func Caves()
         return
 
     // General
+    DoubleBlade()
+
     ?foe.distance >= 16 & foe.distance < 20 
     ^& foe ! medium_bat
         EquipDash()
@@ -335,8 +357,6 @@ func Caves()
             SetEquip("bardiche")
         :
             EquipSet(vigorWands)
-
-    TryBladeAbility()
 
 func CavesMiniBoss()
     ?foe.distance > 10
@@ -366,108 +386,142 @@ func CavesBoss()
 func Mushroom()
     UseHealth(7)
 
+    SetEquipL("triskelion")
+    SetEquipR("poison shield")
+
+    // Boss
+    ?foe = boss & foe.distance < 20
+        MushroomBoss()
+        return
+    DoubleBlade()
+
     ?foe.distance >= 16 & foe.distance < 20
         EquipDash()
 
     ?foe.distance <= 16
-        ?loc.stars < 5
-            EquipSet(vigorWands)
-        : 
-            SetEquip("bardiche")
+        SetEquip("ice staff")
 
-    TryBladeAbility()
+func MushroomBoss()
+    ?foe.distance >= 10 
+        EquipDash()
+        return
+    
+    ?foe ! mushroom_boss
+        QtrDash()
 
-    // Boss
-    ?foe = boss & foe.distance < 20
-        ?foe.distance >= 10 
-            EquipDash()
-        :
-            // ?foe = mushroom_boss_fat
-            //     SetEquip("poison staff")
+    // Enoki
+    ?foe = mushroom_boss_skinny
+        MaskAbility()
+        
+    // ?foe = mushroom_boss_fat
+    //     SetEquip("poison staff")
 
-            SetEquip("bardiche")
-            TryBardicheAbility()   
+    EquipSet(iceSwords)
+    TryBardicheAbility()   
 
 // ===================
 // Haunted Halls
 // ===================
 func Halls()
-    UseHealth(7)
+    ?loc.stars <= 10
+        BrewPot("beserk")
+    :
+        UseHealth(7)
+
+    SetEquipL("triskelion")
+    SetEquipR("vigor shield")
+
+    // Boss
+    ?foe = pallas & foe.distance < 20
+        HallsBoss()
+        return
+
+    // General
+    DoubleBlade()
 
     ?foe.distance >= 16 & foe.distance < 20
         EquipDash()
 
     ?foe.distance <= 16
-        ?foe.hp >= 100 & 
-        ^foe ! immune_to_physical
-            SetEquip("bardiche")
-        :
-            EquipSet(vigorWands)
+        SetEquip("ice staff")
 
-    TryBladeAbility()
+func HallsBoss()
+    ?item.potion ! empty & loc.stars <= 10
+        activate potion
 
-    // Boss
-    ?foe = boss & foe.distance < 20
-        ?foe.distance >= 10 
-            EquipDash()
-        :
-            SetEquip("bardiche")
-            TryBardicheAbility()   
+    MaskAbility()
+
+    // Pause skip
+    ?shouldPauseSkip & !hasPauseSkipped &
+    ^foe = legless
+        hasPauseSkipped = true
+        ui.OpenInv()
+        return
+
+    ?foe.distance >= 10 
+        EquipDash()
+        return
+    var chillStack = 
+        ^GetEffectStack(foeDebuffs,"debuff_chill")
+    >`0,8,@chillStack@
+    ?chillStack < 6
+        EquipSet(iceSwords)
+    :
+        EquipSet(vigorWands)
+    TryBardicheAbility()   
 
 // ===================
 // Boiling Mine
 // ===================       
 func Mine()
-    UseHealth(7)
+    ?loc.stars <= 10
+        BrewPot("beserk")
+    :
+        UseHealth(7)
 
-    ?foe.distance >= 16 & foe.distance < 20
-        EquipDash()
-
-    ?foe.distance <= 16
-        ?loc.stars > 6
-            SetEquip("bardiche")
-        :
-            EquipSet(aetherWands)
-            ?foe = mine_walker
-                SetEquipL("aether hammer")
-                SetEquipR("dashing shield")
-                
-    TryBladeAbility()
+    SetEquipL("triskelion")
+    SetEquipR("aether shield")
 
     // Mini Boss
-    ?foe = boss & foe.distance < 30 &
-    ^foe = bomb_cart
+    ?foe = explode
         MineMiniboss()
+        return
 
     // Boss
     ?foe = boss & foe.distance < 30 &
     ^foe = bronze_guardian
         MineBoss()
+        return
 
-func MineMiniboss()
-    EquipSet(aetherWands)
+    // General
+    DoubleBlade()
+
+    ?foe.distance >= 16 & foe.distance < 20
+        EquipDash()
 
     ?foe.distance < 10
-        TryBardicheAbility()
-
-        // RUH ROH RAGGY
-        ?ItemCD("bardiche") < 870 & 
-        ^ItemCD("bardiche") > 0
-            SetEquipL("mind")
+        SetEquip("ice staff")
+                
+func MineMiniboss()
+    ?foe.distance <= 16 & foe.distance >= 11
+        SetEquipR("dash") // no bash
+    ?foe.distance < 8
+        SetEquipR("mind")
 
 func MineBoss() 
+    ?item.potion ! empty
+        activate potion
+
     ?hp = maxhp
         EquipSet(aetherWands)
     :
         EquipSet(vigorWands)
 
-    var aiState = 0
-
     // Attack
     ?foe.state = 32
         ?foe.time > 15
             SetEquipL("mind")
-            SetEquipR("ouroboros")
+            SetEquipR("aether shield")
             aiState = 1
     // Cooldown - can melee
     :?foe.state = 33
@@ -512,7 +566,7 @@ func Icy()
         ?foe.distance >= 16 
             EquipDash()
             return
-        SetEquip("bardiche")
+        SetEquip("ice staff")
 
 func IceBoss() 
     // ice sword until fully chilled then
@@ -530,7 +584,7 @@ func IceBoss()
     // Pause skip
     ?shouldPauseSkip & !hasPauseSkipped
         hasPauseSkipped = true
-        loc.Pause()
+        ui.OpenInv()
         return
 
     MaskAbility()
@@ -554,7 +608,7 @@ func IceBoss()
         ?foe.distance > 10
             EquipDash()
         :
-            SetEquip("bardiche")
+            EquipSet(iceSwords)
             TryBardicheAbility()
 
 // ===================
@@ -618,8 +672,8 @@ func HUD()
 
     // Time
     var current = 
-        ^FormatTime(time) + " " + 
-        ^time + "F"
+        ^FormatTime(totaltime) + " " + 
+        ^totaltime + "F"
     var best = 
         ^FormatTime(loc.bestTime) + " " + 
         ^loc.bestTime + "F"
@@ -646,6 +700,7 @@ func Main()
     toEquipR = ""
     toEquip = ""
     shouldActivate = false
+    foeDebuffs = foe.debuffs.string
     ?loc.begin | loc.loop
         ResetGlobals()
 

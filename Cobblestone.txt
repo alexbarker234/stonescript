@@ -1,4 +1,5 @@
 // Weapon setups
+// Wands
 var vigorWands = [
     ^"vigor wand +11", 
     ^"vigor wand +10"]
@@ -11,12 +12,17 @@ var fireWands = [
 var stunlock = [
     ^"stone hammer +9", 
     ^"aether hammer"]
+
+// Swords
 var unmakeSwords = [
     ^"aether sword dU +5", 
     ^"aether sword dU +4"]
 var iceSwords = [
     ^"ice sword", 
     ^"ice sword -gold"]
+var fireSwords = [
+    ^"fire sword +7", 
+    ^"fire sword +8"]
 
 // Data vars
 var allAbilities = [
@@ -38,11 +44,28 @@ var hasEncountedBoss = false
 var hasPauseSkipped = false
 var aiState = 0
 
+var foeDebuffs = ""
+var smiteStack = 0
+var chillStack = 0
+
 func ResetGlobals()
     hasEncountedBoss = false
     hasPauseSkipped = false
     aiState = 0
 
+func ResetGlobalsPerFrame()
+    foeDebuffs = foe.debuffs.string
+    smiteStack = 
+    ^GetEffectStack(buffs.string,"smite")
+    >`0,8, debuffs: @foeDebuffs@
+    chillStack = 
+    ^GetEffectStack(foeDebuffs,"debuff_chill")
+    // Equip resets
+    toEquipL = ""
+    toEquipR = ""
+    toEquip = ""
+    shouldActivate = false
+    
 // Find weak rune to use later
 var weakRune = stone
 ?foe = vigor
@@ -55,10 +78,6 @@ var weakRune = stone
     weakRune = aether
 ?foe = aether
     weakRune = vigor
-
-var foeDebuffs = foe.debuffs.string
-var smiteStack = 
-    ^GetEffectStack(buffs.string,"smite")
 
 // Helper Functions
 func Between(value, min, max)
@@ -145,7 +164,6 @@ func TryBardicheAbility()
 func BrewPot(toBrew)
     ?!loc.begin
         return
-    >@toBrew@
     ?toBrew = "experience"
         brew wood + wood
     :?toBrew = "strength"
@@ -233,9 +251,6 @@ func Rocky()
 
     ?foe.distance > 20
         return
-
-    var chillStack = 
-    ^GetEffectStack(foeDebuffs,"debuff_chill")
 
     MaskAbility()
 
@@ -459,9 +474,7 @@ func HallsBoss()
     ?foe.distance >= 10 
         EquipDash()
         return
-    var chillStack = 
-    ^GetEffectStack(foeDebuffs,"debuff_chill")
-    
+
     ?chillStack < 6
         EquipSet(iceSwords)
     :
@@ -573,19 +586,21 @@ func Icy()
         ?foe.distance >= 16 
             EquipDash()
             return
+        ?smiteStack = 0
+            EquipSet(fireSwords)
+            return
         SetEquip("ice staff")
 
 func IceBoss() 
-    // ice sword until fully chilled then
-    // fire sword
-    >`0,7,Dist:@foe.distance@
-
     ?item.potion ! empty
         activate potion
 
     // intro state
     ?foe.armor > 0
-        SetEquip("bardiche")
+        ?foe.distance > 10
+            EquipDash() 
+        :
+            EquipSet(fireSwords)
         return
 
     // Pause skip
@@ -600,23 +615,17 @@ func IceBoss()
     ?foe.state = 133
         EquipSet(fireWands)
         return
-
-    // Shovel strat
-    ?loc.stars <= 5
-        ?foe.distance <= 2
-            SetEquip("bardiche")
-            TryBardicheAbility()
-        :?foe.distance <= 5
-            SetEquip("shovel")
-        :?foe.distance > 5
-            EquipDash()
-    // normal
+    >`0,9,@chillStack@
+    // General strat
+    ?foe.distance > 10
+        EquipDash()
     :
-        ?foe.distance > 10
-            EquipDash()
-        :
+        ?chillStack < 6
             EquipSet(iceSwords)
-            TryBardicheAbility()
+        :
+            >`0,9,@chillStack@ - fire
+            EquipSet(fireSwords)
+        TryBardicheAbility()
 
 // ===================
 // Temple 
@@ -697,20 +706,11 @@ func HUD()
     >`0,@bottom@,Avg:
     >`7,@bottom@,@average@
 
-
 func Main()
     // Always run animation cancel
     RunAAC()
 
-    // Reset variables
-    toEquipL = ""
-    toEquipR = ""
-    toEquip = ""
-    shouldActivate = false
-    foeDebuffs = foe.debuffs.string
-    var smiteStack = 
-        ^GetEffectStack(buffs.string,"smite")
-
+    ResetGlobalsPerFrame()
     ?loc.begin | loc.loop
         ResetGlobals()
 

@@ -57,7 +57,6 @@ func ResetGlobalsPerFrame()
     foeDebuffs = foe.debuffs.string
     smiteStack = 
     ^GetEffectStack(buffs.string,"smite")
-    >`0,8, debuffs: @foeDebuffs@
     chillStack = 
     ^GetEffectStack(foeDebuffs,"debuff_chill")
     // Equip resets
@@ -615,7 +614,6 @@ func IceBoss()
     ?foe.state = 133
         EquipSet(fireWands)
         return
-    >`0,9,@chillStack@
     // General strat
     ?foe.distance > 10
         EquipDash()

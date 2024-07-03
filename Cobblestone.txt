@@ -382,9 +382,10 @@ func Deadwood()
         ?item.potion ! empty & 
         ^Between(time, 60, 500)
             activate potion
-    :
+    :?loc.stars <= 10
         brew tar
-        //BrewBeserk()
+    :
+        BrewBeserk()
 
     SetEquipL("triskelion")
     SetEquipR("ice shield")
@@ -419,7 +420,7 @@ func DeadwoodMinibosss()
 func DeadwoodBoss()
     ?EquipDashInRange()
         return
-        
+
     >@item.potion@
     ?PotionIs("beserk")
         activate potion

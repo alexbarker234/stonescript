@@ -103,6 +103,12 @@ func Between(value, min, max)
 func ItemCD(itemName)
     return item.GetCooldown(itemName)
 
+func CanUse(itemName)
+    return item.CanActivate(itemName)
+
+func CanUseItem()
+    return item.CanActivate()
+
 func FormatTime(timeVal)
     return time.FormatCasual(timeVal)
 
@@ -135,7 +141,7 @@ func EquipItems()
         equip @toEquip@
 
 func ActivateItems()
-    ?shouldActivate & item.CanActivate()
+    ?shouldActivate & CanUseItem()
         activate R
 
 // Cross lookup
@@ -160,8 +166,8 @@ func EquipDash()
         SetEquipR("dashing shield")
 
 func InDashRange()
-    return foe.distance >= 11 & 
-    ^foe.distance <= 16
+    return 
+    ^foe.distance >= 11 & foe.distance <= 16
 
 func EquipDashInRange()
     ?InDashRange()
@@ -203,7 +209,7 @@ func TryBardicheAbility()
     ^cooldown <= 0 | cooldown > 870
         SetEquip("bardiche")
         ActivateItem()
-
+// broken idk why
 func BrewPot(toBrew)
     ?!loc.begin
         return
@@ -228,18 +234,21 @@ func BrewPot(toBrew)
     :?toBrew = "vampiric"
         brew tar + bronze
 
-func TryBladeAbility()
-    ?foe.distance <= 10 &
-    ^ItemCD("blade") <= 0 &
-    ^foe.count > 6
-        SetEquip("blade")
-        ActivateItem()
+func IsMushroomBoss()
+    return foe = mushroom_boss |
+    ^foe = mushroom_boss_fat | 
+    ^foe = mushroom_boss_skinny
 
 func QtrDash()
     ?foe.count ! 0
         return
     var cooldown = ItemCD("quarterstaff")
-    ?cooldown <= 0 | cooldown > 175
+    // Keep equipped
+    ?cooldown > 175
+        SetEquip("quarterstaff")
+    // Use 
+    :?cooldown <= 0 &
+    ^CanUseItem()
         SetEquip("quarterstaff")
         ActivateItem()
 
@@ -272,7 +281,7 @@ func FireTalisman()
     ?summon.count = 0 | cooldown > 130
         SetEquipR("fire talisman")
         ?cooldown <= 0
-        ^ & item.CanActivate()
+        ^ & CanUseItem()
             ActivateItem()
 
 func MaskAbility()
@@ -446,7 +455,8 @@ func CavesBoss()
 // Mushroom forest
 // ===================
 func Mushroom()
-    UseHealth(7)
+    ?loc.begin
+        brew wood + bronze
 
     SetEquipL("triskelion")
     SetEquipR("poison shield")
@@ -455,27 +465,32 @@ func Mushroom()
         return
 
     // Boss
-    ?foe = boss & foe.distance < 16
+    ?IsMushroomBoss() & foe.distance < 16
         MushroomBoss()
         return
+
+    // Miniboss
+    ?foe = boss & foe.distance < 16
+        EquipIceSwordsOr(poisonSwords)
+        return
+
     DoubleBlade()
 
     ?foe.distance <= 16
         EquipSet(iceWands)
 
-func MushroomBoss()  
-    ?foe ! mushroom_boss
-        QtrDash()
+func MushroomBoss() 
+    ?item.potion ! empty
+        activate potion
 
-    // Enoki
-    ?foe = mushroom_boss_skinny
+    ?foe = mushroom_boss_fat
         MaskAbility()
         
-    // ?foe = mushroom_boss_fat
-    //     SetEquip("poison staff")
-
-    EquipSet(iceSwords)
+    EquipIceSwordsOr(poisonSwords)
     TryBardicheAbility()   
+
+    ?foe ! mushroom_boss
+        QtrDash()
 
 // ===================
 // Haunted Halls

@@ -20,13 +20,13 @@ var stunlock = [
 var unmakeSwords = [
     ^"aether sword dU +10", 
     ^"aether sword dU +9"]
+var chillSwords = [
+    ^"ice sword", 
+    ^"ice sword -gold"]
+
 var poisonSwords = [
     ^"poison sword D +10", 
     ^"poison sword D +8"]
-
-var iceSwords = [
-    ^"ice sword", 
-    ^"ice sword -gold"]
 var fireSwords = [
     ^"fire sword +7", 
     ^"fire sword +8"]
@@ -35,7 +35,7 @@ var vigorSwords = [
     ^"vigor sword +10"]
 
 var elementalSwordDict = [
-    ["ice", iceSwords],
+    ["ice", chillSwords],
     ["fire", fireSwords],
     ["posion", poisonSwords],
     ["aether", unmakeSwords],
@@ -179,9 +179,10 @@ func EquipSet(set)
     SetEquipL(set[0])
     SetEquipR(set[1])
 
-func EquipIceSwordsOr(set)
+// Uses chill until fully chilled
+func EquipChillSwordsOr(set)
     ?chillStack < 6
-        EquipSet(iceSwords)
+        EquipSet(chillSwords)
     :
         EquipSet(set)
 
@@ -317,7 +318,7 @@ func Rocky()
             activate potion
         EquipSet(fireSwords)
 
-        EquipIceSwordsOr(fireSwords)
+        EquipChillSwordsOr(fireSwords)
             
     // Phase 2
     ?foe = dysangelos_elementalist
@@ -448,7 +449,7 @@ func CavesBoss()
 
     MaskAbility()
 
-    EquipSet(iceSwords)
+    EquipSet(chillSwords)
     TryBardicheAbility()
 
 // ===================
@@ -471,7 +472,7 @@ func Mushroom()
 
     // Miniboss
     ?foe = boss & foe.distance < 16
-        EquipIceSwordsOr(poisonSwords)
+        EquipChillSwordsOr(poisonSwords)
         return
 
     DoubleBlade()
@@ -486,7 +487,7 @@ func MushroomBoss()
     ?foe = mushroom_boss_fat
         MaskAbility()
         
-    EquipIceSwordsOr(poisonSwords)
+    EquipChillSwordsOr(poisonSwords)
     TryBardicheAbility()   
 
     ?foe ! mushroom_boss
@@ -510,7 +511,7 @@ func Halls()
     // Miniboss
     ?foe = spawner & foe = boss &
     ^foe.distance < 16
-        EquipIceSwordsOr(vigorSwords)
+        EquipChillSwordsOr(vigorSwords)
         return
 
     // General
@@ -538,7 +539,7 @@ func HallsBoss()
     ?EquipDashInRange()
         return
 
-    EquipIceSwordsOr(vigorSwords)
+    EquipChillSwordsOr(vigorSwords)
 
     // deal with skellys
     ?foe.count > 2
@@ -694,7 +695,7 @@ func IceBoss()
     ?foe.distance > 10
         EquipDash()
     :
-        EquipIceSwordsOr(fireSwords)
+        EquipChillSwordsOr(fireSwords)
         TryBardicheAbility()
 
 // ===================
@@ -719,7 +720,7 @@ func Temple()
 
     ?foe.distance < 16     
         ?foe = acronian_cultist
-            EquipSet(iceSwords)
+            EquipSet(chillSwords)
             return
 
         EquipSet(iceWands)
@@ -728,7 +729,7 @@ func TempleBoss()
     ?item.potion ! empty
         activate potion
 
-    ?foe.distance > 11 & foe.state ! 112
+    ?foe.distance > 11 & foe.state < 100
         EquipDash()
         return
 
@@ -737,7 +738,7 @@ func TempleBoss()
         SetEquipL("mind")
         return
 
-    EquipSet(iceSwords)
+    EquipSet(chillSwords)
     //SetEquip("ice crossbow")
 
 func ColorCD(cd)

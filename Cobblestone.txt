@@ -15,14 +15,29 @@ var stunlock = [
 
 // Swords
 var unmakeSwords = [
-    ^"aether sword dU +5", 
-    ^"aether sword dU +4"]
+    ^"aether sword dU +10", 
+    ^"aether sword dU +9"]
+var poisonSwords = [
+    ^"poison sword D +10", 
+    ^"poison sword D +8"]
+
 var iceSwords = [
     ^"ice sword", 
     ^"ice sword -gold"]
 var fireSwords = [
     ^"fire sword +7", 
     ^"fire sword +8"]
+var vigorSwords = [
+    ^"vigor sword +7", 
+    ^"vigor sword +10"]
+
+var elementalSwordDict = [
+    ["ice", iceSwords],
+    ["fire", fireSwords],
+    ["posion", poisonSwords],
+    ["aether", unmakeSwords],
+    ["vigor", vigorSwords],
+]
 
 // Data vars
 var allAbilities = [
@@ -128,6 +143,12 @@ func xLookup(val, arr1, arr2)
     :
         return false
 
+func DictVal(dict, dictKey)
+    for i = 0 .. dict.Count()-1
+        var value = dict[i]
+        ?value[0] = dictKey
+            return value[1]
+
 // Misc Functions
 func EquipDash()
     ?ItemCD("bash") <= 0 
@@ -138,6 +159,17 @@ func EquipDash()
 func EquipSet(set) 
     SetEquipL(set[0])
     SetEquipR(set[1])
+
+// broken?
+func EquipIceSwordsOr(set)
+    ?chillStack < 6
+        EquipSet(iceSwords)
+    :
+        EquipSet(set)
+
+func PickupWhenClose()
+    ?pickup.distance < 10
+        SetEquipR("star")
 
 func GetEffectStack(str, uid)
     // Does not have
@@ -246,37 +278,48 @@ func RunAAC()
 
 // LOCATIONS
 func Rocky()
-    UseHealth(7)
+    //BrewPot("beserk")
+    ?loc.begin
+        brew wood + bronze
 
     ?foe.distance > 20
+        return
+
+    ?foe.distance > 10
+        EquipDash()
         return
 
     MaskAbility()
 
     // Phase 1 - Weak to fire
     ?foe = dysangelos_bearer
-        EquipSet(iceSwords)
-        ?foe.distance > 10
-            EquipDash()
+       ?item.potion ! empty & loc.stars <= 5
+            activate potion
+        EquipSet(fireSwords)
+
+        EquipIceSwordsOr(fireSwords)
             
     // Phase 2
     ?foe = dysangelos_elementalist
         // Use weak
-        SetEquipL(weakRune + " wand")
+        SetEquipL(weakRune + " sword")
         SetEquipR(weakRune + " shield")
 
     // Phase 3
     ?foe = dysangelos_perfected
-        EquipSet(iceSwords)
-        ?foe.distance > 10
-            EquipDash()
+        ?item.potion ! empty
+            activate potion
 
-        // yikers attack, TODO: dodge
-        ?foe.state = 115 & foe.time > 70
+        var weakness = FindDysaWeakness()
+        var swordSet = 
+        ^DictVal(elementalSwordDict,weakness)
+
+        EquipSet(swordSet)
+
+        // Dodge sky laser
+        ?foe.state = 115 & foe.time > 60
             SetEquipR("mind")
             return
-        ?(hp + armor) < 31
-            activate potion
 
     // slam his ass
     TryBardicheAbility()
@@ -309,8 +352,7 @@ func Deadwood()
 
     SetEquipL("triskelion")
     SetEquipR("ice shield")
-    ?pickup.distance < 10
-        SetEquipR("star")
+    PickupWhenClose()
 
     // Harvesting
     ?harvest.distance < 10 & shouldHarvest
@@ -344,7 +386,11 @@ func DeadwoodBoss()
 func Caves()
     // TODO move next screen and
     // use the snake on bolesh 
-    UseHealth(7)
+    BrewPot("berserk")
+
+    SetEquipL("triskelion")
+    SetEquipR("ice shield")
+    PickupWhenClose()
 
     // Miniboss - whys it called that
     ?foe = cool_bat & foe.distance < 20
@@ -361,14 +407,10 @@ func Caves()
     ?foe.distance >= 16 & foe.distance < 20 
     ^& foe ! medium_bat
         EquipDash()
+        return
 
-    // Fighting
-    ?foe.distance <= 16
-        ?loc.stars >= 8 | encounter.isElite | 
-        ^foe.hp > 100
-            SetEquip("bardiche")
-        :
-            EquipSet(vigorWands)
+    ?foe.distance <= 16 
+        SetEquip("ice staff")
 
 func CavesMiniBoss()
     ?foe.distance > 10
@@ -377,20 +419,35 @@ func CavesMiniBoss()
         EquipSet(stunlock)
 
 func CavesBoss()
-    ?loc.stars <= 5
-        SetEquip("bardiche")
-        TryBardicheAbility()
-    :
-        // 
-        ?foe.state = 142
-            SetEquipL("mind")
-            return
-        
-        ?foe.distance > 5
-            EquipDash()
+    ?item.potion ! empty
+        activate potion
 
-        // try chill
-        SetEquip("ice crossbow")
+    ?foe.distance > 16 & foe.state ! 142
+        EquipDash()
+        return
+    ?foe.state = 142 & foe.time = 60
+        SetEquipL("mind")
+        return
+
+    MaskAbility()
+
+    EquipSet(iceSwords)
+    TryBardicheAbility()
+
+    // ?loc.stars <= 5
+    //     SetEquip("bardiche")
+    //     TryBardicheAbility()
+    // :
+    //     // 
+    //     ?foe.state = 142
+    //         SetEquipL("mind")
+    //         return
+        
+    //     ?foe.distance > 5
+    //         EquipDash()
+
+    //     // try chill
+    //     SetEquip("ice crossbow")
 
 // ===================
 // Mushroom forest
@@ -489,12 +546,12 @@ func HallsBoss()
 // Boiling Mine
 // ===================       
 func Mine()
-    BrewPot("beserk")
-
+    ?loc.begin
+        brew wood + bronze
+        
     SetEquipL("triskelion")
     SetEquipR("aether shield")
-    ?pickup.distance < 10
-        SetEquipR("star")
+    PickupWhenClose()
 
     // Mini Boss
     ?foe = explode
@@ -515,8 +572,7 @@ func Mine()
 
     ?foe.distance < 16
         ?foe.GetCount(10) = 1 & smiteStack = 0
-            // todo aether swords
-            EquipSet(iceSwords)
+            EquipSet(unmakeSwords)
         :
             SetEquip("ice staff")
                 
@@ -564,18 +620,17 @@ func Icy()
     SetEquipR("fire shield")
 
     // Mark boss
-    ?foe = yeti
+    ?foe = yeti & foe.distance < 20 
         hasEncountedBoss = true
-
-    // Unmake pillar
-    ?(foe = ice_pillar | foe = ice_wall) & 
-    ^foe.distance < 20
-        EquipSet(unmakeSwords)
-        return
 
     // Boss
     ?hasEncountedBoss & foe.distance < 20 
         IceBoss()
+        return
+
+    ?foe = giant ice elemental & 
+    ^foe.distance < 20 
+        IceMiniboss()
         return
 
     // General
@@ -585,10 +640,22 @@ func Icy()
         ?foe.distance >= 16 
             EquipDash()
             return
+
+        // Unmake pillar
+        ?(foe = ice_pillar | foe = ice_wall) 
+            EquipSet(unmakeSwords)
+            return
+        
         ?smiteStack = 0
             EquipSet(fireSwords)
             return
         SetEquip("ice staff")
+
+func IceMiniboss()
+    ?foe.distance >= 16 
+        EquipDash()
+        return
+    EquipSet(fireSwords)
 
 func IceBoss() 
     ?item.potion ! empty
@@ -618,11 +685,7 @@ func IceBoss()
     ?foe.distance > 10
         EquipDash()
     :
-        ?chillStack < 6
-            EquipSet(iceSwords)
-        :
-            >`0,9,@chillStack@ - fire
-            EquipSet(fireSwords)
+        EquipIceSwordsOr(fireSwords)
         TryBardicheAbility()
 
 // ===================
@@ -631,8 +694,11 @@ func IceBoss()
 func Temple()
     BrewPot("berserk")
 
+    SetEquipL("triskelion")
+    SetEquipR("ice shield")
+
     // Boss
-    ?foe = boss & foe.distance < 20
+    ?foe = nagaraja & foe.distance < 20
         TempleBoss()
         return
 
@@ -641,15 +707,29 @@ func Temple()
     ?foe.distance < 20
         ?foe.distance > 16
             EquipDash()
-        :
-            SetEquip("ice crossbow")
+            return
+        
+        ?foe = acronian_cultist
+            EquipSet(iceSwords)
+            return
+
+        SetEquip("ice staff")
 
 func TempleBoss()
-    // TODO double ice sword
     ?item.potion ! empty
         activate potion
 
-    SetEquip("ice crossbow")
+    ?foe.distance > 16 & foe.state ! 112
+        EquipDash()
+        return
+
+    // Dodge Brick
+    ?foe.state = 112 & foe.time = 45
+        SetEquipL("mind")
+        return
+
+    EquipSet(iceSwords)
+    //SetEquip("ice crossbow")
 
 func ColorCD(cd)
     ?cd > 0
@@ -684,6 +764,8 @@ func HUD()
         >`0,6,State: @foe.state@ 
         ^Time: @foe.time@
     >`0,7,Dist: @foe.distance@
+    >`0,8,X: @pos.x@
+    
     // Time
     var current = 
         ^FormatTime(totaltime) + " " + 
@@ -715,8 +797,7 @@ func Main()
     // Default 
     SetEquipL("triskelion")
     SetEquipR("ouroboros")
-    ?pickup.distance < 10
-        SetEquipL("star")
+    PickupWhenClose()
 
     // always dash
     QtrDash()

@@ -383,10 +383,10 @@ func Deadwood()
         ^Between(time, 60, 500)
             activate potion
     :?loc.stars <= 10
-        brew tar
-    :
         BrewBeserk()
-
+    :
+        brew tar
+        
     SetEquipL("triskelion")
     SetEquipR("ice shield")
     PickupWhenClose()

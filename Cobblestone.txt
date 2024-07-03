@@ -21,12 +21,15 @@ var unmakeSwords = [
     ^"aether sword dU +10", 
     ^"aether sword dU +9"]
 var chillSwords = [
-    ^"ice sword", 
-    ^"ice sword -gold"]
+    ^"ice sword dI", 
+    ^"ice sword dI -gold"]
 
 var poisonSwords = [
     ^"poison sword D +10", 
     ^"poison sword D +8"]
+var iceSwords = [
+    ^"ice sword D +9", 
+    ^"ice sword D +8"]
 var fireSwords = [
     ^"fire sword +7", 
     ^"fire sword +8"]
@@ -35,7 +38,7 @@ var vigorSwords = [
     ^"vigor sword +10"]
 
 var elementalSwordDict = [
-    ["ice", chillSwords],
+    ["ice", iceSwords],
     ["fire", fireSwords],
     ["posion", poisonSwords],
     ["aether", unmakeSwords],
@@ -112,6 +115,12 @@ func CanUseItem()
 func FormatTime(timeVal)
     return time.FormatCasual(timeVal)
 
+func FoeWithin(val)
+    return foe.distance <= val & 
+    ^foe.distance >= 0 // why is this a problem
+
+func PotionIs(pot)
+    return item.potion = pot
 // Item Equip Helper
 var toEquipL = ""
 var toEquipR = ""
@@ -210,6 +219,10 @@ func TryBardicheAbility()
     ^cooldown <= 0 | cooldown > 870
         SetEquip("bardiche")
         ActivateItem()
+
+func BrewBeserk()
+    ?loc.begin
+        brew wood + bronze
 // broken idk why
 func BrewPot(toBrew)
     ?!loc.begin
@@ -312,6 +325,7 @@ func Rocky()
 
     MaskAbility()
 
+    // might not be weak to fire in new patch
     // Phase 1 - Weak to fire
     ?foe = dysangelos_bearer
        ?item.potion ! empty & loc.stars <= 5
@@ -369,7 +383,8 @@ func Deadwood()
         ^Between(time, 60, 500)
             activate potion
     :
-        UseHealth(7)
+        brew tar
+        //BrewBeserk()
 
     SetEquipL("triskelion")
     SetEquipR("ice shield")
@@ -379,26 +394,48 @@ func Deadwood()
     ?harvest.distance < 10 & shouldHarvest
         SetEquip("hatchet")
 
+    // Miniboss
+    ?(foe = wasp | foe = wasp_nest) & 
+    ^FoeWithin(16)
+        DeadwoodMinibosss()
+        return
     // Boss
-    ?foe = boss & foe.distance < 16
+    ?foe = boss & FoeWithin(16)
         DeadwoodBoss()
         return
 
     // General
     DoubleBlade()
-    ?foe.distance < 16     
+    ?FoeWithin(16)     
         ?EquipDashInRange()
             return
-        EquipSet(iceWands)
+        SetEquip("ice staff")
+
+func DeadwoodMinibosss()
+    ?EquipDashInRange()
+        return
+    EquipSet(iceWands)
 
 func DeadwoodBoss()
+    ?EquipDashInRange()
+        return
+        
+    >@item.potion@
+    ?PotionIs("beserk")
+        activate potion
+
     ?foe = poena
         EquipSet(stunlock)
+        TryBardicheAbility()
+
+        // Just restore HP at the end
+        ?PotionIs("health") & hp ! maxhp
+            activate potion
+
         // ?foe.state = 32
         //     SetEquipL("mind")
     :?foe = tree_boss
-        SetEquip("bardiche")
-        TryBardicheAbility()
+        EquipChillSwordsOr(vigorSwords)
 
 // ===================
 // Caves of Fear
@@ -406,18 +443,18 @@ func DeadwoodBoss()
 func Caves()
     // TODO move next screen and
     // use the snake on bolesh 
-    BrewPot("berserk")
+    BrewBeserk()
 
     SetEquipL("triskelion")
     SetEquipR("ice shield")
     PickupWhenClose()
 
     // Miniboss - whys it called that
-    ?foe = cool_bat & foe.distance < 16
+    ?foe = cool_bat & FoeWithin(16)
         CavesMiniBoss()
         return
     // Boss
-    ?foe = spider_boss & foe.distance < 16
+    ?foe = spider_boss & FoeWithin(16)
         CavesBoss()
         return
 
@@ -427,14 +464,15 @@ func Caves()
     ?EquipDashInRange()
         return
 
-    ?foe.distance <= 16 
+    ?FoeWithin(16)
         EquipSet(iceWands)
 
 func CavesMiniBoss()
-    ?foe.distance > 10
-        EquipDash()
-    :
-        EquipSet(stunlock)
+    ?EquipDashInRange()
+        return
+
+    EquipChillSwordsOr(iceSwords)
+    //EquipSet(stunlock)
 
 func CavesBoss()
     ?item.potion ! empty
@@ -449,15 +487,14 @@ func CavesBoss()
 
     MaskAbility()
 
-    EquipSet(chillSwords)
+    EquipChillSwordsOr(iceSwords)
     TryBardicheAbility()
 
 // ===================
 // Mushroom forest
 // ===================
 func Mushroom()
-    ?loc.begin
-        brew wood + bronze
+    BrewBeserk()
 
     SetEquipL("triskelion")
     SetEquipR("poison shield")
@@ -466,18 +503,18 @@ func Mushroom()
         return
 
     // Boss
-    ?IsMushroomBoss() & foe.distance < 16
+    ?IsMushroomBoss() & FoeWithin(16)
         MushroomBoss()
         return
 
     // Miniboss
-    ?foe = boss & foe.distance < 16
+    ?foe = boss & FoeWithin(16)
         EquipChillSwordsOr(poisonSwords)
         return
 
     DoubleBlade()
 
-    ?foe.distance <= 16
+    ?FoeWithin(16)
         EquipSet(iceWands)
 
 func MushroomBoss() 
@@ -504,13 +541,13 @@ func Halls()
     SetEquipR("vigor shield")
 
     // Boss
-    ?foe = pallas & foe.distance < 16
+    ?foe = pallas & FoeWithin(16)
         HallsBoss()
         return
 
     // Miniboss
     ?foe = spawner & foe = boss &
-    ^foe.distance < 16
+    ^FoeWithin(16)
         EquipChillSwordsOr(vigorSwords)
         return
 
@@ -520,7 +557,7 @@ func Halls()
     ?EquipDashInRange()
         return
 
-    ?foe.distance <= 16 
+    ?FoeWithin(16) 
         EquipSet(iceWands)
 
 func HallsBoss()
@@ -564,7 +601,7 @@ func Mine()
         return
 
     // Boss
-    ?foe = boss & foe.distance < 30 &
+    ?foe = boss & FoeWithin(20) &
     ^foe = bronze_guardian
         MineBoss()
         return
@@ -575,7 +612,7 @@ func Mine()
     ?EquipDashInRange()
         return
 
-    ?foe.distance < 16
+    ?FoeWithin(16)
         ?foe.GetCount(10) = 1 & smiteStack = 0
             EquipSet(unmakeSwords)
             return
@@ -611,8 +648,8 @@ func MineBoss()
             TryBardicheAbility()
     :
         aiState = 0
-        // todo: aether crossbow speed enchant
-        EquipSet(aetherWands)
+        SetEquip("aether crossbow")
+        //EquipSet(aetherWands)
 
 
 // ===================
@@ -626,16 +663,16 @@ func Icy()
     SetEquipR("fire shield")
 
     // Mark boss
-    ?foe = yeti & foe.distance < 16 
+    ?foe = yeti & FoeWithin(16)
         hasEncountedBoss = true
 
     // Boss
-    ?hasEncountedBoss & foe.distance < 16 
+    ?hasEncountedBoss & FoeWithin(16) 
         IceBoss()
         return
 
     ?foe = giant ice elemental & 
-    ^foe.distance < 16 
+    ^FoeWithin(16)
         IceMiniboss()
         return
 
@@ -645,7 +682,7 @@ func Icy()
     ?EquipDashInRange()
         return
 
-    ?foe.distance < 16
+    ?FoeWithin(16)
         // Unmake pillar
         ?(foe = ice_pillar | foe = ice_wall) 
             EquipSet(unmakeSwords)
@@ -708,7 +745,7 @@ func Temple()
     SetEquipR("ice shield")
 
     // Boss
-    ?foe = nagaraja & foe.distance < 16
+    ?foe = nagaraja & FoeWithin(16)
         TempleBoss()
         return
 
@@ -718,9 +755,9 @@ func Temple()
     ?EquipDashInRange()
         return
 
-    ?foe.distance < 16     
+    ?FoeWithin(16)
         ?foe = acronian_cultist
-            EquipSet(chillSwords)
+            EquipChillSwordsOr(iceSwords)
             return
 
         EquipSet(iceWands)
@@ -729,7 +766,7 @@ func TempleBoss()
     ?item.potion ! empty
         activate potion
 
-    ?foe.distance > 11 & foe.state < 100
+    ?foe.distance > 11 & foe.state ! 112
         EquipDash()
         return
 
@@ -738,7 +775,7 @@ func TempleBoss()
         SetEquipL("mind")
         return
 
-    EquipSet(chillSwords)
+    EquipChillSwordsOr(iceSwords)
     //SetEquip("ice crossbow")
 
 func ColorCD(cd)

@@ -2,7 +2,7 @@
 // Wands
 var vigorWands = [
     ^"vigor wand +11", 
-    ^"vigor wand +10"]
+    ^"vigor wand +12"]
 var aetherWands = [
     ^"aether wand *8", 
     ^"aether wand *7"]
@@ -167,6 +167,28 @@ func DictVal(dict, dictKey)
         ?value[0] = dictKey
             return value[1]
 
+// Potion Funcs
+func BrewBeserk()
+    ?loc.begin
+        brew wood + bronze
+
+func BrewStrength()
+    ?loc.begin
+        brew stone
+
+func UseHealth(hp_threshold)
+    ?loc.begin
+        brew tar
+    ?hp < hp_threshold
+        activate potion
+
+func UsePot()
+    ?item.potion ! empty
+        activate potion
+func UsePotWhen(condition)
+    ?item.potion ! empty & condition
+        activate potion
+
 // Misc Functions
 func EquipDash()
     ?ItemCD("bash") <= 0 
@@ -220,34 +242,6 @@ func TryBardicheAbility()
         SetEquip("bardiche")
         ActivateItem()
 
-func BrewBeserk()
-    ?loc.begin
-        brew wood + bronze
-// broken idk why
-func BrewPot(toBrew)
-    ?!loc.begin
-        return
-    ?toBrew = "experience"
-        brew wood + wood
-    :?toBrew = "strength"
-        brew stone + stone
-    :?toBrew = "healing"
-        brew tar + tar
-    :?toBrew = "lightning"
-        brew bronze + bronze
-    :?toBrew = "invisibility"
-        brew wood + stone
-    :?toBrew = "cleansing"
-        brew wood + tar
-    :?toBrew = "berserk"
-        brew wood + bronze
-    :?toBrew = "defensive"
-        brew stone + tar
-    :?toBrew = "lucky"
-        brew stone + bronze
-    :?toBrew = "vampiric"
-        brew tar + bronze
-
 func IsMushroomBoss()
     return foe = mushroom_boss |
     ^foe = mushroom_boss_fat | 
@@ -284,12 +278,6 @@ func DoubleBlade()
         return true
     return scrolling > 0
 
-func UseHealth(hp_threshold)
-    ?loc.begin
-        brew tar
-    ?hp < hp_threshold
-        activate potion
-
 func FireTalisman()
     var cooldown = ItemCD("fire_talisman")
     ?summon.count = 0 | cooldown > 130
@@ -313,9 +301,7 @@ func RunAAC()
 
 // LOCATIONS
 func Rocky()
-    //BrewPot("beserk")
-    ?loc.begin
-        brew wood + bronze
+    BrewBeserk()
 
     ?foe.distance > 16
         return
@@ -328,8 +314,7 @@ func Rocky()
     // might not be weak to fire in new patch
     // Phase 1 - Weak to fire
     ?foe = dysangelos_bearer
-       ?item.potion ! empty & loc.stars <= 5
-            activate potion
+        UsePotWhen(loc.stars <= 5)
         EquipSet(fireSwords)
 
         EquipChillSwordsOr(fireSwords)
@@ -342,8 +327,7 @@ func Rocky()
 
     // Phase 3
     ?foe = dysangelos_perfected
-        ?item.potion ! empty
-            activate potion
+        UsePot()
 
         var weakness = FindDysaWeakness()
         var swordSet = 
@@ -476,8 +460,7 @@ func CavesMiniBoss()
     //EquipSet(stunlock)
 
 func CavesBoss()
-    ?item.potion ! empty
-        activate potion
+    UsePot()
 
     ?foe.distance > 11 & foe.state ! 142
         EquipDash()
@@ -519,8 +502,7 @@ func Mushroom()
         EquipSet(iceWands)
 
 func MushroomBoss() 
-    ?item.potion ! empty
-        activate potion
+    UsePot()
 
     ?foe = mushroom_boss_fat
         MaskAbility()
@@ -535,11 +517,14 @@ func MushroomBoss()
 // Haunted Halls
 // ===================
 func Halls()
-    ?loc.begin
-        brew wood + bronze
+    BrewBeserk()
 
     SetEquipL("triskelion")
     SetEquipR("vigor shield")
+
+    ?loc.stars <= 5
+        Halls5()
+        return
 
     // Boss
     ?foe = pallas & FoeWithin(16)
@@ -561,9 +546,24 @@ func Halls()
     ?FoeWithin(16) 
         EquipSet(iceWands)
 
+// Optimised for 5* - barely faster
+func Halls5()
+    BrewBeserk()
+
+    ?EquipDashInRange()
+        return
+
+    ?foe = boss & FoeWithin(16)
+        UsePot()
+        MaskAbility()
+        EquipSet(vigorSwords)
+        return
+
+    ?FoeWithin(16)
+        EquipSet(vigorWands)
+
 func HallsBoss()
-    ?item.potion ! empty
-        activate potion
+    UsePot()
 
     MaskAbility()
 
@@ -589,9 +589,12 @@ func HallsBoss()
 // Boiling Mine
 // ===================       
 func Mine()
-    ?loc.begin
-        brew wood + bronze
-        
+    ?loc.stars <= 10
+        BrewBeserk()
+    :
+        // Extra armour damage
+        BrewStrength()
+
     SetEquipL("triskelion")
     SetEquipR("aether shield")
     PickupWhenClose()
@@ -626,8 +629,7 @@ func MineMiniboss()
         SetEquipR("mind")
 
 func MineBoss() 
-    ?item.potion ! empty
-        activate potion
+    UsePot()
 
     MaskAbility()
 
@@ -657,8 +659,7 @@ func MineBoss()
 // Icy Ridge
 // ===================
 func Icy()
-    ?loc.begin
-        brew wood + bronze
+    BrewBeserk()
 
     SetEquipL("triskelion")
     SetEquipR("fire shield")
@@ -706,8 +707,7 @@ func IceMiniboss()
     EquipSet(fireSwords)
 
 func IceBoss() 
-    ?item.potion ! empty
-        activate potion
+    UsePot()
 
     // intro state
     ?foe.armor > 0
@@ -740,7 +740,7 @@ func IceBoss()
 // Temple 
 // ===================
 func Temple()
-    BrewPot("berserk")
+    BrewBeserk()
 
     SetEquipL("triskelion")
     SetEquipR("ice shield")
@@ -764,8 +764,7 @@ func Temple()
         EquipSet(iceWands)
 
 func TempleBoss()
-    ?item.potion ! empty
-        activate potion
+    UsePot()
 
     ?foe.distance > 11 & foe.state ! 112
         EquipDash()

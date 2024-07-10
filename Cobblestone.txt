@@ -129,8 +129,12 @@ func FormatTime(timeVal)
   return time.FormatCasual(timeVal)
 
 func FoeWithin(val)
-  return foe.distance <= val & 
-  ^foe.distance >= 0 // why is this a problem
+  // enemies can be behind sometimes
+  return FoeBetween(0, val)
+
+func FoeBetween(min, max)
+  return foe.distance >= min &
+  ^foe.distance <= max
 
 func PotionIs(pot)
   return item.potion = pot
@@ -210,8 +214,7 @@ func EquipDash()
     SetEquipR("dashing shield")
 
 func InDashRange()
-  return 
-  ^foe.distance >= 11 & foe.distance <= 16
+  return FoeBetween(11,16)
 
 func EquipDashInRange()
   ?InDashRange()
@@ -268,7 +271,7 @@ func IsMushroomBoss()
 // ABILITIES
 func TryBardicheAbility()
   var cooldown = ItemCD("bardiche")
-  ?foe.distance <= 10 &
+  ?FoeWithin(10) &
   ^cooldown <= 0 | cooldown > 870
     SetEquip("bardiche")
     ActivateItem()
@@ -297,7 +300,7 @@ func DoubleBlade()
     scrolling = 0
     screen.ResetOffset()
   ?bladeReady & 
-  ^foe.distance < 25 & 
+  ^FoeWithin(25) & 
   ^(foe.count > 5 | scrolling > 15)
     SetEquip("blade")
     ActivateItem()
@@ -334,7 +337,7 @@ func RunAAC()
 func Rocky()
   BrewBeserk()
 
-  ?foe.distance > 16
+  ?!FoeWithin(16)
     return
 
   ?foe = acronian_scout
@@ -525,9 +528,12 @@ func CavesMiniBoss()
 func CavesBoss()
   UsePot()
 
-  ?foe.distance > 11 & foe.state ! 142
+  // Dash
+  ?foe.state ! 142 & InDashRange()
     EquipDash()
     return
+    
+  // Dodge
   ?foe.state = 142 & foe.time = 60
     SetEquipL("mind")
     return
@@ -686,9 +692,9 @@ func Mine()
     EquipSet(iceWands)
         
 func MineMiniboss()
-  ?foe.distance <= 16 & foe.distance >= 11
+  ?FoeBetween(11,16)
     SetEquipR("dash") // no bash
-  ?foe.distance < 8
+  ?FoeWithin(8)
     SetEquipR("mind")
 
 func MineBoss() 
@@ -774,10 +780,10 @@ func IceBoss()
 
   // intro state
   ?foe.armor > 0
-    ?foe.distance > 10
-      EquipDash() 
-    :
-      EquipSet(fireSwords)
+    ?EquipDashInRange()
+      return
+
+    EquipSet(fireSwords)
     return
 
   // Pause skip
@@ -788,16 +794,17 @@ func IceBoss()
 
   MaskAbility()
 
-  // blowing
+  // blowing - fire crossbow is better
   ?foe.state = 133
     EquipSet(fireWands)
     return
+
   // General strat
-  ?foe.distance > 10
-    EquipDash()
-  :
-    EquipChillSwordsOr(fireSwords)
-    TryBardicheAbility()
+  ?EquipDashInRange()
+    return
+
+  EquipChillSwordsOr(fireSwords)
+  TryBardicheAbility()
 
 // ===================
 // Temple 
@@ -829,7 +836,7 @@ func Temple()
 func TempleBoss()
   UsePot()
 
-  ?foe.distance > 11 & foe.state ! 112
+  ?foe.state ! 112 & InDashRange()
     EquipDash()
     return
 

@@ -1,61 +1,61 @@
 // Weapon setups
 // Wands
 var vigorWands = [
-    ^"vigor wand +11", 
-    ^"vigor wand +12"]
+  ^"vigor wand +11", 
+  ^"vigor wand +12"]
 var aetherWands = [
-    ^"aether wand *8", 
-    ^"aether wand *7"]
+  ^"aether wand *8", 
+  ^"aether wand *7"]
 var fireWands = [
-    ^"fire wand *8", 
-    ^"fire wand *7"]
+  ^"fire wand *8", 
+  ^"fire wand *7"]
 var iceWands = [
-    ^"ice wand +11", 
-    ^"ice wand +8"]
+  ^"ice wand +11", 
+  ^"ice wand +8"]
 var stunlock = [
-    ^"stone hammer +9", 
-    ^"aether hammer"]
+  ^"stone hammer +9", 
+  ^"aether hammer"]
 
 // Hammers
 var armorHammers = [
-    "poison hammer D",
-    "ice hammer D"
+  "poison hammer D",
+  "ice hammer D"
 ]
 
 // Swords
 var unmakeSwords = [
-    ^"aether sword dU +10", 
-    ^"aether sword dU +9"]
+  ^"aether sword dU +10", 
+  ^"aether sword dU +9"]
 var chillSwords = [
-    ^"ice sword dI", 
-    ^"ice sword dI -gold"]
+  ^"ice sword dI", 
+  ^"ice sword dI -gold"]
 var healingSwords = [
-    "vigor sword dL +10",
-    "vigor sword dL +11"]
+  "vigor sword dL +10",
+  "vigor sword dL +11"]
 
 var poisonSwords = [
-    ^"poison sword D +10", 
-    ^"poison sword D +8"]
+  ^"poison sword D +10", 
+  ^"poison sword D +8"]
 var iceSwords = [
-    ^"ice sword D +9", 
-    ^"ice sword D +8"]
+  ^"ice sword D +9", 
+  ^"ice sword D +8"]
 var fireSwords = [
-    ^"fire sword D +7", 
-    ^"fire sword D +8"]
+  ^"fire sword D +7", 
+  ^"fire sword D +8"]
 var vigorSwords = [
-    ^"vigor sword D +11", 
-    ^"vigor sword D +10"]
+  ^"vigor sword D +11", 
+  ^"vigor sword D +10"]
 
 var stoneSwords = [
-    "stone sword +10",
-    "stone sword +11"]
+  "stone sword +10",
+  "stone sword +11"]
 
 var elementalSwordDict = [
-    ["ice", iceSwords],
-    ["fire", fireSwords],
-    ["poison", poisonSwords],
-    ["aether", unmakeSwords],
-    ["vigor", vigorSwords],
+  ["ice", iceSwords],
+  ["fire", fireSwords],
+  ["poison", poisonSwords],
+  ["aether", unmakeSwords],
+  ["vigor", vigorSwords],
 ]
 
 // Data vars
@@ -65,8 +65,8 @@ var allAbilities = [
   "cinderwisp","quarterstaff","dash","bash",
 ]
 var abilityHUDNames = [
-    "mind","ham","bard", "bfg","arm","mask",
-    "tali","wisp","qtr","dash","bash"
+  "mind","ham","bard", "bfg","arm","mask",
+  "tali","wisp","qtr","dash","bash"
 ]
 // Config vars
 var shouldHarvest = false
@@ -82,55 +82,55 @@ var foeDebuffs = ""
 var smiteStack = 0
 
 func ResetGlobals()
-    hasEncountedBoss = false
-    hasPauseSkipped = false
-    aiState = 0
+  hasEncountedBoss = false
+  hasPauseSkipped = false
+  aiState = 0
 
 func ResetGlobalsPerFrame()
-    foeDebuffs = foe.debuffs.string
-    smiteStack = 
-    ^GetEffectStack(buffs.string,"smite")
-    // Equip resets
-    toEquipL = ""
-    toEquipR = ""
-    toEquip = ""
-    shouldActivate = false
-    
+  foeDebuffs = foe.debuffs.string
+  smiteStack = 
+  ^GetEffectStack(buffs.string,"smite")
+  // Equip resets
+  toEquipL = ""
+  toEquipR = ""
+  toEquip = ""
+  shouldActivate = false
+  
 // Find weak rune to use later
 var weakRune = stone
 ?foe = vigor
-    weakRune = poison
+  weakRune = poison
 ?foe = poison
-    weakRune = ice
+  weakRune = ice
 ?foe = ice
-    weakRune = fire
+  weakRune = fire
 ?foe = fire
-    weakRune = aether
+  weakRune = aether
 ?foe = aether
-    weakRune = vigor
+  weakRune = vigor
 
 // Helper Functions
 func Between(value, min, max)
-    return value >= min & value <= max
+  return value >= min & value <= max
 
 func ItemCD(itemName)
-    return item.GetCooldown(itemName)
+  return item.GetCooldown(itemName)
 
 func CanUse(itemName)
-    return item.CanActivate(itemName)
+  return item.CanActivate(itemName)
 
 func CanUseItem()
-    return item.CanActivate()
+  return item.CanActivate()
 
 func FormatTime(timeVal)
-    return time.FormatCasual(timeVal)
+  return time.FormatCasual(timeVal)
 
 func FoeWithin(val)
-    return foe.distance <= val & 
-    ^foe.distance >= 0 // why is this a problem
+  return foe.distance <= val & 
+  ^foe.distance >= 0 // why is this a problem
 
 func PotionIs(pot)
-    return item.potion = pot
+  return item.potion = pot
 // Item Equip Helper
 var toEquipL = ""
 var toEquipR = ""
@@ -138,190 +138,190 @@ var toEquip = ""
 var shouldActivate = false
 
 func SetEquipL(itemName)
-    toEquipL = itemName
+  toEquipL = itemName
 
 func SetEquipR(itemName)
-    toEquipR = itemName
+  toEquipR = itemName
 
 func SetEquip(itemName)
-    toEquipL = ""
-    toEquipR = ""
-    toEquip = itemName
+  toEquipL = ""
+  toEquipR = ""
+  toEquip = itemName
 
 func ActivateItem()
-    shouldActivate = true
+  shouldActivate = true
 
 func EquipItems()
-    ?toEquipL
-        equipL @toEquipL@
-    ?toEquipR
-        equipR @toEquipR@
-    ?toEquip
-        equip @toEquip@
+  ?toEquipL
+    equipL @toEquipL@
+  ?toEquipR
+    equipR @toEquipR@
+  ?toEquip
+    equip @toEquip@
 
 func ActivateItems()
-    ?shouldActivate & CanUseItem()
-        activate R
+  ?shouldActivate & CanUseItem()
+    activate R
 
 // Cross lookup
 func xLookup(val, arr1, arr2)
-    var index = arr1.IndexOf(val)
-    ?index > -1
-        return arr2[index]
-    :
-        return false
+  var index = arr1.IndexOf(val)
+  ?index > -1
+    return arr2[index]
+  :
+    return false
 
 func DictVal(dict, dictKey)
-    for i = 0 .. dict.Count()-1
-        var value = dict[i]
-        ?value[0] = dictKey
-            return value[1]
+  for i = 0 .. dict.Count()-1
+    var value = dict[i]
+    ?value[0] = dictKey
+      return value[1]
 
 // Potion Funcs
 func BrewBeserk()
-    ?loc.begin
-        brew wood + bronze
+  ?loc.begin
+    brew wood + bronze
 
 func BrewStrength()
-    ?loc.begin
-        brew stone
+  ?loc.begin
+    brew stone
 
 func UseHealth(hp_threshold)
-    ?loc.begin
-        brew tar
-    ?hp < hp_threshold
-        activate potion
+  ?loc.begin
+    brew tar
+  ?hp < hp_threshold
+    activate potion
 
 func UsePot()
-    ?item.potion ! empty
-        activate potion
+  ?item.potion ! empty
+    activate potion
 func UsePotWhen(condition)
-    ?item.potion ! empty & condition
-        activate potion
+  ?item.potion ! empty & condition
+    activate potion
 
 // Misc Functions
 func EquipDash()
-    ?ItemCD("bash") <= 0 
-        SetEquipR("bashing shield")
-    :?ItemCD("dash") <= 0
-        SetEquipR("dashing shield")
+  ?ItemCD("bash") <= 0 
+    SetEquipR("bashing shield")
+  :?ItemCD("dash") <= 0
+    SetEquipR("dashing shield")
 
 func InDashRange()
-    return 
-    ^foe.distance >= 11 & foe.distance <= 16
+  return 
+  ^foe.distance >= 11 & foe.distance <= 16
 
 func EquipDashInRange()
-    ?InDashRange()
-        EquipDash()
-        return true
-    return false
+  ?InDashRange()
+    EquipDash()
+    return true
+  return false
 
 func EquipSet(set) 
-    SetEquipL(set[0])
-    SetEquipR(set[1])
+  SetEquipL(set[0])
+  SetEquipR(set[1])
 
 // Uses chill until fully chilled
 func EquipChillSwordsOr(set)
-    ?CanApplyDebuf("debuff_chill")
-        EquipSet(chillSwords)
-    :
-        EquipSet(set)
+  ?CanApplyDebuf("debuff_chill")
+    EquipSet(chillSwords)
+  :
+    EquipSet(set)
 
 func EquipSwordSet(rune)
-    EquipSet(DictVal(elementalSwordDict,rune))
+  EquipSet(DictVal(elementalSwordDict,rune))
 
 func PickupWhenClose()
-    ?pickup.distance < 10
-        SetEquipR("star")
+  ?pickup.distance < 10
+    SetEquipR("star")
 
 func GetEffectStack(str, uid)
-    // Does not have
-    ?!(str = uid)
-        return 0
-    // Split
-    var parts = 
-        ^string.Split(str, ":", ",", false)
-    var i = parts.IndexOf(uid)
-    // return duration for stun
-    ?uid = "stun"
-        return int.Parse(parts[i+2])
-    // stacks
-    return int.Parse(parts[i+1])
+  // Does not have
+  ?!(str = uid)
+    return 0
+  // Split
+  var parts = 
+    ^string.Split(str, ":", ",", false)
+  var i = parts.IndexOf(uid)
+  // return duration for stun
+  ?uid = "stun"
+    return int.Parse(parts[i+2])
+  // stacks
+  return int.Parse(parts[i+1])
 
 func CanApplyDebuf(debuff)
-    ?(foe = "immune_to_" + debuff)
-        return false
-    var stack = 
-        ^GetEffectStack(foeDebuffs, debuff)
-    ?debuff = "debuff_chill"
-        return stack < 6
+  ?(foe = "immune_to_" + debuff)
+    return false
+  var stack = 
+    ^GetEffectStack(foeDebuffs, debuff)
+  ?debuff = "debuff_chill"
+    return stack < 6
   return foe.debuffs.string ! debuff
 
 func IsMushroomBoss()
-    return foe = mushroom_boss |
-    ^foe = mushroom_boss_fat | 
-    ^foe = mushroom_boss_skinny
+  return foe = mushroom_boss |
+  ^foe = mushroom_boss_fat | 
+  ^foe = mushroom_boss_skinny
 
 // ABILITIES
 func TryBardicheAbility()
-    var cooldown = ItemCD("bardiche")
-    ?foe.distance <= 10 &
-    ^cooldown <= 0 | cooldown > 870
-        SetEquip("bardiche")
-        ActivateItem()
+  var cooldown = ItemCD("bardiche")
+  ?foe.distance <= 10 &
+  ^cooldown <= 0 | cooldown > 870
+    SetEquip("bardiche")
+    ActivateItem()
 
 func QtrDash()
-    ?foe.count ! 0
-        return
-    var cooldown = ItemCD("quarterstaff")
-    // Keep equipped
-    ?cooldown > 175
-        SetEquip("quarterstaff")
-    // Use 
-    :?cooldown <= 0 &
-    ^CanUseItem()
-        SetEquip("quarterstaff")
-        ActivateItem()
+  ?foe.count ! 0
+    return
+  var cooldown = ItemCD("quarterstaff")
+  // Keep equipped
+  ?cooldown > 175
+    SetEquip("quarterstaff")
+  // Use 
+  :?cooldown <= 0 &
+  ^CanUseItem()
+    SetEquip("quarterstaff")
+    ActivateItem()
 
 // Double-screen BFG/Smite
 var scrolling = 0
 func DoubleBlade()
-    var bladeReady = ItemCD("blade") <= 0
-    ?bladeReady & foe.count > 3
-        scrolling++
-        screen.Next()
-    :
-        scrolling = 0
-        screen.ResetOffset()
-    ?bladeReady & 
-    ^foe.distance < 25 & 
-    ^(foe.count > 5 | scrolling > 15)
-        SetEquip("blade")
-        ActivateItem()
-        return true
-    return scrolling > 0
+  var bladeReady = ItemCD("blade") <= 0
+  ?bladeReady & foe.count > 3
+    scrolling++
+    screen.Next()
+  :
+    scrolling = 0
+    screen.ResetOffset()
+  ?bladeReady & 
+  ^foe.distance < 25 & 
+  ^(foe.count > 5 | scrolling > 15)
+    SetEquip("blade")
+    ActivateItem()
+    return true
+  return scrolling > 0
 
 func FireTalisman()
-    var cooldown = ItemCD("fire_talisman")
-    ?cooldown > 130
-        SetEquipR("fire talisman")
-    ?summon.count = 0 & cooldown <= 0 &
-    ^CanUseItem()
-        SetEquipR("fire talisman")
-        ActivateItem()
+  var cooldown = ItemCD("fire_talisman")
+  ?cooldown > 130
+    SetEquipR("fire talisman")
+  ?summon.count = 0 & cooldown <= 0 &
+  ^CanUseItem()
+    SetEquipR("fire talisman")
+    ActivateItem()
 
 func MaskAbility()
-    ?ItemCD("mask") <= 0 
-        SetEquip("mask")
-        ActivateItem()
+  ?ItemCD("mask") <= 0 
+    SetEquip("mask")
+    ActivateItem()
 
 func RunAAC()
-    ?item.left.state = 3
-        equipL *0 wand //trash
-        equipL @item.left@
-    ?item.right.state = 3
-        equipR *0 shield //trash
-        equip @item.right@
+  ?item.left.state = 3
+    equipL *0 wand //trash
+    equipL @item.left@
+  ?item.right.state = 3
+    equipR *0 shield //trash
+    equip @item.right@
 
 // LOCATIONS
 
@@ -329,80 +329,80 @@ func RunAAC()
 // Rocky Plateau
 // ===================
 func Rocky()
-    BrewBeserk()
+  BrewBeserk()
 
-    ?foe.distance > 16
-        return
+  ?foe.distance > 16
+    return
 
-    ?foe = acronian_scout
-        RockyMiniboss()
-        return
-    RockyBoss()
+  ?foe = acronian_scout
+    RockyMiniboss()
+    return
+  RockyBoss()
 
 func RockyMiniboss()
-    ?EquipDashInRange()
-        return
-    EquipChillSwordsOr(stoneSwords)
+  ?EquipDashInRange()
+    return
+  EquipChillSwordsOr(stoneSwords)
 
 func RockyBoss()
-    MaskAbility()
+  MaskAbility()
 
-    var canChill = CanApplyDebuf("debuff_chill")
-    var canPoison = 
-    ^CanApplyDebuf("debuff_damage")
+  var canChill = CanApplyDebuf("debuff_chill")
+  var canPoison = 
+  ^CanApplyDebuf("debuff_damage")
 
-    // Phase 1
-    ?foe = dysangelos_bearer
-        UsePotWhen(loc.stars <= 5)
-        ?EquipDashInRange()
-            return
-        EquipChillSwordsOr(stoneSwords)
-            
-    // Phase 2
-    ?foe = dysangelos_elementalist
-        ?EquipDashInRange()
-            return
-        ?canChill
-            EquipSet(chillSwords)
-        :
-            EquipSwordSet(weakRune)
+  // Phase 1
+  ?foe = dysangelos_bearer
+    UsePotWhen(loc.stars <= 5)
+    ?EquipDashInRange()
+      return
+    EquipChillSwordsOr(stoneSwords)
+      
+  // Phase 2
+  ?foe = dysangelos_elementalist
+    ?EquipDashInRange()
+      return
+    ?canChill
+      EquipSet(chillSwords)
+    :
+      EquipSwordSet(weakRune)
 
-    // Phase 3
-    ?foe = dysangelos_perfected
-        UsePot()
+  // Phase 3
+  ?foe = dysangelos_perfected
+    UsePot()
 
-        // Dodge sky laser
-        ?foe.state = 115 & foe.time > 60
-            SetEquipR("mind")
-            return
+    // Dodge sky laser
+    ?foe.state = 115 & foe.time > 60
+      SetEquipR("mind")
+      return
 
-        ?EquipDashInRange()
-            return
+    ?EquipDashInRange()
+      return
 
-        var weakness = FindDysaWeakness()
-        // Chill
-        ?canChill
-            EquipSet(chillSwords)
-            return
-        // Delete armor 
-        ?foe.armor > 0
-            EquipSet(armorHammers)
-            return
-        // Reduce Damage
-        ?canPoison
-            SetEquipL("poison sword dP")
-            SetEquipR(weakness + " sword D")
-            return
+    var weakness = FindDysaWeakness()
+    // Chill
+    ?canChill
+      EquipSet(chillSwords)
+      return
+    // Delete armor 
+    ?foe.armor > 0
+      EquipSet(armorHammers)
+      return
+    // Reduce Damage
+    ?canPoison
+      SetEquipL("poison sword dP")
+      SetEquipR(weakness + " sword D")
+      return
 
-        // Attack normally
-        ?hp < maxhp
-            EquipSet(healingSwords)
-        :
-            EquipSwordSet(weakness)
+    // Attack normally
+    ?hp < maxhp
+      EquipSet(healingSwords)
+    :
+      EquipSwordSet(weakness)
 
 
-    // slam his ass
-    TryBardicheAbility()
+  // slam his ass
+  TryBardicheAbility()
 
 // For Phase 3 - gets strong to some elements
 func FindDysaWeakness()
@@ -421,519 +421,519 @@ func FindDysaWeakness()
 // Deadwood Canyon
 // ===================
 func Deadwood()
-    // Experience Potion
-    ?loc.stars <= 5 & xpFarm
-        brew wood
-        ?item.potion ! empty & 
-        ^Between(time, 60, 500)
-            activate potion
-    :?loc.stars <= 10
-        BrewBeserk()
-    :
-        brew tar
-        
-    SetEquipL("triskelion")
-    SetEquipR("ice shield")
-    PickupWhenClose()
+  // Experience Potion
+  ?loc.stars <= 5 & xpFarm
+    brew wood
+    ?item.potion ! empty & 
+    ^Between(time, 60, 500)
+      activate potion
+  :?loc.stars <= 10
+    BrewBeserk()
+  :
+    brew tar
+    
+  SetEquipL("triskelion")
+  SetEquipR("ice shield")
+  PickupWhenClose()
 
-    // Harvesting
-    ?harvest.distance < 10 & shouldHarvest
-        SetEquip("hatchet")
+  // Harvesting
+  ?harvest.distance < 10 & shouldHarvest
+    SetEquip("hatchet")
 
-    // Miniboss
-    ?(foe = wasp | foe = wasp_nest) & 
-    ^FoeWithin(16)
-        DeadwoodMinibosss()
-        return
-    // Boss
-    ?foe = boss & FoeWithin(16)
-        DeadwoodBoss()
-        return
+  // Miniboss
+  ?(foe = wasp | foe = wasp_nest) & 
+  ^FoeWithin(16)
+    DeadwoodMinibosss()
+    return
+  // Boss
+  ?foe = boss & FoeWithin(16)
+    DeadwoodBoss()
+    return
 
-    // General
-    DoubleBlade()
-    ?FoeWithin(16)     
-        ?EquipDashInRange()
-            return
-        SetEquip("ice staff")
+  // General
+  DoubleBlade()
+  ?FoeWithin(16)   
+    ?EquipDashInRange()
+      return
+    SetEquip("ice staff")
 
 func DeadwoodMinibosss()
-    ?EquipDashInRange()
-        return
-    EquipSet(iceWands)
+  ?EquipDashInRange()
+    return
+  EquipSet(iceWands)
 
 func DeadwoodBoss()
-    ?EquipDashInRange()
-        return
+  ?EquipDashInRange()
+    return
 
-    ?PotionIs("beserk")
-        activate potion
+  ?PotionIs("beserk")
+    activate potion
 
-    ?foe = poena
-        EquipSet(stunlock)
-        TryBardicheAbility()
+  ?foe = poena
+    EquipSet(stunlock)
+    TryBardicheAbility()
 
-        // Just restore HP at the end
-        ?PotionIs("health") & hp ! maxhp
-            activate potion
+    // Just restore HP at the end
+    ?PotionIs("health") & hp ! maxhp
+      activate potion
 
-        // ?foe.state = 32
-        //     SetEquipL("mind")
-    :?foe = tree_boss
-        EquipChillSwordsOr(vigorSwords)
+    // ?foe.state = 32
+    //   SetEquipL("mind")
+  :?foe = tree_boss
+    EquipChillSwordsOr(vigorSwords)
 
 // ===================
 // Caves of Fear
 // ===================
 func Caves()
-    // TODO move next screen and
-    // use the snake on bolesh 
-    BrewBeserk()
+  // TODO move next screen and
+  // use the snake on bolesh 
+  BrewBeserk()
 
-    SetEquipL("triskelion")
-    SetEquipR("ice shield")
-    PickupWhenClose()
+  SetEquipL("triskelion")
+  SetEquipR("ice shield")
+  PickupWhenClose()
 
-    // Miniboss - whys it called that
-    ?foe = cool_bat & FoeWithin(16)
-        CavesMiniBoss()
-        return
-    // Boss
-    ?foe = spider_boss & FoeWithin(16)
-        CavesBoss()
-        return
+  // Miniboss - whys it called that
+  ?foe = cool_bat & FoeWithin(16)
+    CavesMiniBoss()
+    return
+  // Boss
+  ?foe = spider_boss & FoeWithin(16)
+    CavesBoss()
+    return
 
-    // General
-    DoubleBlade()
+  // General
+  DoubleBlade()
 
-    ?EquipDashInRange()
-        return
+  ?EquipDashInRange()
+    return
 
-    ?FoeWithin(16)
-        EquipSet(iceWands)
+  ?FoeWithin(16)
+    EquipSet(iceWands)
 
 func CavesMiniBoss()
-    ?EquipDashInRange()
-        return
+  ?EquipDashInRange()
+    return
 
-    EquipChillSwordsOr(iceSwords)
-    //EquipSet(stunlock)
+  EquipChillSwordsOr(iceSwords)
+  //EquipSet(stunlock)
 
 func CavesBoss()
-    UsePot()
+  UsePot()
 
-    ?foe.distance > 11 & foe.state ! 142
-        EquipDash()
-        return
-    ?foe.state = 142 & foe.time = 60
-        SetEquipL("mind")
-        return
+  ?foe.distance > 11 & foe.state ! 142
+    EquipDash()
+    return
+  ?foe.state = 142 & foe.time = 60
+    SetEquipL("mind")
+    return
 
-    MaskAbility()
+  MaskAbility()
 
-    EquipChillSwordsOr(iceSwords)
-    TryBardicheAbility()
+  EquipChillSwordsOr(iceSwords)
+  TryBardicheAbility()
 
 // ===================
 // Mushroom forest
 // ===================
 func Mushroom()
-    BrewBeserk()
+  BrewBeserk()
 
-    SetEquipL("triskelion")
-    SetEquipR("poison shield")
+  SetEquipL("triskelion")
+  SetEquipR("poison shield")
 
-    ?EquipDashInRange()
-        return
+  ?EquipDashInRange()
+    return
 
-    // Boss
-    ?IsMushroomBoss() & FoeWithin(16)
-        MushroomBoss()
-        return
+  // Boss
+  ?IsMushroomBoss() & FoeWithin(16)
+    MushroomBoss()
+    return
 
-    // Miniboss
-    ?foe = boss & FoeWithin(16)
-        EquipChillSwordsOr(poisonSwords)
-        return
+  // Miniboss
+  ?foe = boss & FoeWithin(16)
+    EquipChillSwordsOr(poisonSwords)
+    return
 
-    DoubleBlade()
+  DoubleBlade()
 
-    ?FoeWithin(16)
-        EquipSet(iceWands)
+  ?FoeWithin(16)
+    EquipSet(iceWands)
 
 func MushroomBoss() 
-    UsePot()
+  UsePot()
 
-    ?foe = mushroom_boss_fat
-        MaskAbility()
-        
-    EquipChillSwordsOr(poisonSwords)
-    TryBardicheAbility()   
+  ?foe = mushroom_boss_fat
+    MaskAbility()
+    
+  EquipChillSwordsOr(poisonSwords)
+  TryBardicheAbility()   
 
-    ?foe ! mushroom_boss
-        QtrDash()
+  ?foe ! mushroom_boss
+    QtrDash()
 
 // ===================
 // Haunted Halls
 // ===================
 func Halls()
-    BrewBeserk()
+  BrewBeserk()
 
-    SetEquipL("triskelion")
-    SetEquipR("vigor shield")
+  SetEquipL("triskelion")
+  SetEquipR("vigor shield")
 
-    ?loc.stars <= 5
-        Halls5()
-        return
+  ?loc.stars <= 5
+    Halls5()
+    return
 
-    // Boss
-    ?foe = pallas & FoeWithin(16)
-        HallsBoss()
-        return
+  // Boss
+  ?foe = pallas & FoeWithin(16)
+    HallsBoss()
+    return
 
-    // Miniboss
-    ?foe = spawner & foe = boss &
-    ^FoeWithin(16)
-        EquipChillSwordsOr(vigorSwords)
-        return
+  // Miniboss
+  ?foe = spawner & foe = boss &
+  ^FoeWithin(16)
+    EquipChillSwordsOr(vigorSwords)
+    return
 
-    // General
-    DoubleBlade()
+  // General
+  DoubleBlade()
 
-    ?EquipDashInRange()
-        return
+  ?EquipDashInRange()
+    return
 
-    ?FoeWithin(16) 
-        EquipSet(iceWands)
+  ?FoeWithin(16) 
+    EquipSet(iceWands)
 
 // Optimised for 5* - barely faster
 func Halls5()
-    BrewBeserk()
+  BrewBeserk()
 
-    ?EquipDashInRange()
-        return
+  ?EquipDashInRange()
+    return
 
-    ?foe = boss & FoeWithin(16)
-        UsePot()
-        MaskAbility()
-        EquipSet(vigorSwords)
-        return
+  ?foe = boss & FoeWithin(16)
+    UsePot()
+    MaskAbility()
+    EquipSet(vigorSwords)
+    return
 
-    ?FoeWithin(16)
-        EquipSet(vigorWands)
+  ?FoeWithin(16)
+    EquipSet(vigorWands)
 
 func HallsBoss()
-    UsePot()
+  UsePot()
 
-    MaskAbility()
+  MaskAbility()
 
-    // Pause skip
-    ?shouldPauseSkip & !hasPauseSkipped &
-    ^foe = legless
-        hasPauseSkipped = true
-        ui.OpenInv()
-        return
+  // Pause skip
+  ?shouldPauseSkip & !hasPauseSkipped &
+  ^foe = legless
+    hasPauseSkipped = true
+    ui.OpenInv()
+    return
 
-    ?EquipDashInRange()
-        return
+  ?EquipDashInRange()
+    return
 
-    EquipChillSwordsOr(vigorSwords)
+  EquipChillSwordsOr(vigorSwords)
 
-    // deal with skellys
-    ?foe.count > 2
-        SetEquip("bardiche")
+  // deal with skellys
+  ?foe.count > 2
+    SetEquip("bardiche")
 
-    TryBardicheAbility()   
+  TryBardicheAbility()   
 
 // ===================
 // Boiling Mine
-// ===================       
+// ===================     
 func Mine()
-    ?loc.stars <= 10
-        BrewBeserk()
-    :
-        // Extra armor damage
-        BrewStrength()
+  ?loc.stars <= 10
+    BrewBeserk()
+  :
+    // Extra armor damage
+    BrewStrength()
 
-    SetEquipL("triskelion")
-    SetEquipR("aether shield")
-    PickupWhenClose()
+  SetEquipL("triskelion")
+  SetEquipR("aether shield")
+  PickupWhenClose()
 
-    // Mini Boss
-    ?foe = explode
-        MineMiniboss()
-        return
+  // Mini Boss
+  ?foe = explode
+    MineMiniboss()
+    return
 
-    // Boss
-    ?foe = boss & FoeWithin(20) &
-    ^foe = bronze_guardian
-        MineBoss()
-        return
+  // Boss
+  ?foe = boss & FoeWithin(20) &
+  ^foe = bronze_guardian
+    MineBoss()
+    return
 
-    // General
-    DoubleBlade()
+  // General
+  DoubleBlade()
 
-    ?EquipDashInRange()
-        return
+  ?EquipDashInRange()
+    return
 
-    ?FoeWithin(16)
-        ?foe.GetCount(10) = 1 & smiteStack = 0
-            EquipSet(unmakeSwords)
-            return
-        EquipSet(iceWands)
-                
+  ?FoeWithin(16)
+    ?foe.GetCount(10) = 1 & smiteStack = 0
+      EquipSet(unmakeSwords)
+      return
+    EquipSet(iceWands)
+        
 func MineMiniboss()
-    ?foe.distance <= 16 & foe.distance >= 11
-        SetEquipR("dash") // no bash
-    ?foe.distance < 8
-        SetEquipR("mind")
+  ?foe.distance <= 16 & foe.distance >= 11
+    SetEquipR("dash") // no bash
+  ?foe.distance < 8
+    SetEquipR("mind")
 
 func MineBoss() 
-    UsePot()
+  UsePot()
 
-    MaskAbility()
+  MaskAbility()
 
-    // Attack
-    ?foe.state = 32
-        ?foe.time > 15
-            SetEquipL("mind")
-            SetEquipR("aether shield")
-            aiState = 1
-    // Cooldown - can melee
-    :?foe.state = 33
-        ?aiState = 1
-            EquipDash()
-            ?ItemCD("dash") > 0 |
-            ^ItemCD("bash") > 0
-                aiState = 2
-        :
-            EquipSet(unmakeSwords)
-            TryBardicheAbility()
+  // Attack
+  ?foe.state = 32
+    ?foe.time > 15
+      SetEquipL("mind")
+      SetEquipR("aether shield")
+      aiState = 1
+  // Cooldown - can melee
+  :?foe.state = 33
+    ?aiState = 1
+      EquipDash()
+      ?ItemCD("dash") > 0 |
+      ^ItemCD("bash") > 0
+        aiState = 2
     :
-        aiState = 0
-        SetEquip("aether crossbow")
-        //EquipSet(aetherWands)
+      EquipSet(unmakeSwords)
+      TryBardicheAbility()
+  :
+    aiState = 0
+    SetEquip("aether crossbow")
+    //EquipSet(aetherWands)
 
 
 // ===================
 // Icy Ridge
 // ===================
 func Icy()
-    BrewBeserk()
+  BrewBeserk()
 
-    SetEquipL("triskelion")
-    SetEquipR("fire shield")
+  SetEquipL("triskelion")
+  SetEquipR("fire shield")
 
-    // Mark boss
-    ?foe = yeti & FoeWithin(16)
-        hasEncountedBoss = true
+  // Mark boss
+  ?foe = yeti & FoeWithin(16)
+    hasEncountedBoss = true
 
-    // Boss
-    ?hasEncountedBoss & FoeWithin(16) 
-        IceBoss()
-        return
+  // Boss
+  ?hasEncountedBoss & FoeWithin(16) 
+    IceBoss()
+    return
 
-    ?foe = giant ice elemental & 
-    ^FoeWithin(16)
-        IceMiniboss()
-        return
+  ?foe = giant ice elemental & 
+  ^FoeWithin(16)
+    IceMiniboss()
+    return
 
-    // General
-    DoubleBlade()
+  // General
+  DoubleBlade()
 
-    ?EquipDashInRange()
-        return
+  ?EquipDashInRange()
+    return
 
-    ?FoeWithin(16)
-        // Unmake pillar
-        ?(foe = ice_pillar | foe = ice_wall) 
-            EquipSet(unmakeSwords)
-            return
-        
-        ?smiteStack = 0
-            EquipSet(fireSwords)
-            return
-        EquipSet(iceWands)
+  ?FoeWithin(16)
+    // Unmake pillar
+    ?(foe = ice_pillar | foe = ice_wall) 
+      EquipSet(unmakeSwords)
+      return
+    
+    ?smiteStack = 0
+      EquipSet(fireSwords)
+      return
+    EquipSet(iceWands)
 
 func IceMiniboss()
-    ?EquipDashInRange()
-        return
+  ?EquipDashInRange()
+    return
 
-    var stunTime = 
-    ^GetEffectStack(foeDebuffs, "stun")
-    
-    >`0,10,stun:@stunTime@
+  var stunTime = 
+  ^GetEffectStack(foeDebuffs, "stun")
+  
+  >`0,10,stun:@stunTime@
 
-    EquipSet(fireSwords)
+  EquipSet(fireSwords)
 
 func IceBoss() 
-    UsePot()
+  UsePot()
 
-    // intro state
-    ?foe.armor > 0
-        ?foe.distance > 10
-            EquipDash() 
-        :
-            EquipSet(fireSwords)
-        return
-
-    // Pause skip
-    ?shouldPauseSkip & !hasPauseSkipped
-        hasPauseSkipped = true
-        ui.OpenInv()
-        return
-
-    MaskAbility()
-
-    // blowing
-    ?foe.state = 133
-        EquipSet(fireWands)
-        return
-    // General strat
+  // intro state
+  ?foe.armor > 0
     ?foe.distance > 10
-        EquipDash()
+      EquipDash() 
     :
-        EquipChillSwordsOr(fireSwords)
-        TryBardicheAbility()
+      EquipSet(fireSwords)
+    return
+
+  // Pause skip
+  ?shouldPauseSkip & !hasPauseSkipped
+    hasPauseSkipped = true
+    ui.OpenInv()
+    return
+
+  MaskAbility()
+
+  // blowing
+  ?foe.state = 133
+    EquipSet(fireWands)
+    return
+  // General strat
+  ?foe.distance > 10
+    EquipDash()
+  :
+    EquipChillSwordsOr(fireSwords)
+    TryBardicheAbility()
 
 // ===================
 // Temple 
 // ===================
 func Temple()
-    BrewBeserk()
+  BrewBeserk()
 
-    SetEquipL("triskelion")
-    SetEquipR("ice shield")
+  SetEquipL("triskelion")
+  SetEquipR("ice shield")
 
-    // Boss
-    ?foe = nagaraja & FoeWithin(16)
-        TempleBoss()
-        return
+  // Boss
+  ?foe = nagaraja & FoeWithin(16)
+    TempleBoss()
+    return
 
-    // General
-    DoubleBlade()
+  // General
+  DoubleBlade()
 
-    ?EquipDashInRange()
-        return
+  ?EquipDashInRange()
+    return
 
-    ?FoeWithin(16)
-        ?foe = acronian_cultist
-            EquipChillSwordsOr(iceSwords)
-            return
+  ?FoeWithin(16)
+    ?foe = acronian_cultist
+      EquipChillSwordsOr(iceSwords)
+      return
 
-        EquipSet(iceWands)
+    EquipSet(iceWands)
 
 func TempleBoss()
-    UsePot()
+  UsePot()
 
-    ?foe.distance > 11 & foe.state ! 112
-        EquipDash()
-        return
+  ?foe.distance > 11 & foe.state ! 112
+    EquipDash()
+    return
 
-    // Dodge Brick
-    ?foe.state = 112 & foe.time = 45
-        SetEquipL("mind")
-        return
+  // Dodge Brick
+  ?foe.state = 112 & foe.time = 45
+    SetEquipL("mind")
+    return
 
-    EquipChillSwordsOr(iceSwords)
-    //SetEquip("ice crossbow")
+  EquipChillSwordsOr(iceSwords)
+  //SetEquip("ice crossbow")
 
 func ColorCD(cd)
-    ?cd > 0
-        return "red"
-    return "green"
+  ?cd > 0
+    return "red"
+  return "green"
 
 func HUD()
-    // Disable utility belt
-    disable hud u 
+  // Disable utility belt
+  disable hud u 
 
-    var bottom = screen.h - 2
+  var bottom = screen.h - 2
 
-    // CD HUD
-    var x = screen.w - 10
-    var x2 = screen.w - 5
-    var y = 1
-    for abi : allAbilities
-        var cd = ItemCD(abi)     
-        var text = xLookup(abi,allAbilities,
-        ^abilityHUDNames)
-        var textCol = ColorCD(cd)
+  // CD HUD
+  var x = screen.w - 10
+  var x2 = screen.w - 5
+  var y = 1
+  for abi : allAbilities
+    var cd = ItemCD(abi)   
+    var text = xLookup(abi,allAbilities,
+    ^abilityHUDNames)
+    var textCol = ColorCD(cd)
 
-        >`@x@,@y@,#@textCol@,
-        ^@string.Capitalize(text)@
+    >`@x@,@y@,#@textCol@,
+    ^@string.Capitalize(text)@
 
-        >`@x2@,@y@,#@textCol@,
-        ^@time.FormatDigital(cd)@
-        y++
+    >`@x2@,@y@,#@textCol@,
+    ^@time.FormatDigital(cd)@
+    y++
 
-    // Boss state
-    ?foe = boss
-        >`0,6,State: @foe.state@ 
-        ^Time: @foe.time@
-    >`0,7,Dist: @foe.distance@
-    >`0,8,X: @pos.x@
-    >`0,9,Foe Count: @foe.count@
-    
-    // Time
-    var current = 
-        ^FormatTime(totaltime) + " " + 
-        ^totaltime + "F"
-    var best = 
-        ^FormatTime(loc.bestTime) + " " + 
-        ^loc.bestTime + "F"
-    var average = 
-        ^FormatTime(loc.averageTime) + " " + 
-        ^loc.averageTime + "F"
+  // Boss state
+  ?foe = boss
+    >`0,6,State: @foe.state@ 
+    ^Time: @foe.time@
+  >`0,7,Dist: @foe.distance@
+  >`0,8,X: @pos.x@
+  >`0,9,Foe Count: @foe.count@
+  
+  // Time
+  var current = 
+    ^FormatTime(totaltime) + " " + 
+    ^totaltime + "F"
+  var best = 
+    ^FormatTime(loc.bestTime) + " " + 
+    ^loc.bestTime + "F"
+  var average = 
+    ^FormatTime(loc.averageTime) + " " + 
+    ^loc.averageTime + "F"
 
-    >`0,@bottom - 2@,Cur:
-    >`7,@bottom - 2@,@current@
+  >`0,@bottom - 2@,Cur:
+  >`7,@bottom - 2@,@current@
 
-    >`0,@bottom - 1@,Best:
-    >`7,@bottom - 1@,@best@
+  >`0,@bottom - 1@,Best:
+  >`7,@bottom - 1@,@best@
 
-    >`0,@bottom@,Avg:
-    >`7,@bottom@,@average@
+  >`0,@bottom@,Avg:
+  >`7,@bottom@,@average@
 
 func Main()
-    // Always run animation cancel
-    RunAAC()
+  // Always run animation cancel
+  RunAAC()
 
-    ResetGlobalsPerFrame()
-    ?loc.begin | loc.loop
-        ResetGlobals()
+  ResetGlobalsPerFrame()
+  ?loc.begin | loc.loop
+    ResetGlobals()
 
-    // Default 
-    SetEquipL("triskelion")
-    SetEquipR("ouroboros")
-    PickupWhenClose()
+  // Default 
+  SetEquipL("triskelion")
+  SetEquipR("ouroboros")
+  PickupWhenClose()
 
-    // always dash
-    QtrDash()
+  // always dash
+  QtrDash()
 
-    ?loc = Rocky
-        Rocky()
-    :?loc = Deadwood
-        Deadwood()
-    :?loc = Caves
-        Caves()
-    :?loc = Mushroom
-        Mushroom()
-    :?loc = Halls
-        Halls()
-    :?loc = Mine
-        Mine()
-    :?loc = Icy
-        Icy()
-    :?loc = Temple
-        Temple()
+  ?loc = Rocky
+    Rocky()
+  :?loc = Deadwood
+    Deadwood()
+  :?loc = Caves
+    Caves()
+  :?loc = Mushroom
+    Mushroom()
+  :?loc = Halls
+    Halls()
+  :?loc = Mine
+    Mine()
+  :?loc = Icy
+    Icy()
+  :?loc = Temple
+    Temple()
 
-    // No deadwood - poena bites 
-    :?loc ! Deadwood
-        FireTalisman()
+  // No deadwood - poena bites 
+  :?loc ! Deadwood
+    FireTalisman()
 
-    EquipItems()
-    ActivateItems()
+  EquipItems()
+  ActivateItems()
 
-    HUD()
+  HUD()
 
 Main()

@@ -1,50 +1,53 @@
 // Weapon setups
 // Wands
 var vigorWands = [
-  ^"vigor wand +11", 
-  ^"vigor wand +12"]
+  "vigor wand +11", 
+  "vigor wand +12"]
 var aetherWands = [
-  ^"aether wand *8", 
-  ^"aether wand *7"]
+  "aether wand *8", 
+  "aether wand *7"]
 var fireWands = [
-  ^"fire wand *8", 
-  ^"fire wand *7"]
+  "fire wand *8", 
+  "fire wand *7"]
 var iceWands = [
-  ^"ice wand +11", 
-  ^"ice wand +8"]
-var stunlock = [
-  ^"stone hammer +9", 
-  ^"aether hammer"]
+  "ice wand +11", 
+  "ice wand +8"]
 
 // Hammers
 var armorHammers = [
   "poison hammer D",
-  "ice hammer D"
-]
+  "ice hammer D"]
+var stunlock = [
+  "stone hammer +9", 
+  "aether hammer"]
 
-// Swords
+// Effect Swords
 var unmakeSwords = [
-  ^"aether sword dU +10", 
-  ^"aether sword dU +9"]
+  "aether sword dU +10", 
+  "aether sword dU +9"]
 var chillSwords = [
-  ^"ice sword dI", 
-  ^"ice sword dI -gold"]
+  "ice sword dI", 
+  "ice sword dI -gold"]
 var healingSwords = [
   "vigor sword dL +10",
   "vigor sword dL +11"]
 
+// D Swords
 var poisonSwords = [
-  ^"poison sword D +10", 
-  ^"poison sword D +8"]
+  "poison sword D +10", 
+  "poison sword D +8"]
 var iceSwords = [
-  ^"ice sword D +9", 
-  ^"ice sword D +8"]
+  "ice sword D +9", 
+  "ice sword D +8"]
 var fireSwords = [
-  ^"fire sword D +7", 
-  ^"fire sword D +8"]
+  "fire sword D +7", 
+  "fire sword D +8"]
 var vigorSwords = [
-  ^"vigor sword D +11", 
-  ^"vigor sword D +10"]
+  "vigor sword D +11", 
+  "vigor sword D +10"]
+var aetherSwords = [
+  "aether sword D +11", 
+  "aether sword D +9"]
 
 var stoneSwords = [
   "stone sword +10",
@@ -54,7 +57,7 @@ var elementalSwordDict = [
   ["ice", iceSwords],
   ["fire", fireSwords],
   ["poison", poisonSwords],
-  ["aether", unmakeSwords],
+  ["aether", aetherSwords],
   ["vigor", vigorSwords],
 ]
 

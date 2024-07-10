@@ -770,8 +770,6 @@ func IceMiniboss()
 
   var stunTime = 
   ^GetEffectStack(foeDebuffs, "stun")
-  
-  >`0,10,stun:@stunTime@
 
   EquipSet(fireSwords)
 
@@ -965,7 +963,7 @@ func Main()
     Temple()
 
   // No deadwood - poena bites 
-  :?loc ! Deadwood
+  ?loc ! Deadwood
     FireTalisman()
 
   EquipItems()

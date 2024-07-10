@@ -843,6 +843,31 @@ func ColorCD(cd)
     return "red"
   return "green"
 
+var usedItems = []
+var itemGPs = []
+var runGP = 0
+func ManageGP()
+  ?!usedItems.Contains(item.right)
+    usedItems.Add(item.right)
+    itemGPs.Add([item.right, item.right.gp])
+    runGP += item.right.gp
+  ?!usedItems.Contains(item.left)
+    usedItems.Add(item.left)
+    itemGPs.Add([item.left, item.left.gp])  
+    runGP += item.left.gp
+  ?loc.loop
+    usedItems.Clear()
+    itemGPs.Clear()
+    runGP = 0
+
+// Currently just writes over everything
+// Will make it a proper display later
+func ItemGPHUD()
+  var y = 1
+  for itemGP : itemGPs
+    >`10,@y@,@itemGP[0]@ - @itemGP[1]@
+    y++
+
 func HUD()
   // Disable utility belt
   disable hud u 
@@ -866,14 +891,16 @@ func HUD()
     ^@time.FormatDigital(cd)@
     y++
 
-  // Boss state
-  ?foe = boss
-    >`0,6,State: @foe.state@ 
-    ^Time: @foe.time@
+  // Misc states
+  >`0,6,State: @foe.state@ Time: @foe.time@
   >`0,7,Dist: @foe.distance@
   >`0,8,X: @pos.x@
   >`0,9,Foe Count: @foe.count@
-  
+  >`0,10,Loop GP: @runGP@
+
+  // Item GPs
+  //ItemGPHUD()
+
   // Time
   var current = 
     ^FormatTime(totaltime) + " " + 
@@ -934,6 +961,7 @@ func Main()
   EquipItems()
   ActivateItems()
 
+  ManageGP()
   HUD()
 
 Main()

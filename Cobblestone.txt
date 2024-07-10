@@ -16,6 +16,12 @@ var stunlock = [
     ^"stone hammer +9", 
     ^"aether hammer"]
 
+// Hammers
+var armorHammers = [
+    "poison hammer D",
+    "ice hammer D"
+]
+
 // Swords
 var unmakeSwords = [
     ^"aether sword dU +10", 
@@ -23,6 +29,9 @@ var unmakeSwords = [
 var chillSwords = [
     ^"ice sword dI", 
     ^"ice sword dI -gold"]
+var healingSwords = [
+    "vigor sword dL +10",
+    "vigor sword dL +11"]
 
 var poisonSwords = [
     ^"poison sword D +10", 
@@ -31,16 +40,20 @@ var iceSwords = [
     ^"ice sword D +9", 
     ^"ice sword D +8"]
 var fireSwords = [
-    ^"fire sword +7", 
-    ^"fire sword +8"]
+    ^"fire sword D +7", 
+    ^"fire sword D +8"]
 var vigorSwords = [
-    ^"vigor sword +11", 
-    ^"vigor sword +10"]
+    ^"vigor sword D +11", 
+    ^"vigor sword D +10"]
+
+var stoneSwords = [
+    "stone sword +10",
+    "stone sword +11"]
 
 var elementalSwordDict = [
     ["ice", iceSwords],
     ["fire", fireSwords],
-    ["posion", poisonSwords],
+    ["poison", poisonSwords],
     ["aether", unmakeSwords],
     ["vigor", vigorSwords],
 ]
@@ -67,7 +80,6 @@ var aiState = 0
 
 var foeDebuffs = ""
 var smiteStack = 0
-var chillStack = 0
 
 func ResetGlobals()
     hasEncountedBoss = false
@@ -78,8 +90,6 @@ func ResetGlobalsPerFrame()
     foeDebuffs = foe.debuffs.string
     smiteStack = 
     ^GetEffectStack(buffs.string,"smite")
-    chillStack = 
-    ^GetEffectStack(foeDebuffs,"debuff_chill")
     // Equip resets
     toEquipL = ""
     toEquipR = ""
@@ -212,10 +222,13 @@ func EquipSet(set)
 
 // Uses chill until fully chilled
 func EquipChillSwordsOr(set)
-    ?chillStack < 6
+    ?CanApplyDebuf("debuff_chill")
         EquipSet(chillSwords)
     :
         EquipSet(set)
+
+func EquipSwordSet(rune)
+    EquipSet(DictVal(elementalSwordDict,rune))
 
 func PickupWhenClose()
     ?pickup.distance < 10
@@ -235,17 +248,27 @@ func GetEffectStack(str, uid)
     // stacks
     return int.Parse(parts[i+1])
 
+func CanApplyDebuf(debuff)
+    ?(foe = "immune_to_" + debuff)
+        return false
+    var stack = 
+        ^GetEffectStack(foeDebuffs, debuff)
+    ?debuff = "debuff_chill"
+        return stack < 6
+  return foe.debuffs.string ! debuff
+
+func IsMushroomBoss()
+    return foe = mushroom_boss |
+    ^foe = mushroom_boss_fat | 
+    ^foe = mushroom_boss_skinny
+
+// ABILITIES
 func TryBardicheAbility()
     var cooldown = ItemCD("bardiche")
     ?foe.distance <= 10 &
     ^cooldown <= 0 | cooldown > 870
         SetEquip("bardiche")
         ActivateItem()
-
-func IsMushroomBoss()
-    return foe = mushroom_boss |
-    ^foe = mushroom_boss_fat | 
-    ^foe = mushroom_boss_skinny
 
 func QtrDash()
     ?foe.count ! 0
@@ -280,11 +303,12 @@ func DoubleBlade()
 
 func FireTalisman()
     var cooldown = ItemCD("fire_talisman")
-    ?summon.count = 0 | cooldown > 130
+    ?cooldown > 130
         SetEquipR("fire talisman")
-        ?cooldown <= 0
-        ^ & CanUseItem()
-            ActivateItem()
+    ?summon.count = 0 & cooldown <= 0 &
+    ^CanUseItem()
+        SetEquipR("fire talisman")
+        ActivateItem()
 
 func MaskAbility()
     ?ItemCD("mask") <= 0 
@@ -300,45 +324,82 @@ func RunAAC()
         equip @item.right@
 
 // LOCATIONS
+
+// ===================
+// Rocky Plateau
+// ===================
 func Rocky()
     BrewBeserk()
 
     ?foe.distance > 16
         return
 
+    ?foe = acronian_scout
+        RockyMiniboss()
+        return
+    RockyBoss()
+
+func RockyMiniboss()
     ?EquipDashInRange()
         return
+    EquipChillSwordsOr(stoneSwords)
 
+func RockyBoss()
     MaskAbility()
 
-    // might not be weak to fire in new patch
-    // Phase 1 - Weak to fire
+    var canChill = CanApplyDebuf("debuff_chill")
+    var canPoison = 
+    ^CanApplyDebuf("debuff_damage")
+
+    // Phase 1
     ?foe = dysangelos_bearer
         UsePotWhen(loc.stars <= 5)
-        EquipSet(fireSwords)
-
-        EquipChillSwordsOr(fireSwords)
+        ?EquipDashInRange()
+            return
+        EquipChillSwordsOr(stoneSwords)
             
     // Phase 2
     ?foe = dysangelos_elementalist
-        // Use weak
-        SetEquipL(weakRune + " sword")
-        SetEquipR(weakRune + " shield")
+        ?EquipDashInRange()
+            return
+        ?canChill
+            EquipSet(chillSwords)
+        :
+            EquipSwordSet(weakRune)
 
     // Phase 3
     ?foe = dysangelos_perfected
         UsePot()
 
-        var weakness = FindDysaWeakness()
-        var swordSet = 
-        ^DictVal(elementalSwordDict,weakness)
-
-        EquipSet(swordSet)
-
         // Dodge sky laser
         ?foe.state = 115 & foe.time > 60
             SetEquipR("mind")
             return
+
+        ?EquipDashInRange()
+            return
+
+        var weakness = FindDysaWeakness()
+        // Chill
+        ?canChill
+            EquipSet(chillSwords)
+            return
+        // Delete armor 
+        ?foe.armor > 0
+            EquipSet(armorHammers)
+            return
+        // Reduce Damage
+        ?canPoison
+            SetEquipL("poison sword dP")
+            SetEquipR(weakness + " sword D")
+            return
+
+        // Attack normally
+        ?hp < maxhp
+            EquipSet(healingSwords)
+        :
+            EquipSwordSet(weakness)
+
 
     // slam his ass
     TryBardicheAbility()
@@ -405,7 +466,6 @@ func DeadwoodBoss()
     ?EquipDashInRange()
         return
 
-    >@item.potion@
     ?PotionIs("beserk")
         activate potion
 
@@ -592,7 +652,7 @@ func Mine()
     ?loc.stars <= 10
         BrewBeserk()
     :
-        // Extra armour damage
+        // Extra armor damage
         BrewStrength()
 
     SetEquipL("triskelion")

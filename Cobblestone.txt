@@ -80,6 +80,7 @@ var xpFarm = false
 var hasEncountedBoss = false
 var hasPauseSkipped = false
 var aiState = 0
+var loopCount = 0
 
 var foeDebuffs = ""
 var smiteStack = 0
@@ -146,14 +147,20 @@ var shouldActivate = false
 
 func SetEquipL(itemName)
   toEquipL = itemName
+  toEquip = ""
 
 func SetEquipR(itemName)
   toEquipR = itemName
+  toEquip = ""
 
 func SetEquip(itemName)
   toEquipL = ""
   toEquipR = ""
   toEquip = itemName
+
+func EquipSet(set) 
+  SetEquipL(set[0])
+  SetEquipR(set[1])
 
 func ActivateItem()
   shouldActivate = true
@@ -189,6 +196,10 @@ func BrewBerserk()
   ?loc.begin
     brew wood + bronze
 
+func BrewLucky()
+  ?loc.begin
+    brew stone + bronze
+
 func BrewStrength()
   ?loc.begin
     brew stone
@@ -222,10 +233,6 @@ func EquipDashInRange()
     return true
   return false
 
-func EquipSet(set) 
-  SetEquipL(set[0])
-  SetEquipR(set[1])
-
 // Uses chill until fully chilled
 func EquipChillSwordsOr(set)
   ?CanApplyDebuf("debuff_chill")
@@ -240,6 +247,8 @@ func PickupWhenClose()
   ?pickup.distance < 10
     SetEquipR("star")
 
+var returnDuration = ["stun", "berserk", 
+"lucky_crit", "lucky_mult"]
 func GetEffectStack(str, uid)
   // Does not have
   ?!(str = uid)
@@ -248,10 +257,10 @@ func GetEffectStack(str, uid)
   var parts = 
     ^string.Split(str, ":", ",", false)
   var i = parts.IndexOf(uid)
-  // return duration for stun
-  ?uid = "stun"
+  // return duration 
+  ?returnDuration.Contains(uid)
     return int.Parse(parts[i+2])
-  // stacks
+  // return stacks
   return int.Parse(parts[i+1])
 
 func CanApplyDebuf(debuff)
@@ -276,12 +285,13 @@ func TryBardicheAbility()
     SetEquip("bardiche")
     ActivateItem()
 
+var qtrCD = 165 // default 195
 func QtrDash()
   ?foe.count ! 0
     return
   var cooldown = ItemCD("quarterstaff")
   // Keep equipped
-  ?cooldown > 175
+  ?cooldown > qtrCD - 20
     SetEquip("quarterstaff")
   // Use 
   :?cooldown <= 0 &
@@ -335,15 +345,25 @@ func RunAAC()
 // Rocky Plateau
 // ===================
 func Rocky()
-  BrewBerserk()
+  BrewLucky()
 
-  ?!FoeWithin(16)
-    return
+  ?pickup.distance < 10
+    ?loopCount = 0
+      SetEquipL("star")
+    :
+      SetEquipR("star")
 
-  ?foe = acronian_scout
-    RockyMiniboss()
-    return
-  RockyBoss()
+  UsePot()
+
+  ?FoeWithin(16)
+    ?foe = acronian_scout
+      RockyMiniboss()
+    :
+      RockyBoss()
+
+  // Mask for full first run
+  ?loopCount = 0
+      SetEquipR("mask")
 
 func RockyMiniboss()
   ?EquipDashInRange()
@@ -362,13 +382,18 @@ func RockyBoss()
     UsePotWhen(loc.stars <= 5)
     ?EquipDashInRange()
       return
-    EquipChillSwordsOr(stoneSwords)
+
+    ?canPoison
+      SetEquipL("poison sword dP")
+      SetEquipR("stone sword")
+    :
+      EquipChillSwordsOr(stoneSwords)
       
   // Phase 2
   ?foe = dysangelos_elementalist
     ?EquipDashInRange()
       return
-    ?canChill
+    ?canChill & foe ! ice
       EquipSet(chillSwords)
     :
       EquipSwordSet(weakRune)
@@ -379,7 +404,13 @@ func RockyBoss()
 
     // Dodge sky laser
     ?foe.state = 115 & foe.time > 60
-      SetEquipR("mind")
+      SetEquipL("mind")
+      return
+
+    // Dodge shield swipe
+    ?foe.state = 32 & foe.time > 60 & 
+    ^foe.damage = 1
+      SetEquipL("mind")
       return
 
     ?EquipDashInRange()
@@ -401,14 +432,14 @@ func RockyBoss()
       return
 
     // Attack normally
-    ?hp < maxhp
+    ?hp < maxhp & foe.buffs.string ! vigor
       EquipSet(healingSwords)
     :
       EquipSwordSet(weakness)
 
-
   // slam his ass
-  TryBardicheAbility()
+  ?loopCount ! 0
+    TryBardicheAbility()
 
 // For Phase 3 - gets strong to some elements
 func FindDysaWeakness()
@@ -472,7 +503,7 @@ func DeadwoodBoss()
   ?EquipDashInRange()
     return
 
-  ?PotionIs("beserk")
+  ?PotionIs("berserk")
     activate potion
 
   ?foe = poena
@@ -876,14 +907,11 @@ func ItemGPHUD()
     >`10,@y@,@itemGP[0]@ - @itemGP[1]@
     y++
 
-var potionEffectNames = ["berserk", "lucky"]
+var potionEffectNames = ["berserk", 
+  "lucky_crit"]
 func PotionHUD()
-  >`0,12,b:@buffs.string@
-  var y = 13
   for effect : potionEffectNames
     var x = GetEffectStack(buffs.string, effect)
-    >`0,@y@,@effect@: @x@
-    y++
     ?x > 0
       return string.Capitalize(effect) + ": " +
       ^x
@@ -951,6 +979,9 @@ func Main()
   ?loc.begin | loc.loop
     ResetGlobals()
 
+  ?loc.loop
+    loopCount++
+
   // Default 
   SetEquipL("triskelion")
   SetEquipR("ouroboros")
@@ -977,8 +1008,12 @@ func Main()
     Temple()
 
   // No deadwood - poena bites 
-  ?loc ! Deadwood
+  ?loc ! Deadwood &
+  // No permapot
+  ^!(loc = Rocky & loopCount = 0)
     FireTalisman()
+
+  >`0,13,b:@toEquip@ l:@toEquipL@ r:@toEquipR@
 
   EquipItems()
   ActivateItems()

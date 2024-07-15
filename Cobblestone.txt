@@ -185,7 +185,7 @@ func DictVal(dict, dictKey)
       return value[1]
 
 // Potion Funcs
-func BrewBeserk()
+func BrewBerserk()
   ?loc.begin
     brew wood + bronze
 
@@ -335,7 +335,7 @@ func RunAAC()
 // Rocky Plateau
 // ===================
 func Rocky()
-  BrewBeserk()
+  BrewBerserk()
 
   ?!FoeWithin(16)
     return
@@ -434,7 +434,7 @@ func Deadwood()
     ^Between(time, 60, 500)
       activate potion
   :?loc.stars <= 10
-    BrewBeserk()
+    BrewBerserk()
   :
     brew tar
     
@@ -494,7 +494,7 @@ func DeadwoodBoss()
 func Caves()
   // TODO move next screen and
   // use the snake on bolesh 
-  BrewBeserk()
+  BrewBerserk()
 
   SetEquipL("triskelion")
   SetEquipR("ice shield")
@@ -547,7 +547,7 @@ func CavesBoss()
 // Mushroom forest
 // ===================
 func Mushroom()
-  BrewBeserk()
+  BrewBerserk()
 
   SetEquipL("triskelion")
   SetEquipR("poison shield")
@@ -586,7 +586,7 @@ func MushroomBoss()
 // Haunted Halls
 // ===================
 func Halls()
-  BrewBeserk()
+  BrewBerserk()
 
   SetEquipL("triskelion")
   SetEquipR("vigor shield")
@@ -617,7 +617,7 @@ func Halls()
 
 // Optimised for 5* - barely faster
 func Halls5()
-  BrewBeserk()
+  BrewBerserk()
 
   ?EquipDashInRange()
     return
@@ -659,7 +659,7 @@ func HallsBoss()
 // ===================     
 func Mine()
   ?loc.stars <= 10
-    BrewBeserk()
+    BrewBerserk()
   :
     // Extra armor damage
     BrewStrength()
@@ -728,7 +728,7 @@ func MineBoss()
 // Icy Ridge
 // ===================
 func Icy()
-  BrewBeserk()
+  BrewBerserk()
 
   SetEquipL("triskelion")
   SetEquipR("fire shield")
@@ -808,7 +808,7 @@ func IceBoss()
 // Temple 
 // ===================
 func Temple()
-  BrewBeserk()
+  BrewBerserk()
 
   SetEquipL("triskelion")
   SetEquipR("ice shield")
@@ -876,6 +876,19 @@ func ItemGPHUD()
     >`10,@y@,@itemGP[0]@ - @itemGP[1]@
     y++
 
+var potionEffectNames = ["berserk", "lucky"]
+func PotionHUD()
+  >`0,12,b:@buffs.string@
+  var y = 13
+  for effect : potionEffectNames
+    var x = GetEffectStack(buffs.string, effect)
+    >`0,@y@,@effect@: @x@
+    y++
+    ?x > 0
+      return string.Capitalize(effect) + ": " +
+      ^x
+  return "None"
+
 func HUD()
   // Disable utility belt
   disable hud u 
@@ -905,6 +918,7 @@ func HUD()
   >`0,8,X: @pos.x@
   >`0,9,Foe Count: @foe.count@
   >`0,10,Loop GP: @runGP@
+  >`0,11,Potion: @PotionHUD()@
 
   // Item GPs
   //ItemGPHUD()

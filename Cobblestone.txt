@@ -937,11 +937,21 @@ func PotionHUD()
       ^x
   return "None"
 
+var oldAverages = []
 func HUD()
   // Disable utility belt
   disable hud u 
 
   var bottom = screen.h - 2
+
+  // Manage variables
+  ?loc.loop | loc.begin
+    oldAverages.Add(loc.averageTime)
+
+  var lastAverage = loc.averageTime
+  ?oldAverages.Count() > 1
+    lastAverage = 
+    ^oldAverages[oldAverages.Count() - 2]
 
   // CD HUD
   var x = screen.w - 10
@@ -990,6 +1000,14 @@ func HUD()
 
   >`0,@bottom@,Avg:
   >`7,@bottom@,@average@
+  // Average up/down icon
+  var iconX = 8 + string.Size(average)
+  ?loc.averageTime > lastAverage
+    >`@iconX@,@bottom@,#red,▼
+  :?loc.averageTime < lastAverage
+    >`@iconX@,@bottom@,#green,▼
+  :
+    >`@iconX@,@bottom@,#blue,-
 
 func Main()
   // Always run animation cancel

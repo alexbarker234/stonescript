@@ -285,19 +285,24 @@ func TryBardicheAbility()
     SetEquip("bardiche")
     ActivateItem()
 
-var qtrCD = 165 // default 195
+var qtrTimer = 0
 func QtrDash()
-  ?foe.count ! 0
+  ?foe.distance <= 16
     return
   var cooldown = ItemCD("quarterstaff")
   // Keep equipped
-  ?cooldown > qtrCD - 20
+  ?qtrTimer ! 0
     SetEquip("quarterstaff")
+    qtrTimer++
+    ?qtrTimer > 2
+      qtrTimer = 0
+      
   // Use 
   :?cooldown <= 0 &
   ^CanUseItem()
     SetEquip("quarterstaff")
     ActivateItem()
+    qtrTimer++
 
 // Double-screen BFG/Smite
 var scrolling = 0
@@ -771,10 +776,13 @@ func MineBoss()
 // Icy Ridge
 // ===================
 func Icy()
-  BrewBerserk()
+  BrewLucky()
 
   SetEquipL("triskelion")
   SetEquipR("fire shield")
+
+  ?!foe 
+    SetEquipR("mask")
 
   // Mark boss
   ?foe = yeti & FoeWithin(16)
@@ -1024,8 +1032,6 @@ func Main()
   // No permapot
   ^!(loc = Rocky & loopCount = 0)
     FireTalisman()
-
-  >`0,13,b:@toEquip@ l:@toEquipL@ r:@toEquipR@
 
   EquipItems()
   ActivateItems()

@@ -40,8 +40,8 @@ var iceSwords = [
   "ice sword D +9", 
   "ice sword D +8"]
 var fireSwords = [
-  "fire sword D +7", 
-  "fire sword D +8"]
+  "fire sword D +15", 
+  "fire sword D +14"]
 var vigorSwords = [
   "vigor sword D +11", 
   "vigor sword D +10"]
@@ -371,7 +371,9 @@ func RockyMiniboss()
   EquipChillSwordsOr(stoneSwords)
 
 func RockyBoss()
-  MaskAbility()
+  // transitions
+  ?foe.state = -1 | foe.state = 124
+    return
 
   var canChill = CanApplyDebuf("debuff_chill")
   var canPoison = 
@@ -383,12 +385,22 @@ func RockyBoss()
     ?EquipDashInRange()
       return
 
+
+    ?canChill
+      EquipSet(chillSwords)
+      return
+    
     ?canPoison
       SetEquipL("poison sword dP")
-      SetEquipR("stone sword")
-    :
-      EquipChillSwordsOr(stoneSwords)
-      
+      SetEquipR(weakness + " sword D")
+      return
+
+    ?hp < maxhp - 40
+      EquipSet(healingSwords)  
+      return
+
+    EquipSet(stoneSwords)
+
   // Phase 2
   ?foe = dysangelos_elementalist
     ?EquipDashInRange()
@@ -987,9 +999,6 @@ func Main()
   SetEquipR("ouroboros")
   PickupWhenClose()
 
-  // always dash
-  QtrDash()
-
   ?loc = Rocky
     Rocky()
   :?loc = Deadwood
@@ -1006,6 +1015,9 @@ func Main()
     Icy()
   :?loc = Temple
     Temple()
+
+  // always dash
+  QtrDash()
 
   // No deadwood - poena bites 
   ?loc ! Deadwood &

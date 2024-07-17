@@ -79,6 +79,8 @@ var xpFarm = false
 // Globals
 var hasEncountedBoss = false
 var hasPauseSkipped = false
+var shouldPermaPot = false
+
 var aiState = 0
 var loopCount = 0
 
@@ -351,6 +353,7 @@ func RunAAC()
 // ===================
 func Rocky()
   BrewLucky()
+  shouldPermaPot = true
 
   ?pickup.distance < 10
     ?loopCount = 0
@@ -358,17 +361,11 @@ func Rocky()
     :
       SetEquipR("star")
 
-  UsePot()
-
   ?FoeWithin(16)
     ?foe = acronian_scout
       RockyMiniboss()
     :
       RockyBoss()
-
-  // Mask for full first run
-  ?loopCount = 0
-      SetEquipR("mask")
 
 func RockyMiniboss()
   ?EquipDashInRange()
@@ -389,7 +386,6 @@ func RockyBoss()
     UsePotWhen(loc.stars <= 5)
     ?EquipDashInRange()
       return
-
 
     ?canChill
       EquipSet(chillSwords)
@@ -460,10 +456,10 @@ func RockyBoss()
 
 // For Phase 3 - gets strong to some elements
 func FindDysaWeakness()
-  ?foe.buffs.string ! "ice"
-    return "ice"
-  :?foe.buffs.string ! "fire"
+  ?foe.buffs.string ! "fire"
     return "fire"
+  :?foe.buffs.string ! "ice"
+    return "ice"
   :?foe.buffs.string ! "aether"
     return "aether"
   :?foe.buffs.string ! "vigor"
@@ -938,13 +934,8 @@ func PotionHUD()
   return "None"
 
 var oldAverages = []
-func HUD()
-  // Disable utility belt
-  disable hud u 
-
-  var bottom = screen.h - 2
-
-  // Manage variables
+// Average up/down icon
+func AverageIconHUD(average)
   ?loc.loop | loc.begin
     oldAverages.Add(loc.averageTime)
 
@@ -952,6 +943,20 @@ func HUD()
   ?oldAverages.Count() > 1
     lastAverage = 
     ^oldAverages[oldAverages.Count() - 2]
+
+  var iconX = 8 + string.Size(average)
+  ?loc.averageTime > lastAverage
+    >`@iconX@,@bottom@,#red,▲
+  :?loc.averageTime < lastAverage
+    >`@iconX@,@bottom@,#green,▼
+  :
+    >`@iconX@,@bottom@,#blue,-
+
+func HUD()
+  // Disable utility belt
+  disable hud u 
+
+  var bottom = screen.h - 2
 
   // CD HUD
   var x = screen.w - 10
@@ -1000,14 +1005,8 @@ func HUD()
 
   >`0,@bottom@,Avg:
   >`7,@bottom@,@average@
-  // Average up/down icon
-  var iconX = 8 + string.Size(average)
-  ?loc.averageTime > lastAverage
-    >`@iconX@,@bottom@,#red,▼
-  :?loc.averageTime < lastAverage
-    >`@iconX@,@bottom@,#green,▼
-  :
-    >`@iconX@,@bottom@,#blue,-
+  AverageIconHUD(average)
+
 
 func Main()
   // Always run animation cancel
@@ -1042,14 +1041,23 @@ func Main()
   :?loc = Temple
     Temple()
 
-  // always dash
-  QtrDash()
+  var ppRun = shouldPermaPot & loopCount = 0
 
-  // No deadwood - poena bites 
-  ?loc ! Deadwood &
-  // No permapot
-  ^!(loc = Rocky & loopCount = 0)
-    FireTalisman()
+  // always use potion when available
+  ?shouldPermaPot
+    UsePot()
+
+  // mask when permapotting
+  ?ppRun
+    SetEquipR("mask")
+  // abilities when not permapotting
+  :
+    // always dash
+    QtrDash()
+
+    // No deadwood - poena bites 
+    ?loc ! Deadwood
+      FireTalisman()
 
   EquipItems()
   ActivateItems()

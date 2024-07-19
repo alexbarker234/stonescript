@@ -1,3 +1,10 @@
+// Import Slime Pet from GitHub
+sys.cacheRemoteFiles = false
+sys.SetFileUrl(
+^"https://raw.githubusercontent.com/
+^alexbarker234/stonescript/main/")
+import SlimePet
+
 // Weapon setups
 // D Wands
 var vigorWands = [

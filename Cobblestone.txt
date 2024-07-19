@@ -1,17 +1,25 @@
 // Weapon setups
-// Wands
+// D Wands
 var vigorWands = [
-  "vigor wand +11", 
-  "vigor wand +12"]
+  "vigor wand D +11", 
+  "vigor wand D +12"]
 var aetherWands = [
-  "aether wand *8", 
-  "aether wand *7"]
+  "aether wand D *8", 
+  "aether wand D *7"]
 var fireWands = [
-  "fire wand *8", 
-  "fire wand *7"]
+  "fire wand D *8", 
+  "fire wand D *7"]
 var iceWands = [
-  "ice wand +11", 
-  "ice wand +8"]
+  "ice wand D +8", 
+  "ice wand D +7"]
+var poisonWands = [
+  "poison wand D +8", 
+  "poison wand D +7"]
+
+// Effect Wands
+var chillWands = [
+  "ice wand dI +11", 
+  "ice wand dI +8"]
 
 // Hammers
 var armorHammers = [
@@ -92,8 +100,7 @@ func ResetGlobals()
 
 func ResetGlobalsPerFrame()
   foeDebuffs = foe.debuffs.string
-  smiteStack = 
-  ^GetEffectStack(buffs.string,"smite")
+  smiteStack = buffs.GetCount("smite")
   // Equip resets
   toEquipL = ""
   toEquipR = ""
@@ -247,27 +254,10 @@ func PickupWhenClose()
   ?pickup.distance < 10
     SetEquipR("star")
 
-var returnDuration = ["stun", "berserk", 
-"lucky_crit", "lucky_mult"]
-func GetEffectStack(str, uid)
-  // Does not have
-  ?!(str = uid)
-    return 0
-  // Split
-  var parts = 
-    ^string.Split(str, ":", ",", false)
-  var i = parts.IndexOf(uid)
-  // return duration 
-  ?returnDuration.Contains(uid)
-    return int.Parse(parts[i+2])
-  // return stacks
-  return int.Parse(parts[i+1])
-
 func CanApplyDebuf(debuff)
   ?(foe = "immune_to_" + debuff)
     return false
-  var stack = 
-    ^GetEffectStack(foeDebuffs, debuff)
+  var stack = foe.debuffs.GetCount(debuff)
   ?debuff = "debuff_chill"
     return stack < 6
   return foe.debuffs.string ! debuff
@@ -509,7 +499,7 @@ func Deadwood()
 func DeadwoodMinibosss()
   ?EquipDashInRange()
     return
-  EquipSet(iceWands)
+  EquipSet(chillWands)
 
 func DeadwoodBoss()
   ?EquipDashInRange()
@@ -559,7 +549,7 @@ func Caves()
     return
 
   ?FoeWithin(16)
-    EquipSet(iceWands)
+    EquipSet(chillWands)
 
 func CavesMiniBoss()
   ?EquipDashInRange()
@@ -611,7 +601,7 @@ func Mushroom()
   DoubleBlade()
 
   ?FoeWithin(16)
-    EquipSet(iceWands)
+    EquipSet(chillWands)
 
 func MushroomBoss() 
   UsePot()
@@ -656,7 +646,7 @@ func Halls()
     return
 
   ?FoeWithin(16) 
-    EquipSet(iceWands)
+    EquipSet(chillWands)
 
 // Optimised for 5* - barely faster
 func Halls5()
@@ -732,7 +722,7 @@ func Mine()
     ?foe.GetCount(10) = 1 & smiteStack = 0
       EquipSet(unmakeSwords)
       return
-    EquipSet(iceWands)
+    EquipSet(chillWands)
         
 func MineMiniboss()
   ?FoeBetween(11,16)
@@ -805,14 +795,11 @@ func Icy()
     ?smiteStack = 0
       EquipSet(fireSwords)
       return
-    EquipSet(iceWands)
+    EquipSet(chillWands)
 
 func IceMiniboss()
   ?EquipDashInRange()
     return
-
-  var stunTime = 
-  ^GetEffectStack(foeDebuffs, "stun")
 
   EquipSet(fireSwords)
 
@@ -872,7 +859,7 @@ func Temple()
       EquipChillSwordsOr(iceSwords)
       return
 
-    EquipSet(iceWands)
+    EquipSet(chillWands)
 
 func TempleBoss()
   UsePot()
@@ -919,11 +906,12 @@ func ItemGPHUD()
     >`10,@y@,@itemGP[0]@ - @itemGP[1]@
     y++
 
+// TODO, complete list
 var potionEffectNames = ["berserk", 
   "lucky_crit"]
 func PotionHUD()
   for effect : potionEffectNames
-    var x = GetEffectStack(buffs.string, effect)
+    var x = buffs.GetTime(effect)
     ?x > 0
       return string.Capitalize(effect) + ": " +
       ^x

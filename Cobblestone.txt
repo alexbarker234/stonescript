@@ -148,6 +148,7 @@ func FoeBetween(min, max)
 
 func PotionIs(pot)
   return item.potion = pot
+
 // Item Equip Helper
 var toEquipL = ""
 var toEquipR = ""
@@ -526,8 +527,6 @@ func DeadwoodBoss()
 // Caves of Fear
 // ===================
 func Caves()
-  // TODO move next screen and
-  // use the snake on bolesh 
   BrewBerserk()
 
   SetEquipL("triskelion")
@@ -550,7 +549,7 @@ func Caves()
     return
 
   ?FoeWithin(16)
-    EquipSet(chillWands)
+    EquipSet(iceWands)
 
 func CavesMiniBoss()
   ?EquipDashInRange()
@@ -796,7 +795,7 @@ func Icy()
       EquipSet(unmakeSwords)
       return
     
-    ?smiteStack = 0
+    ?smiteStack = 0 & foe.GetCount(10) = 1
       EquipSet(fireSwords)
       return
     EquipSet(chillWands)
@@ -880,6 +879,11 @@ func TempleBoss()
   EquipChillSwordsOr(iceSwords)
   //SetEquip("ice crossbow")
 
+// ===================
+// HUD 
+// ===================
+
+var bottom = screen.h - 2
 func ColorCD(cd)
   ?cd > 0
     return "red"
@@ -940,13 +944,7 @@ func AverageIconHUD(average)
   :
     >`@iconX@,@bottom@,#blue,-
 
-func HUD()
-  // Disable utility belt
-  disable hud u 
-
-  var bottom = screen.h - 2
-
-  // CD HUD
+func CooldownHUD()
   var x = screen.w - 10
   var x2 = screen.w - 5
   var y = 1
@@ -962,6 +960,12 @@ func HUD()
     >`@x2@,@y@,#@textCol@,
     ^@time.FormatDigital(cd)@
     y++
+
+func HUD()
+  // Disable utility belt
+  disable hud u 
+
+  CooldownHUD()
 
   // Misc states
   >`0,6,State: @foe.state@ Time: @foe.time@

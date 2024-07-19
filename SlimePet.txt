@@ -1,0 +1,101 @@
+var frames = [
+ascii
+##.——.
+#( • •)
+asciiend,
+ascii
+###.—.
+##(• •)
+asciiend,
+ascii
+#______
+(  • • ) 
+asciiend
+]
+
+// config
+var jumpTime = 10.0
+var jumpHeight = 5
+
+var maxX = -10   
+var maxDistance = -100
+var targetZ = 18
+
+// init vars
+var x = 0
+var y = 0
+var z = 0
+var myX = 0
+var myZ = 0
+var lastPlayerX = 0
+var lastPlayerZ = 0
+
+// ai
+var aiTimer = 0
+var aiState = 0
+var frame = 0
+
+// init
+?aiState = 0
+  aiState = 1
+  myX = -11 // start
+// chilling
+:?aiState = 1
+  frame = 0
+  
+  // distance 
+  ?math.Abs(myX) > 10
+    aiState = 2
+    aiTimer = 0
+
+// charge jump
+:?aiState = 2
+  aiTimer++
+  // switch frame every 5 ticks
+  frame = math.FloorToInt(aiTimer / 3) % 2
+  ?aiTimer > 15
+    aiTimer = 0
+    aiState = 3
+// jump
+:?aiState = 3
+  frame = 1
+
+  aiTimer++
+  // Sin arc jump
+  y = -math.Sin((aiTimer / jumpTime) * math.pi) *
+  ^jumpHeight
+  y = math.RoundToInt(y)
+
+  myX++
+
+  ?aiTimer > jumpTime
+    aiState = 4
+    aiTimer = 0
+    y = 0 
+    // random offset -1 to 1
+    z = math.Round((rng / 9999) * 2) - 1 
+
+// land
+:?aiState = 4
+  frame = 2
+  aiTimer++
+
+  ?aiTimer > 5
+    aiState = 1
+    aiTimer = 0
+
+// increment distance from player
+?aiState ! 0
+  myX = myX - (pos.x - lastPlayerX)
+  myZ = targetZ - pos.z + y + z
+
+// manage player vars 
+lastPlayerX = pos.x
+lastPlayerZ = pos.z
+
+>`0,9,y:@y@
+>`0,10,@myX@, @myZ@
+>`0,11,@pos.x@, @pos.z@
+
+// draw relative to player
+>o@myX@,@myZ@,#green,@frames[frame]@

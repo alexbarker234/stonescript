@@ -1,10 +1,3 @@
-// Import Slime Pet from GitHub
-sys.cacheRemoteFiles = false
-sys.SetFileUrl(
-^"https://raw.githubusercontent.com/
-^alexbarker234/stonescript/main/")
-import SlimePet
-
 // Weapon setups
 // D Wands
 var vigorWands = [
@@ -1065,3 +1058,112 @@ func Main()
   HUD()
 
 Main()
+
+// SLIME PET COSMETIC - pls fix web imports
+var slimeFrames = [
+ascii
+##.——.
+#( • •)
+asciiend,
+ascii
+###.—.
+##(• •)
+asciiend,
+ascii
+#______
+(  • • ) 
+asciiend
+]
+
+// config
+var jumpTime = 10.0
+var jumpHeight = 5
+var slimeTargetZ = 18
+
+// init vars
+var slimeY = 0
+var slimeZ = 0
+var slimeX = 0
+var slimeDrawY = 0
+var lastPlayerX = 0
+var lastPlayerZ = 0
+
+// ai
+var slimeAI = 0
+var slimeState = 0
+var slimeFrame = 0
+
+// init
+?slimeState = 0
+  slimeState = 1
+  slimeX = -11 // start
+// chilling
+:?slimeState = 1
+  slimeFrame = 0
+  
+  var dist = math.Abs(slimeX)
+
+  // distance 
+  ?dist > 20
+    jumpTime = 15.0
+  :
+    jumpTime = 10.0
+
+  ?dist > 10
+    slimeState = 2
+    slimeAI = 0
+
+// charge jump
+:?slimeState = 2
+  slimeAI++
+  // switch slimeFrame every 5 ticks
+  slimeFrame = math.FloorToInt(slimeAI / 3) % 2
+  ?slimeAI > 15
+    slimeAI = 0
+    slimeState = 3
+// jump
+:?slimeState = 3
+  slimeFrame = 1
+
+  slimeAI++
+  // Sin arc jump
+  slimeY = -math.Sin((slimeAI / jumpTime) * 
+  ^math.pi) * jumpHeight
+  slimeY = math.RoundToInt(slimeY)
+
+  slimeX++
+
+  ?slimeAI > jumpTime
+    slimeState = 4
+    slimeAI = 0
+    slimeY = 0 
+    // random offset -1 to 1
+    slimeZ = math.Round((rng / 9999) * 2) - 1 
+
+// land
+:?slimeState = 4
+  slimeFrame = 2
+  slimeAI++
+
+  ?slimeAI > 5
+    slimeState = 1
+    slimeAI = 0
+
+// increment distance from player
+?slimeState ! 0
+  slimeX = slimeX - (pos.x - lastPlayerX)
+
+// tp if too far
+?slimeX < -50
+  slimeX = -20
+
+slimeDrawY = slimeTargetZ - pos.z + 
+^slimeY + slimeZ
+
+// manage player vars 
+lastPlayerX = pos.x
+lastPlayerZ = pos.z
+
+// draw relative to player
+>o@slimeX@,@slimeDrawY@,#green,
+^@slimeFrames[slimeFrame]@

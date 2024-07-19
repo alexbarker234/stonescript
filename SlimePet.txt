@@ -1,4 +1,4 @@
-var frames = [
+var slimeFrames = [
 ascii
 ##.——.
 #( • •)
@@ -16,86 +16,92 @@ asciiend
 // config
 var jumpTime = 10.0
 var jumpHeight = 5
-
-var maxX = -10   
-var maxDistance = -100
-var targetZ = 18
+var slimeTargetZ = 18
 
 // init vars
-var x = 0
-var y = 0
-var z = 0
-var myX = 0
-var myZ = 0
+var slimeY = 0
+var slimeZ = 0
+var slimeX = 0
+var slimeDrawY = 0
 var lastPlayerX = 0
 var lastPlayerZ = 0
 
 // ai
-var aiTimer = 0
-var aiState = 0
-var frame = 0
+var slimeAI = 0
+var slimeState = 0
+var slimeFrame = 0
 
 // init
-?aiState = 0
-  aiState = 1
-  myX = -11 // start
+?slimeState = 0
+  slimeState = 1
+  slimeX = -11 // start
 // chilling
-:?aiState = 1
-  frame = 0
+:?slimeState = 1
+  slimeFrame = 0
   
+  var dist = math.Abs(slimeX)
+
   // distance 
-  ?math.Abs(myX) > 10
-    aiState = 2
-    aiTimer = 0
+  ?dist > 20
+    jumpTime = 15.0
+  :
+    jumpTime = 10.0
+
+  ?dist > 10
+    slimeState = 2
+    slimeAI = 0
 
 // charge jump
-:?aiState = 2
-  aiTimer++
-  // switch frame every 5 ticks
-  frame = math.FloorToInt(aiTimer / 3) % 2
-  ?aiTimer > 15
-    aiTimer = 0
-    aiState = 3
+:?slimeState = 2
+  slimeAI++
+  // switch slimeFrame every 5 ticks
+  slimeFrame = math.FloorToInt(slimeAI / 3) % 2
+  ?slimeAI > 15
+    slimeAI = 0
+    slimeState = 3
 // jump
-:?aiState = 3
-  frame = 1
+:?slimeState = 3
+  slimeFrame = 1
 
-  aiTimer++
+  slimeAI++
   // Sin arc jump
-  y = -math.Sin((aiTimer / jumpTime) * math.pi) *
-  ^jumpHeight
-  y = math.RoundToInt(y)
+  slimeY = -math.Sin((slimeAI / jumpTime) * 
+  ^math.pi) * jumpHeight
+  slimeY = math.RoundToInt(slimeY)
 
-  myX++
+  slimeX++
 
-  ?aiTimer > jumpTime
-    aiState = 4
-    aiTimer = 0
-    y = 0 
+  ?slimeAI > jumpTime
+    slimeState = 4
+    slimeAI = 0
+    slimeY = 0 
     // random offset -1 to 1
-    z = math.Round((rng / 9999) * 2) - 1 
+    slimeZ = math.Round((rng / 9999) * 2) - 1 
 
 // land
-:?aiState = 4
-  frame = 2
-  aiTimer++
+:?slimeState = 4
+  slimeFrame = 2
+  slimeAI++
 
-  ?aiTimer > 5
-    aiState = 1
-    aiTimer = 0
+  ?slimeAI > 5
+    slimeState = 1
+    slimeAI = 0
 
 // increment distance from player
-?aiState ! 0
-  myX = myX - (pos.x - lastPlayerX)
-  myZ = targetZ - pos.z + y + z
+?slimeState ! 0
+  slimeX = slimeX - (pos.x - lastPlayerX)
+
+// tp if too far
+?slimeX < -50
+  slimeX = -20
+
+slimeDrawY = slimeTargetZ - pos.z + 
+^slimeY + slimeZ
 
 // manage player vars 
 lastPlayerX = pos.x
 lastPlayerZ = pos.z
 
->`0,9,y:@y@
->`0,10,@myX@, @myZ@
->`0,11,@pos.x@, @pos.z@
-
 // draw relative to player
->o@myX@,@myZ@,#green,@frames[frame]@
+>o@slimeX@,@slimeDrawY@,#green,
+^@slimeFrames[slimeFrame]@

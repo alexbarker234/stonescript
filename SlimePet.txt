@@ -14,9 +14,9 @@ asciiend
 ]
 
 // config
-var jumpTime = 10.0
+var jumpLength = 10.0
 var jumpHeight = 5
-var slimeTargetZ = 18
+var slimeTargetZ = 22
 
 // init vars
 var slimeY = 0
@@ -34,20 +34,20 @@ var slimeFrame = 0
 // init
 ?slimeState = 0
   slimeState = 1
-  slimeX = -11 // start
+  // init start position
+  slimeX = -11
+  slimeTargetZ = pos.z + 1
+
 // chilling
 :?slimeState = 1
   slimeFrame = 0
   
-  var dist = math.Abs(slimeX)
-
-  // distance 
-  ?dist > 20
-    jumpTime = 15.0
+  ?slimeX < -20
+    jumpLength = 15.0
   :
-    jumpTime = 10.0
+    jumpLength = 10.0
 
-  ?dist > 10
+  ?slimeX < -15
     slimeState = 2
     slimeAI = 0
 
@@ -65,13 +65,13 @@ var slimeFrame = 0
 
   slimeAI++
   // Sin arc jump
-  slimeY = -math.Sin((slimeAI / jumpTime) * 
+  slimeY = -math.Sin((slimeAI / jumpLength) * 
   ^math.pi) * jumpHeight
   slimeY = math.RoundToInt(slimeY)
 
   slimeX++
 
-  ?slimeAI > jumpTime
+  ?slimeAI > jumpLength
     slimeState = 4
     slimeAI = 0
     slimeY = 0 

@@ -7,8 +7,8 @@ import http.client
 
 URL = "rawpad.up.railway.app"
 DIRECTORY = "./stonescript"
-FILE = 'Cobblestone.txt'
-IMPORT_REGEX = r'\/\/\s?import ([^\s]*)'
+ENTRYPOINT = 'Cobblestone.txt'
+IMPORT_PATTERN = re.compile(r'\/\/\s?import ([^\s]*)')
 
 
 def calculate_md5(file_path):
@@ -44,14 +44,13 @@ def compile(file_path):
       file_content = f.read()
 
     # Find all import statements
-    import_pattern = re.compile(IMPORT_REGEX)
-    matches = import_pattern.findall(file_content)
+    matches = IMPORT_PATTERN.findall(file_content)
 
     # Replace each import statement with the content of the corresponding script
     for match in matches:
         print(f"Found import {match}")
         script_content = load_script(match)
-        file_content = re.sub(IMPORT_REGEX, script_content, file_content, 1)
+        file_content = IMPORT_PATTERN.sub(script_content, file_content, 1)
 
     # Minify
     # Remove comments
@@ -73,23 +72,37 @@ def post_to_rawpad(content):
     conn.close()
 
 
-def watch_file(file_path):
-    """Watch the file for changes and post the contents when changed."""
-    last_hash = calculate_md5(file_path)
+def watch_files(paths):
+    """Watch multiple files for changes and post the contents when changed."""
+    last_hashes = {path: calculate_md5(path) for path in paths}
+    print(f"Watching {paths}")
+
     while True:
         time.sleep(1)  # Wait for 1 second
-        current_hash = calculate_md5(file_path)
-        if current_hash != last_hash:
-            print(f"Change detected in {file_path}.")
-            compiled_text = compile(file_path)
-            post_to_rawpad(compiled_text)
-            last_hash = current_hash
+        for file_path in paths:
+            current_hash = calculate_md5(file_path)
+            if current_hash != last_hashes[file_path]:
+                print(f"Change detected in {file_path}.")
+                compiled_text = compile(file_path)
+                post_to_rawpad(compiled_text)
+                last_hashes[file_path] = current_hash
+
+
+def get_imported_files(entrypoint):
+    with open(entrypoint, 'r', encoding="utf_8") as f:
+      file_content = f.read()
+
+    # build file list
+    paths = [os.path.join(DIRECTORY, f"{match}.txt")
+             for match in IMPORT_PATTERN.findall(file_content)]
+    paths.append(entrypoint)
+    # remove paths if it doesnt exist
+    paths = [path for path in paths if os.path.exists(path)]
+
+    return paths
 
 
 if __name__ == "__main__":
-    full_path = os.path.join(DIRECTORY, FILE)
-    if os.path.exists(full_path):
-        print(f"Watching {full_path} for changes...")
-        watch_file(full_path)
-    else:
-        print(f"File {full_path} does not exist.")
+    full_path = os.path.join(DIRECTORY, ENTRYPOINT)
+
+    watch_files(get_imported_files(full_path))

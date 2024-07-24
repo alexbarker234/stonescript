@@ -31,19 +31,20 @@ var slimeAI = 0
 var slimeState = 0
 var slimeFrame = 0
 
+// init slime
 ?loc.loop | loc.begin
-  slimeState = 0
-
-// init
-?slimeState = 0
-  slimeState = 1
-  slimeAI = 0
-  // init start position
+  slimeY = 0
+  slimeZ = 0
   slimeX = -11
+  slimeDrawY = 0
+  lastPlayerX = 0
+  lastPlayerZ = 0 
+
+  slimeAI = 0
   slimeTargetZ = pos.z + 1
 
 // chilling
-:?slimeState = 1
+:?slimeState = 0
   slimeFrame = 0
   
   ?slimeX < -20
@@ -52,19 +53,19 @@ var slimeFrame = 0
     jumpLength = 10.0
 
   ?slimeX < -15
-    slimeState = 2
+    slimeState = 1
     slimeAI = 0
 
 // charge jump
-:?slimeState = 2
+:?slimeState = 1
   slimeAI++
   // switch slimeFrame every 5 ticks
   slimeFrame = math.FloorToInt(slimeAI / 3) % 2
   ?slimeAI > 15
     slimeAI = 0
-    slimeState = 3
+    slimeState = 2
 // jump
-:?slimeState = 3
+:?slimeState = 2
   slimeFrame = 1
 
   slimeAI++
@@ -76,19 +77,19 @@ var slimeFrame = 0
   slimeX++
 
   ?slimeAI > jumpLength
-    slimeState = 4
+    slimeState = 3
     slimeAI = 0
     slimeY = 0 
     // random offset -1 to 1
     slimeZ = math.Round((rng / 9999) * 2) - 1 
 
 // land
-:?slimeState = 4
+:?slimeState = 3
   slimeFrame = 2
   slimeAI++
 
   ?slimeAI > 5
-    slimeState = 1
+    slimeState = 0
     slimeAI = 0
 
 // increment distance from player

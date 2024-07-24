@@ -37,6 +37,7 @@ var slimeFrame = 0
 // init
 ?slimeState = 0
   slimeState = 1
+  slimeAI = 0
   // init start position
   slimeX = -11
   slimeTargetZ = pos.z + 1

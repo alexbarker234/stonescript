@@ -1,4 +1,4 @@
-// Weapon setups
+// Weapon setups 
 // D Wands
 var vigorWands = [
   "vigor wand D +11", 

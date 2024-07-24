@@ -32,6 +32,12 @@ import Cobblestone
 - [TheMatjaz](https://github.com/TheMatjaz/StoneScript/tree/master)
 - [Eunomiac](https://github.com/Eunomiac/stone-story)
 
+## Compiler
+Since web imports are broken & mobile does not have importing from folders, I created a crude compiler that:
+- Minifies (removes comments)
+- Resolves local imports 
+- Automatically uploads to my internet accessible website to copy to Stonestory on mobile
+
 ## Explanation
 > [!WARNING]  
 > This might not be fully up to date with what the script actually does

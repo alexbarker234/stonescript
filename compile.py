@@ -6,7 +6,8 @@ import hashlib
 import http.client
 
 URL = "rawpad.up.railway.app"
-FILE_PATH = 'Cobblestone.txt'
+DIRECTORY = "./stonescript"
+FILE = 'Cobblestone.txt'
 IMPORT_REGEX = r'\/\/\s?import ([^\s]*)'
 
 
@@ -19,7 +20,8 @@ def calculate_md5(file_path):
 
 def load_script(script_name):
     """Load the content of the script file."""
-    file_path = f"{script_name}.txt"
+    file_path = os.path.join(DIRECTORY, f"{script_name}.txt")
+
     if os.path.exists(file_path):
         with open(file_path, 'r', encoding="utf_8") as f:
             return f.read()
@@ -27,11 +29,13 @@ def load_script(script_name):
         print(f"Warning: {file_path} does not exist.")
         return f"// {script_name}.txt not found\n"
 
+
 def remove_empty_lines(content):
     lines = content.split('\n')
     non_empty_lines = [line for line in lines if line.strip() != '']
     cleaned_text = '\n'.join(non_empty_lines)
     return cleaned_text
+
 
 def compile(file_path):
     """Compiles the stonescripts into one main script"""
@@ -83,8 +87,9 @@ def watch_file(file_path):
 
 
 if __name__ == "__main__":
-    if os.path.exists(FILE_PATH):
-        print(f"Watching {FILE_PATH} for changes...")
-        watch_file(FILE_PATH)
+    full_path = os.path.join(DIRECTORY, FILE)
+    if os.path.exists(full_path):
+        print(f"Watching {full_path} for changes...")
+        watch_file(full_path)
     else:
-        print(f"File {FILE_PATH} does not exist.")
+        print(f"File {full_path} does not exist.")

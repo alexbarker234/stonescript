@@ -59,11 +59,7 @@
     var scriptData = `{{ content }}`
 
     function copyToClipboard() {
-      navigator.clipboard.writeText(scriptData).then(() => {
-        alert('Text copied to clipboard!');
-      }, (err) => {
-        console.error('Failed to copy: ', err);
-      });
+      navigator.clipboard.writeText(scriptData)
     }
 
     function fetchData() {

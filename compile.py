@@ -1,11 +1,14 @@
 import json
 import os
+import re
 import time
 import hashlib
 import http.client
 
 URL = "rawpad.up.railway.app"
 FILE_PATH = 'Cobblestone.txt'
+IMPORT_REGEX = r'\/\/\s?import ([^\s]*)'
+
 
 def calculate_md5(file_path):
     """Calculate MD5 hash of the file contents."""
@@ -13,12 +16,32 @@ def calculate_md5(file_path):
         file_content = f.read()
     return hashlib.md5(file_content).hexdigest()
 
+def load_script(script_name):
+    """Load the content of the script file."""
+    file_path = f"{script_name}.txt"
+    if os.path.exists(file_path):
+        with open(file_path, 'r', encoding="utf_8") as f:
+            return f.read()
+    else:
+        print(f"Warning: {file_path} does not exist.")
+        return f"// {script_name}.txt not found\n"
+
 def compile(file_path):
     """Compiles the stonescripts into one main script"""
     # TODO, seperate out the stonescripts and custom import them
-    with open(file_path, 'r') as f:
+    with open(file_path, 'r', encoding="utf_8") as f:
       file_content = f.read()
     
+    # Find all import statements
+    import_pattern = re.compile(IMPORT_REGEX)
+    matches = import_pattern.findall(file_content)
+
+    # Replace each import statement with the content of the corresponding script
+    for match in matches:
+        print(f"Found import {match}")
+        script_content = load_script(match)
+        file_content = re.sub(IMPORT_REGEX, script_content, file_content, 1)
+
     return file_content
 
 def post_to_rawpad(content):

@@ -7,8 +7,8 @@ var aetherWands = [
   "aether wand D *8", 
   "aether wand D *7"]
 var fireWands = [
-  "fire wand D *8", 
-  "fire wand D *7"]
+  "fire wand D +11", 
+  "fire wand D +10"]
 var iceWands = [
   "ice wand D +8", 
   "ice wand D +7"]
@@ -777,7 +777,7 @@ func Icy()
   ?hasEncountedBoss & FoeWithin(16) 
     IceBoss()
     return
-
+  
   ?foe = giant ice elemental & 
   ^FoeWithin(16)
     IceMiniboss()
@@ -795,10 +795,7 @@ func Icy()
       EquipSet(unmakeSwords)
       return
     
-    ?smiteStack = 0 & foe.GetCount(10) = 1
-      EquipSet(fireSwords)
-      return
-    EquipSet(chillWands)
+    EquipSet(fireWands)
 
 func IceMiniboss()
   ?EquipDashInRange()

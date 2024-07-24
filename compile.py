@@ -11,6 +11,26 @@ ENTRYPOINT = 'Cobblestone.txt'
 IMPORT_PATTERN = re.compile(r'\/\/\s?import ([^\s]*)')
 
 
+def load_env():
+    # not installing libraries
+    env_path = ".env"
+
+    if not os.path.exists(env_path):
+        print("No .env file, compiled script won't be uploaded")
+        return
+
+    env_vars = {}
+    with open(".env", 'r') as file:
+        for line in file:
+            if line.strip() and not line.startswith('#'):
+                key, value = line.strip().split('=', 1)
+                env_vars[key] = value
+    return env_vars.get('PASS')
+
+
+PASS = load_env()
+
+
 def calculate_md5(file_path):
     """Calculate MD5 hash of the file contents."""
     with open(file_path, 'rb') as f:
@@ -41,7 +61,7 @@ def compile(file_path):
     """Compiles the stonescripts into one main script"""
     # TODO, seperate out the stonescripts and custom import them
     with open(file_path, 'r', encoding="utf_8") as f:
-      file_content = f.read()
+        file_content = f.read()
 
     # Find all import statements
     matches = IMPORT_PATTERN.findall(file_content)
@@ -63,8 +83,11 @@ def compile(file_path):
 
 def post_to_rawpad(content):
     """Post the contents of the file to the specified URL."""
+    if PASS == None:
+        return
+
     conn = http.client.HTTPSConnection(URL)
-    headers = {'Content-type': 'application/json'}
+    headers = {'Content-type': 'application/json', "Authorization": PASS}
     body = json.dumps({"content": content})
     conn.request('POST', '/save', body, headers)
     response = conn.getresponse()
@@ -72,25 +95,29 @@ def post_to_rawpad(content):
     conn.close()
 
 
-def watch_files(paths):
+def watch_files(entrypoint, paths):
     """Watch multiple files for changes and post the contents when changed."""
     last_hashes = {path: calculate_md5(path) for path in paths}
     print(f"Watching {paths}")
 
     while True:
         time.sleep(1)  # Wait for 1 second
+        any_change = False
         for file_path in paths:
             current_hash = calculate_md5(file_path)
             if current_hash != last_hashes[file_path]:
                 print(f"Change detected in {file_path}.")
-                compiled_text = compile(file_path)
-                post_to_rawpad(compiled_text)
                 last_hashes[file_path] = current_hash
+                any_change = True
+
+        if any_change:
+            compiled_text = compile(entrypoint)
+            post_to_rawpad(compiled_text)
 
 
 def get_imported_files(entrypoint):
     with open(entrypoint, 'r', encoding="utf_8") as f:
-      file_content = f.read()
+        file_content = f.read()
 
     # build file list
     paths = [os.path.join(DIRECTORY, f"{match}.txt")
@@ -105,4 +132,4 @@ def get_imported_files(entrypoint):
 if __name__ == "__main__":
     full_path = os.path.join(DIRECTORY, ENTRYPOINT)
 
-    watch_files(get_imported_files(full_path))
+    watch_files(full_path, get_imported_files(full_path))

@@ -2,6 +2,8 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 
+require("dotenv").config();
+
 const app = express();
 app.use(express.json());
 const port = process.env.PORT ?? 80;
@@ -13,27 +15,27 @@ var lastCopy = new Date();
 
 // make file if it doesnt exist
 fs.access(filePath, fs.constants.F_OK, (err) => {
-  if (err) fs.writeFile(filePath, '', () => {});
+    if (err) fs.writeFile(filePath, "", () => {});
 });
 
 const formatDate = (date) => {
-  const now = new Date();
-  const diffInSeconds = Math.floor((now - date) / 1000);
-  
-  const units = [
-    { unit: 'day', value: 86400 },
-    { unit: 'hour', value: 3600 },
-    { unit: 'minute', value: 60 },
-    { unit: 'second', value: 1 }
-  ];
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
 
-  for (const { unit, value } of units) {
-    const diff = Math.floor(diffInSeconds / value);
-    if (diff >= 1) {
-      return `${diff} ${unit}${diff > 1 ? 's' : ''} ago`;
+    const units = [
+        { unit: "day", value: 86400 },
+        { unit: "hour", value: 3600 },
+        { unit: "minute", value: 60 },
+        { unit: "second", value: 1 },
+    ];
+
+    for (const { unit, value } of units) {
+        const diff = Math.floor(diffInSeconds / value);
+        if (diff >= 1) {
+            return `${diff} ${unit}${diff > 1 ? "s" : ""} ago`;
+        }
     }
-  }
-  return 'just now';
+    return "just now";
 };
 app.get("/", (req, res) => {
     let content = "";
@@ -56,11 +58,13 @@ app.get("/", (req, res) => {
 });
 
 app.post("/save", (req, res) => {
+    if (!req.headers.authorization.includes(process.env.PASS)) return res.status(401);
+
     const newContent = req.body.content;
     try {
         fs.writeFileSync(filePath, newContent, "utf8");
         content = newContent;
-        lastCopy = new Date()
+        lastCopy = new Date();
         res.send("Saved successfully!");
     } catch (err) {
         console.error("Error saving file:", err);
@@ -76,9 +80,9 @@ app.get("/fetch", (req, res) => {
         console.error("Error reading file:", err);
     }
     const response = {
-      lastCopy: formatDate(lastCopy),
-      content
-    }
+        lastCopy: formatDate(lastCopy),
+        content,
+    };
     res.send(response);
 });
 

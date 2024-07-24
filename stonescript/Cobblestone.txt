@@ -149,6 +149,9 @@ func FoeBetween(min, max)
 func PotionIs(pot)
   return item.potion = pot
 
+func HasBerserk()
+  return buffs.GetCount("berserk") > 0
+
 // Item Equip Helper
 var toEquipL = ""
 var toEquipR = ""
@@ -205,7 +208,7 @@ func Moondial(equip1,equip2)
 func MoonjuggleSet(set)
   Moonjuggle(set[0], set[1])
 func Moonjuggle(equip1,equip2)
-  >`0,13,J:@mdc@ @equip1@ @equip2@
+  // >`0,13,J:@mdc@ @equip1@ @equip2@
   ?mdc = 0
     SetEquipL(equip2)
     SetEquipR(equip1)
@@ -217,7 +220,7 @@ func Moonjuggle(equip1,equip2)
     SetEquipR(equip1)
   ?mdc = 3
     SetEquipL(equip2)
-    SetEquipL("moon")
+    SetEquipR("moon")
     mdc = 0
   mdc++
 
@@ -395,15 +398,7 @@ func Rocky()
 func RockyMiniboss()
   ?EquipDashInRange()
     return
-
-  ?CanApplyDebuf("debuff_chill")
-    EquipSet(chillSwords)
-  :
-    // moon juggle when available
-    ?loopCount ! 0
-      MoonjuggleSet(fireSwords)
-    :
-      EquipSet(fireSwords)
+  EquipChillSwordsOr(stoneSwords)
 
 func RockyBoss()
   // transitions
@@ -432,10 +427,7 @@ func RockyBoss()
       EquipSet(healingSwords)  
       return
 
-    ?loopCount ! 0
-      MoonjuggleSet(fireSwords)
-    :
-      EquipSet(fireSwords)
+    EquipSet(fireSwords)
 
   // Phase 2
   ?foe = dysangelos_elementalist
@@ -445,11 +437,8 @@ func RockyBoss()
     ?canChill & foe ! ice
       EquipSet(chillSwords)
       return
-    // equip weak rune
-    ?weakRune = "fire"
-      MoonjuggleSet(fireSwords)
-    :
-      EquipSwordSet(weakRune)
+
+    EquipSwordSet(weakRune)
 
   // Phase 3
   ?foe = dysangelos_perfected
@@ -460,7 +449,7 @@ func RockyBoss()
 
     // Dodge shield swipe
     ?foe.state = 32 & foe.time > 60 & 
-    ^foe.damage = 1
+    ^foe.damage <= 1
       SetEquipL("mind")
       return
 
@@ -471,25 +460,19 @@ func RockyBoss()
     // Chill
     ?canChill
       EquipSet(chillSwords)
-      return
     // Delete armor 
-    ?foe.armor > 0
+    :?foe.armor > 0
       EquipSet(armorHammers)
-      return
     // Reduce Damage
-    ?canPoison
+    :?canPoison
       SetEquipL("poison sword dP")
       SetEquipR(weakness + " sword D")
-      return
-
-    // Attack normally
-    ?hp < maxhp & foe.buffs.string ! vigor
+    // Heal
+    :?hp < maxhp & foe.buffs.string ! vigor
       EquipSet(healingSwords)
+    // Attack
     :
-      ?foe.buffs.string ! "fire" & loopCount ! 0
-        MoonjuggleSet(fireSwords)
-      :
-        EquipSwordSet(weakness)
+      EquipSwordSet(weakness)
 
 // For Phase 3 - gets strong to some elements
 func FindDysaWeakness()
@@ -573,7 +556,7 @@ func DeadwoodBoss()
 // Caves of Fear
 // ===================
 func Caves()
-  BrewBerserk()
+  BrewLucky()
 
   SetEquipL("triskelion")
   SetEquipR("ice shield")
@@ -626,7 +609,7 @@ func CavesBoss()
 // Mushroom forest
 // ===================
 func Mushroom()
-  BrewBerserk()
+  BrewLucky()
 
   SetEquipL("triskelion")
   SetEquipR("poison shield")
@@ -665,7 +648,7 @@ func MushroomBoss()
 // Haunted Halls
 // ===================
 func Halls()
-  BrewBerserk()
+  BrewLucky()
 
   SetEquipL("triskelion")
   SetEquipR("vigor shield")
@@ -800,8 +783,6 @@ func MineBoss()
   :
     aiState = 0
     SetEquip("aether crossbow")
-    //EquipSet(aetherWands)
-
 
 // ===================
 // Icy Ridge
@@ -847,7 +828,7 @@ func IceMiniboss()
   ?EquipDashInRange()
     return
 
-  MoonjuggleSet(fireSwords)
+  EquipSet(fireSwords)
 
 func IceBoss() 
   UsePot()
@@ -882,13 +863,16 @@ func IceBoss()
     return
 
   // jugglo
-  MoonjuggleSet(fireSwords)
+  ?HasBerserk()
+    MoonjuggleSet(fireSwords)
+  :
+    EquipSet(fireSwords)
 
 // ===================
 // Temple 
 // ===================
 func Temple()
-  BrewBerserk()
+  BrewLucky()
 
   SetEquipL("triskelion")
   SetEquipR("ice shield")

@@ -40,11 +40,12 @@ var slimeFrame = 0
   lastPlayerX = 0
   lastPlayerZ = 0 
 
+  slimeState = 0
   slimeAI = 0
   slimeTargetZ = pos.z + 1
 
 // chilling
-:?slimeState = 0
+?slimeState = 0
   slimeFrame = 0
   
   ?slimeX < -20
@@ -93,8 +94,7 @@ var slimeFrame = 0
     slimeAI = 0
 
 // increment distance from player
-?slimeState ! 0
-  slimeX = slimeX - (pos.x - lastPlayerX)
+slimeX = slimeX - (pos.x - lastPlayerX)
 
 // tp if too far
 ?slimeX < -50

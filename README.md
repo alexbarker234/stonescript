@@ -32,11 +32,14 @@ import Cobblestone
 - [TheMatjaz](https://github.com/TheMatjaz/StoneScript/tree/master)
 - [Eunomiac](https://github.com/Eunomiac/stone-story)
 
+## RawPad 
+Internet accessible website at https://rawpad.up.railway.app/ used to easily copy the Stonescript onto StoneStory mobile
+
 ## Compiler
 Since web imports are broken & mobile does not have importing from folders, I created a crude compiler that:
 - Minifies (removes comments)
 - Resolves local imports 
-- Automatically uploads to my internet accessible website to copy to Stonestory on mobile
+- Automatically uploads to RawPad
 
 ## Explanation
 > [!WARNING]  

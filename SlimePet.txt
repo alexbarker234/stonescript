@@ -31,6 +31,9 @@ var slimeAI = 0
 var slimeState = 0
 var slimeFrame = 0
 
+?loc.loop | loc.begin
+  slimeState = 0
+
 // init
 ?slimeState = 0
   slimeState = 1

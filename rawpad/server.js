@@ -16,16 +16,25 @@ fs.access(filePath, fs.constants.F_OK, (err) => {
   if (err) fs.writeFile(filePath, '', () => {});
 });
 
-const formatDate = (date) => date.toLocaleString('en-GB', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: false,
-});
+const formatDate = (date) => {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+  
+  const units = [
+    { unit: 'day', value: 86400 },
+    { unit: 'hour', value: 3600 },
+    { unit: 'minute', value: 60 },
+    { unit: 'second', value: 1 }
+  ];
 
+  for (const { unit, value } of units) {
+    const diff = Math.floor(diffInSeconds / value);
+    if (diff >= 1) {
+      return `${diff} ${unit}${diff > 1 ? 's' : ''} ago`;
+    }
+  }
+  return 'just now';
+};
 app.get("/", (req, res) => {
     let content = "";
     try {

@@ -55,11 +55,14 @@
   </button>
   <div>Last Updated: <span id="updated">{{ lastCopy }}</span></div>
 
+  <!-- easiest way to store text with symbols -->
+  <textarea id="text-area" style="display: none;">{{ content }}</textarea>
+
   <script>
-    var scriptData = `{{ content }}`
+    const textArea = document.getElementById('text-area')
 
     function copyToClipboard() {
-      navigator.clipboard.writeText(scriptData)
+      navigator.clipboard.writeText(textArea.value)
     }
 
     function fetchData() {

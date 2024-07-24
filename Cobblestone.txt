@@ -48,8 +48,8 @@ var iceSwords = [
   "ice sword D +9", 
   "ice sword D +8"]
 var fireSwords = [
-  "fire sword D +15", 
-  "fire sword D +14"]
+  "fire sword D +18", 
+  "fire sword D +17"]
 var vigorSwords = [
   "vigor sword D +11", 
   "vigor sword D +10"]
@@ -186,6 +186,40 @@ func EquipItems()
 func ActivateItems()
   ?shouldActivate & CanUseItem()
     activate R
+
+// Moondialling
+var mdc = 0
+func Moondial(equip1,equip2)
+  ?mdc = 1
+    equipL moon
+    equipR (equipment1)
+  ?mdc = 2
+    equipL moon
+    equipR (equipment2)
+  ?mdc = 3
+    equipL (equipment1)
+    equipR (equipment2)
+    mdc = 0
+  mdc++
+
+func MoonjuggleSet(set)
+  Moonjuggle(set[0], set[1])
+func Moonjuggle(equip1,equip2)
+  >`0,13,J:@mdc@ @equip1@ @equip2@
+  ?mdc = 0
+    SetEquipL(equip2)
+    SetEquipR(equip1)
+  ?mdc = 1
+    SetEquipL("moon")
+    SetEquipR(equip1)
+  ?mdc = 2
+    SetEquipL(equip2)
+    SetEquipR(equip1)
+  ?mdc = 3
+    SetEquipL(equip2)
+    SetEquipL("moon")
+    mdc = 0
+  mdc++
 
 // Cross lookup
 func xLookup(val, arr1, arr2)
@@ -361,7 +395,15 @@ func Rocky()
 func RockyMiniboss()
   ?EquipDashInRange()
     return
-  EquipChillSwordsOr(stoneSwords)
+
+  ?CanApplyDebuf("debuff_chill")
+    EquipSet(chillSwords)
+  :
+    // moon juggle when available
+    ?loopCount ! 0
+      MoonjuggleSet(fireSwords)
+    :
+      EquipSet(fireSwords)
 
 func RockyBoss()
   // transitions
@@ -374,7 +416,6 @@ func RockyBoss()
 
   // Phase 1
   ?foe = dysangelos_bearer
-    UsePotWhen(loc.stars <= 5)
     ?EquipDashInRange()
       return
 
@@ -391,21 +432,27 @@ func RockyBoss()
       EquipSet(healingSwords)  
       return
 
-    EquipSet(stoneSwords)
+    ?loopCount ! 0
+      MoonjuggleSet(fireSwords)
+    :
+      EquipSet(fireSwords)
 
   // Phase 2
   ?foe = dysangelos_elementalist
     ?EquipDashInRange()
       return
+    // chill
     ?canChill & foe ! ice
       EquipSet(chillSwords)
+      return
+    // equip weak rune
+    ?weakRune = "fire"
+      MoonjuggleSet(fireSwords)
     :
       EquipSwordSet(weakRune)
 
   // Phase 3
   ?foe = dysangelos_perfected
-    UsePot()
-
     // Dodge sky laser
     ?foe.state = 115 & foe.time > 60
       SetEquipL("mind")
@@ -439,11 +486,10 @@ func RockyBoss()
     ?hp < maxhp & foe.buffs.string ! vigor
       EquipSet(healingSwords)
     :
-      EquipSwordSet(weakness)
-
-  // slam his ass
-  ?loopCount ! 0
-    TryBardicheAbility()
+      ?foe.buffs.string ! "fire" & loopCount ! 0
+        MoonjuggleSet(fireSwords)
+      :
+        EquipSwordSet(weakness)
 
 // For Phase 3 - gets strong to some elements
 func FindDysaWeakness()
@@ -801,7 +847,7 @@ func IceMiniboss()
   ?EquipDashInRange()
     return
 
-  EquipSet(fireSwords)
+  MoonjuggleSet(fireSwords)
 
 func IceBoss() 
   UsePot()
@@ -811,7 +857,7 @@ func IceBoss()
     ?EquipDashInRange()
       return
 
-    EquipSet(fireSwords)
+    MoonjuggleSet(fireSwords)
     return
 
   // Pause skip
@@ -831,8 +877,12 @@ func IceBoss()
   ?EquipDashInRange()
     return
 
-  EquipChillSwordsOr(fireSwords)
-  TryBardicheAbility()
+  ?CanApplyDebuf("debuff_chill")
+    EquipSet(chillSwords)
+    return
+
+  // jugglo
+  MoonjuggleSet(fireSwords)
 
 // ===================
 // Temple 
@@ -971,6 +1021,8 @@ func HUD()
   >`0,9,Foe Count: @foe.count@
   >`0,10,Loop GP: @runGP@
   >`0,11,Potion: @PotionHUD()@
+  >`0,12,L: @toEquipL@ R: @toEquipR@ B: 
+  ^@toEquip@
 
   // Item GPs
   //ItemGPHUD()
@@ -1089,6 +1141,9 @@ var lastPlayerZ = 0
 var slimeAI = 0
 var slimeState = 0
 var slimeFrame = 0
+
+?loc.loop | loc.begin
+  slimeState = 0
 
 // init
 ?slimeState = 0

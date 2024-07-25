@@ -1,3 +1,5 @@
+// import DPSMeter
+
 // Weapon setups
 // D Wands
 var vigorWands = [
@@ -415,19 +417,14 @@ func RockyBoss()
       return
 
     ?canChill
-      EquipSet(chillSwords)
-      return
-    
-    ?canPoison
+      EquipSet(chillSwords)    
+    :?canPoison
       SetEquipL("poison sword dP")
       SetEquipR(weakness + " sword D")
-      return
-
-    ?hp < maxhp - 40
+    :?hp < maxhp - 40
       EquipSet(healingSwords)  
-      return
-
-    EquipSet(fireSwords)
+    :
+      EquipSet(stoneSwords)
 
   // Phase 2
   ?foe = dysangelos_elementalist
@@ -1007,6 +1004,7 @@ func HUD()
   >`0,11,Potion: @PotionHUD()@
   >`0,12,L: @toEquipL@ R: @toEquipR@ B: 
   ^@toEquip@
+  >`0,13,DPS: @CalculateDPS()@ 
 
   // Item GPs
   //ItemGPHUD()

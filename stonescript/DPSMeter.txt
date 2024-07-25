@@ -1,0 +1,31 @@
+var dpsLastHP = 0
+var dmgHistory = []
+
+func CalculateDPS()
+  ?foe ! boss
+    dmgHistory.Clear()
+    dpsLastHP = 0
+    return
+  
+  var eHP = foe.armor + foe.hp
+
+  // foe healed or got armour - idk how to do 
+  ?eHP > dpsLastHP
+    dmgHistory.Add(0)
+  // remains the same or damaged
+  :  
+    dmgHistory.Add(dpsLastHP - eHP)
+
+  // only take 5 seconds
+  var maxHist = 5 * 30
+  ?dmgHistory.Count() > maxHist
+    dmgHistory.RemoveAt(0)
+
+  // calculate dps
+  var total = 0
+  for dmg : dmgHistory
+    total += dmg
+
+  dpsLastHP = eHP
+
+  return total / (dmgHistory.Count() / 30.0)

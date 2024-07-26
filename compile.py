@@ -7,7 +7,8 @@ import http.client
 
 URL = "rawpad.up.railway.app"
 DIRECTORY = "./stonescript"
-ENTRYPOINT = 'Cobblestone.txt'
+ENTRYPOINT = 'Main.txt'
+FULL_SCRIPT_NAME = 'Cobblestone.txt'
 IMPORT_PATTERN = re.compile(r'\/\/\s?import ([^\s]*)')
 
 
@@ -95,6 +96,15 @@ def post_to_rawpad(content):
     conn.close()
 
 
+def save_full_script(content):
+    try:
+        with open(FULL_SCRIPT_NAME, 'w', encoding="utf_8") as file:
+            file.write(content)
+        print(f"Content successfully saved to {FULL_SCRIPT_NAME}")
+    except Exception as e:
+        print(f"An error occurred while saving the content: {e}")
+
+
 def watch_files(entrypoint, paths):
     """Watch multiple files for changes and post the contents when changed."""
     last_hashes = {path: calculate_md5(path) for path in paths}
@@ -112,6 +122,7 @@ def watch_files(entrypoint, paths):
 
         if any_change:
             compiled_text = compile(entrypoint)
+            save_full_script(compiled_text)
             post_to_rawpad(compiled_text)
 
 

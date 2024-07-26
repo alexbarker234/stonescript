@@ -10,13 +10,16 @@ Stone Story RPG includes a custom scripting language [Stonescript](https://stone
 ## Disclaimers
 Stone Story RPG on Mobile (iOS & Android) has some minor differences, in particular no loading of external scripts.
 
-The web import feature is currently not working very well
+The web import feature is currently not working very well.
 
 ## Usage
 Feel free to use & modify as you please
 
 ### Copying
-Copy [Cobblestone.txt](https://raw.githubusercontent.com/alexbarker234/stonescript/main/Cobblestone.txt)'s content into the in-game Mindstone UI.
+Either:
+- Go to [RawPad](https://rawpad.up.railway.app/) and click the copy button to copy the full script
+- Copy [Cobblestone.txt](https://raw.githubusercontent.com/alexbarker234/stonescript/main/Cobblestone.txt)
+Paste the content into the in-game Mindstone UI.
 
 ### Web Import (janky and broken)
 ```
@@ -27,19 +30,22 @@ sys.SetFileUrl(
 import Cobblestone
 ```
 
-## Other Stonescript Repos
-- [livercat - scribble](https://github.com/livercat/scribble/tree/main)
-- [TheMatjaz](https://github.com/TheMatjaz/StoneScript/tree/master)
-- [Eunomiac](https://github.com/Eunomiac/stone-story)
-
 ## RawPad 
 Internet accessible website at https://rawpad.up.railway.app/ used to easily copy the Stonescript onto StoneStory mobile
 
 ## Compiler
 Since web imports are broken & mobile does not have importing from folders, I created a crude compiler that:
 - Minifies (removes comments)
-- Resolves local imports 
+- Resolves local imports in Main
 - Automatically uploads to RawPad
+
+The compiler currently doesn't support
+- Nested or duplicate imports
+
+## Other Stonescript Repos
+- [livercat - scribble](https://github.com/livercat/scribble/tree/main)
+- [TheMatjaz](https://github.com/TheMatjaz/StoneScript/tree/master)
+- [Eunomiac](https://github.com/Eunomiac/stone-story)
 
 ## Explanation
 > [!WARNING]  

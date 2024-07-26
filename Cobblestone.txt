@@ -1,0 +1,866 @@
+var dpsLastHP = 0
+var dmgHistory = []
+func CalculateDPS()
+  ?foe ! boss
+    dmgHistory.Clear()
+    dpsLastHP = 0
+    return
+  var eHP = foe.armor + foe.hp
+  ?eHP > dpsLastHP
+    dmgHistory.Add(0)
+  :  
+    dmgHistory.Add(dpsLastHP - eHP)
+  var maxHist = 5 * 30
+  ?dmgHistory.Count() > maxHist
+    dmgHistory.RemoveAt(0)
+  var total = 0
+  for dmg : dmgHistory
+    total += dmg
+  dpsLastHP = eHP
+  return total / (dmgHistory.Count() / 30.0)
+var vigorWands = [
+  "vigor wand D +11", 
+  "vigor wand D +12"]
+var aetherWands = [
+  "aether wand D *8", 
+  "aether wand D *7"]
+var fireWands = [
+  "fire wand D +11", 
+  "fire wand D +10"]
+var iceWands = [
+  "ice wand D +8", 
+  "ice wand D +7"]
+var poisonWands = [
+  "poison wand D +8", 
+  "poison wand D +7"]
+var chillWands = [
+  "ice wand dI +11", 
+  "ice wand dI +8"]
+var armorHammers = [
+  "poison hammer D",
+  "ice hammer D"]
+var stunlock = [
+  "stone hammer +9", 
+  "aether hammer"]
+var unmakeSwords = [
+  "aether sword dU +10", 
+  "aether sword dU +9"]
+var chillSwords = [
+  "ice sword dI", 
+  "ice sword dI -gold"]
+var healingSwords = [
+  "vigor sword dL +10",
+  "vigor sword dL +11"]
+var poisonSwords = [
+  "poison sword D +10", 
+  "poison sword D +8"]
+var iceSwords = [
+  "ice sword D +9", 
+  "ice sword D +8"]
+var fireSwords = [
+  "fire sword D +18", 
+  "fire sword D +17"]
+var vigorSwords = [
+  "vigor sword D +11", 
+  "vigor sword D +10"]
+var aetherSwords = [
+  "aether sword D +11", 
+  "aether sword D +9"]
+var stoneSwords = [
+  "stone sword +10",
+  "stone sword +11"]
+var elementalSwordDict = [
+  ["ice", iceSwords],
+  ["fire", fireSwords],
+  ["poison", poisonSwords],
+  ["aether", aetherSwords],
+  ["vigor", vigorSwords],
+]
+var allAbilities = [
+  "mind","hammer","bardiche","blade",
+  "skeleton_arm","mask","fire_talisman",
+  "cinderwisp","quarterstaff","dash","bash",
+]
+var abilityHUDNames = [
+  "mind","ham","bard", "bfg","arm","mask",
+  "tali","wisp","qtr","dash","bash"
+]
+var shouldHarvest = false
+var shouldPauseSkip = true
+var xpFarm = false
+var hasEncountedBoss = false
+var hasPauseSkipped = false
+var shouldPermaPot = false
+var aiState = 0
+var loopCount = 0
+var foeDebuffs = ""
+var smiteStack = 0
+func ResetGlobals()
+  hasEncountedBoss = false
+  hasPauseSkipped = false
+  aiState = 0
+func ResetGlobalsPerFrame()
+  foeDebuffs = foe.debuffs.string
+  smiteStack = buffs.GetCount("smite")
+  toEquipL = ""
+  toEquipR = ""
+  toEquip = ""
+  shouldActivate = false
+var weakRune = stone
+?foe = vigor
+  weakRune = poison
+?foe = poison
+  weakRune = ice
+?foe = ice
+  weakRune = fire
+?foe = fire
+  weakRune = aether
+?foe = aether
+  weakRune = vigor
+func Between(value, min, max)
+  return value >= min & value <= max
+func ItemCD(itemName)
+  return item.GetCooldown(itemName)
+func CanUse(itemName)
+  return item.CanActivate(itemName)
+func CanUseItem()
+  return item.CanActivate()
+func FormatTime(timeVal)
+  return time.FormatCasual(timeVal)
+func FoeWithin(val)
+  return FoeBetween(0, val)
+func FoeBetween(min, max)
+  return foe.distance >= min &
+  ^foe.distance <= max
+func PotionIs(pot)
+  return item.potion = pot
+func HasBerserk()
+  return buffs.GetCount("berserk") > 0
+var toEquipL = ""
+var toEquipR = ""
+var toEquip = ""
+var shouldActivate = false
+func SetEquipL(itemName)
+  toEquipL = itemName
+  toEquip = ""
+func SetEquipR(itemName)
+  toEquipR = itemName
+  toEquip = ""
+func SetEquip(itemName)
+  toEquipL = ""
+  toEquipR = ""
+  toEquip = itemName
+func EquipSet(set) 
+  SetEquipL(set[0])
+  SetEquipR(set[1])
+func ActivateItem()
+  shouldActivate = true
+func EquipItems()
+  ?toEquipL
+    equipL @toEquipL@
+  ?toEquipR
+    equipR @toEquipR@
+  ?toEquip
+    equip @toEquip@
+func ActivateItems()
+  ?shouldActivate & CanUseItem()
+    activate R
+var mdc = 0
+func Moondial(equip1,equip2)
+  ?mdc = 1
+    equipL moon
+    equipR (equipment1)
+  ?mdc = 2
+    equipL moon
+    equipR (equipment2)
+  ?mdc = 3
+    equipL (equipment1)
+    equipR (equipment2)
+    mdc = 0
+  mdc++
+func MoonjuggleSet(set)
+  Moonjuggle(set[0], set[1])
+func Moonjuggle(equip1,equip2)
+  ?mdc = 0
+    SetEquipL(equip2)
+    SetEquipR(equip1)
+  ?mdc = 1
+    SetEquipL("moon")
+    SetEquipR(equip1)
+  ?mdc = 2
+    SetEquipL(equip2)
+    SetEquipR(equip1)
+  ?mdc = 3
+    SetEquipL(equip2)
+    SetEquipR("moon")
+    mdc = 0
+  mdc++
+func xLookup(val, arr1, arr2)
+  var index = arr1.IndexOf(val)
+  ?index > -1
+    return arr2[index]
+  :
+    return false
+func DictVal(dict, dictKey)
+  for i = 0 .. dict.Count()-1
+    var value = dict[i]
+    ?value[0] = dictKey
+      return value[1]
+func BrewBerserk()
+  ?loc.begin
+    brew wood + bronze
+func BrewLucky()
+  ?loc.begin
+    brew stone + bronze
+func BrewStrength()
+  ?loc.begin
+    brew stone
+func UseHealth(hp_threshold)
+  ?loc.begin
+    brew tar
+  ?hp < hp_threshold
+    activate potion
+func UsePot()
+  ?item.potion ! empty
+    activate potion
+func UsePotWhen(condition)
+  ?item.potion ! empty & condition
+    activate potion
+func EquipDash()
+  ?ItemCD("bash") <= 0 
+    SetEquipR("bashing shield")
+  :?ItemCD("dash") <= 0
+    SetEquipR("dashing shield")
+func InDashRange()
+  return FoeBetween(11,16)
+func EquipDashInRange()
+  ?InDashRange()
+    EquipDash()
+    return true
+  return false
+func EquipChillSwordsOr(set)
+  ?CanApplyDebuf("debuff_chill")
+    EquipSet(chillSwords)
+  :
+    EquipSet(set)
+func EquipSwordSet(rune)
+  EquipSet(DictVal(elementalSwordDict,rune))
+func PickupWhenClose()
+  ?pickup.distance < 10
+    SetEquipR("star")
+func CanApplyDebuf(debuff)
+  ?(foe = "immune_to_" + debuff)
+    return false
+  var stack = foe.debuffs.GetCount(debuff)
+  ?debuff = "debuff_chill"
+    return stack < 6
+  return foe.debuffs.string ! debuff
+func IsMushroomBoss()
+  return foe = mushroom_boss |
+  ^foe = mushroom_boss_fat | 
+  ^foe = mushroom_boss_skinny
+func TryBardicheAbility()
+  var cooldown = ItemCD("bardiche")
+  ?FoeWithin(10) &
+  ^cooldown <= 0 | cooldown > 870
+    SetEquip("bardiche")
+    ActivateItem()
+var qtrTimer = 0
+func QtrDash()
+  ?foe.distance <= 16
+    return
+  var cooldown = ItemCD("quarterstaff")
+  ?qtrTimer ! 0
+    SetEquip("quarterstaff")
+    qtrTimer++
+    ?qtrTimer > 2
+      qtrTimer = 0
+  :?cooldown <= 0 &
+  ^CanUseItem()
+    SetEquip("quarterstaff")
+    ActivateItem()
+    qtrTimer++
+var scrolling = 0
+func DoubleBlade()
+  var bladeReady = ItemCD("blade") <= 0
+  ?bladeReady & foe.count > 3
+    scrolling++
+    screen.Next()
+  :
+    scrolling = 0
+    screen.ResetOffset()
+  ?bladeReady & 
+  ^FoeWithin(25) & 
+  ^(foe.count > 5 | scrolling > 15)
+    SetEquip("blade")
+    ActivateItem()
+    return true
+  return scrolling > 0
+func FireTalisman()
+  var cooldown = ItemCD("fire_talisman")
+  ?cooldown > 130
+    SetEquipR("fire talisman")
+  ?summon.count = 0 & cooldown <= 0 &
+  ^CanUseItem()
+    SetEquipR("fire talisman")
+    ActivateItem()
+func MaskAbility()
+  ?ItemCD("mask") <= 0 
+    SetEquip("mask")
+    ActivateItem()
+func RunAAC()
+  ?item.left.state = 3
+    equipL *0 wand 
+    equipL @item.left@
+  ?item.right.state = 3
+    equipR *0 shield 
+    equip @item.right@
+func Rocky()
+  BrewLucky()
+  shouldPermaPot = true
+  ?pickup.distance < 10
+    ?loopCount = 0
+      SetEquipL("star")
+    :
+      SetEquipR("star")
+  ?FoeWithin(16)
+    ?foe = acronian_scout
+      RockyMiniboss()
+    :
+      RockyBoss()
+func RockyMiniboss()
+  ?EquipDashInRange()
+    return
+  EquipChillSwordsOr(stoneSwords)
+func RockyBoss()
+  ?foe.state = -1 | foe.state = 124
+    return
+  var canChill = CanApplyDebuf("debuff_chill")
+  var canPoison = 
+  ^CanApplyDebuf("debuff_damage")
+  ?foe = dysangelos_bearer
+    ?EquipDashInRange()
+      return
+    ?canChill
+      EquipSet(chillSwords)    
+    :?canPoison
+      SetEquipL("poison sword dP")
+      SetEquipR(weakness + " sword D")
+    :?hp < maxhp - 40
+      EquipSet(healingSwords)  
+    :
+      EquipSet(stoneSwords)
+  ?foe = dysangelos_elementalist
+    ?EquipDashInRange()
+      return
+    ?canChill & foe ! ice
+      EquipSet(chillSwords)
+      return
+    EquipSwordSet(weakRune)
+  ?foe = dysangelos_perfected
+    ?foe.state = 115 & foe.time > 60
+      SetEquipL("mind")
+      return
+    ?foe.state = 32 & foe.time > 60 & 
+    ^foe.damage <= 1
+      SetEquipL("mind")
+      return
+    ?EquipDashInRange()
+      return
+    var weakness = FindDysaWeakness()
+    ?canChill
+      EquipSet(chillSwords)
+    :?foe.armor > 0
+      EquipSet(armorHammers)
+    :?canPoison
+      SetEquipL("poison sword dP")
+      SetEquipR(weakness + " sword D")
+    :?hp < maxhp & foe.buffs.string ! vigor
+      EquipSet(healingSwords)
+    :
+      EquipSwordSet(weakness)
+func FindDysaWeakness()
+  ?foe.buffs.string ! "fire"
+    return "fire"
+  :?foe.buffs.string ! "ice"
+    return "ice"
+  :?foe.buffs.string ! "aether"
+    return "aether"
+  :?foe.buffs.string ! "vigor"
+    return "vigor"
+  :
+    return "poison"
+func Deadwood()
+  ?loc.stars <= 5 & xpFarm
+    brew wood
+    ?item.potion ! empty & 
+    ^Between(time, 60, 500)
+      activate potion
+  :?loc.stars <= 10
+    BrewBerserk()
+  :
+    brew tar
+  SetEquipL("triskelion")
+  SetEquipR("ice shield")
+  PickupWhenClose()
+  ?harvest.distance < 10 & shouldHarvest
+    SetEquip("hatchet")
+  ?(foe = wasp | foe = wasp_nest) & 
+  ^FoeWithin(16)
+    DeadwoodMinibosss()
+    return
+  ?foe = boss & FoeWithin(16)
+    DeadwoodBoss()
+    return
+  DoubleBlade()
+  ?FoeWithin(16)   
+    ?EquipDashInRange()
+      return
+    SetEquip("ice staff")
+func DeadwoodMinibosss()
+  ?EquipDashInRange()
+    return
+  EquipSet(chillWands)
+func DeadwoodBoss()
+  ?EquipDashInRange()
+    return
+  ?PotionIs("berserk")
+    activate potion
+  ?foe = poena
+    EquipSet(stunlock)
+    TryBardicheAbility()
+    ?PotionIs("health") & hp ! maxhp
+      activate potion
+  :?foe = tree_boss
+    EquipChillSwordsOr(vigorSwords)
+func Caves()
+  BrewLucky()
+  SetEquipL("triskelion")
+  SetEquipR("ice shield")
+  PickupWhenClose()
+  ?foe = cool_bat & FoeWithin(16)
+    CavesMiniBoss()
+    return
+  ?foe = spider_boss & FoeWithin(16)
+    CavesBoss()
+    return
+  DoubleBlade()
+  ?EquipDashInRange()
+    return
+  ?FoeWithin(16)
+    EquipSet(iceWands)
+func CavesMiniBoss()
+  ?EquipDashInRange()
+    return
+  EquipChillSwordsOr(iceSwords)
+func CavesBoss()
+  UsePot()
+  ?foe.state ! 142 & InDashRange()
+    EquipDash()
+    return
+  ?foe.state = 142 & foe.time = 60
+    SetEquipL("mind")
+    return
+  MaskAbility()
+  EquipChillSwordsOr(iceSwords)
+  TryBardicheAbility()
+func Mushroom()
+  BrewLucky()
+  SetEquipL("triskelion")
+  SetEquipR("poison shield")
+  ?EquipDashInRange()
+    return
+  ?IsMushroomBoss() & FoeWithin(16)
+    MushroomBoss()
+    return
+  ?foe = boss & FoeWithin(16)
+    EquipChillSwordsOr(poisonSwords)
+    return
+  DoubleBlade()
+  ?FoeWithin(16)
+    EquipSet(chillWands)
+func MushroomBoss() 
+  UsePot()
+  ?foe = mushroom_boss_fat
+    MaskAbility()
+  EquipChillSwordsOr(poisonSwords)
+  TryBardicheAbility()   
+  ?foe ! mushroom_boss
+    QtrDash()
+func Halls()
+  BrewLucky()
+  SetEquipL("triskelion")
+  SetEquipR("vigor shield")
+  ?loc.stars <= 5
+    Halls5()
+    return
+  ?foe = pallas & FoeWithin(16)
+    HallsBoss()
+    return
+  ?foe = spawner & foe = boss &
+  ^FoeWithin(16)
+    EquipChillSwordsOr(vigorSwords)
+    return
+  DoubleBlade()
+  ?EquipDashInRange()
+    return
+  ?FoeWithin(16) 
+    EquipSet(chillWands)
+func Halls5()
+  BrewBerserk()
+  ?EquipDashInRange()
+    return
+  ?foe = boss & FoeWithin(16)
+    UsePot()
+    MaskAbility()
+    EquipSet(vigorSwords)
+    return
+  ?FoeWithin(16)
+    EquipSet(vigorWands)
+func HallsBoss()
+  UsePot()
+  MaskAbility()
+  ?shouldPauseSkip & !hasPauseSkipped &
+  ^foe = legless
+    hasPauseSkipped = true
+    ui.OpenInv()
+    return
+  ?EquipDashInRange()
+    return
+  EquipChillSwordsOr(vigorSwords)
+  ?foe.count > 2
+    SetEquip("bardiche")
+  TryBardicheAbility()   
+func Mine()
+  ?loc.stars <= 10
+    BrewBerserk()
+  :
+    BrewStrength()
+  SetEquipL("triskelion")
+  SetEquipR("aether shield")
+  PickupWhenClose()
+  ?foe = explode
+    MineMiniboss()
+    return
+  ?foe = boss & FoeWithin(20) &
+  ^foe = bronze_guardian
+    MineBoss()
+    return
+  DoubleBlade()
+  ?EquipDashInRange()
+    return
+  ?FoeWithin(16)
+    ?foe.GetCount(10) = 1 & smiteStack = 0
+      EquipSet(unmakeSwords)
+      return
+    EquipSet(chillWands)
+func MineMiniboss()
+  ?FoeBetween(11,16)
+    SetEquipR("dash") 
+  ?FoeWithin(8)
+    SetEquipR("mind")
+func MineBoss() 
+  UsePot()
+  MaskAbility()
+  ?foe.state = 32
+    ?foe.time > 15
+      SetEquipL("mind")
+      SetEquipR("aether shield")
+      aiState = 1
+  :?foe.state = 33
+    ?aiState = 1
+      EquipDash()
+      ?ItemCD("dash") > 0 |
+      ^ItemCD("bash") > 0
+        aiState = 2
+    :
+      EquipSet(unmakeSwords)
+      TryBardicheAbility()
+  :
+    aiState = 0
+    SetEquip("aether crossbow")
+func Icy()
+  BrewLucky()
+  SetEquipL("triskelion")
+  SetEquipR("fire shield")
+  ?!foe 
+    SetEquipR("mask")
+  ?foe = yeti & FoeWithin(16)
+    hasEncountedBoss = true
+  ?hasEncountedBoss & FoeWithin(16) 
+    IceBoss()
+    return
+  ?foe = giant ice elemental & 
+  ^FoeWithin(16)
+    IceMiniboss()
+    return
+  DoubleBlade()
+  ?EquipDashInRange()
+    return
+  ?FoeWithin(16)
+    ?(foe = ice_pillar | foe = ice_wall) 
+      EquipSet(unmakeSwords)
+      return
+    EquipSet(fireWands)
+func IceMiniboss()
+  ?EquipDashInRange()
+    return
+  EquipSet(fireSwords)
+func IceBoss() 
+  UsePot()
+  ?foe.armor > 0
+    ?EquipDashInRange()
+      return
+    MoonjuggleSet(fireSwords)
+    return
+  ?shouldPauseSkip & !hasPauseSkipped
+    hasPauseSkipped = true
+    ui.OpenInv()
+    return
+  MaskAbility()
+  ?foe.state = 133
+    EquipSet(fireWands)
+    return
+  ?EquipDashInRange()
+    return
+  ?CanApplyDebuf("debuff_chill")
+    EquipSet(chillSwords)
+    return
+  ?HasBerserk()
+    MoonjuggleSet(fireSwords)
+  :
+    EquipSet(fireSwords)
+func Temple()
+  BrewLucky()
+  SetEquipL("triskelion")
+  SetEquipR("ice shield")
+  ?foe = nagaraja & FoeWithin(16)
+    TempleBoss()
+    return
+  DoubleBlade()
+  ?EquipDashInRange()
+    return
+  ?FoeWithin(16)
+    ?foe = acronian_cultist
+      EquipChillSwordsOr(iceSwords)
+      return
+    EquipSet(chillWands)
+func TempleBoss()
+  UsePot()
+  ?foe.state ! 112 & InDashRange()
+    EquipDash()
+    return
+  ?foe.state = 112 & foe.time = 45
+    SetEquipL("mind")
+    return
+  EquipChillSwordsOr(iceSwords)
+var bottom = screen.h - 2
+func ColorCD(cd)
+  ?cd > 0
+    return "red"
+  return "green"
+var usedItems = []
+var itemGPs = []
+var runGP = 0
+func ManageGP()
+  ?!usedItems.Contains(item.right)
+    usedItems.Add(item.right)
+    itemGPs.Add([item.right, item.right.gp])
+    runGP += item.right.gp
+  ?!usedItems.Contains(item.left)
+    usedItems.Add(item.left)
+    itemGPs.Add([item.left, item.left.gp])  
+    runGP += item.left.gp
+  ?loc.loop
+    usedItems.Clear()
+    itemGPs.Clear()
+    runGP = 0
+func ItemGPHUD()
+  var y = 1
+  for itemGP : itemGPs
+    >`10,@y@,@itemGP[0]@ - @itemGP[1]@
+    y++
+var potionEffectNames = ["berserk", 
+  "lucky_crit"]
+func PotionHUD()
+  for effect : potionEffectNames
+    var x = buffs.GetTime(effect)
+    ?x > 0
+      return string.Capitalize(effect) + ": " +
+      ^x
+  return "None"
+var oldAverages = []
+func AverageIconHUD(average)
+  ?loc.loop | loc.begin
+    oldAverages.Add(loc.averageTime)
+  var lastAverage = loc.averageTime
+  ?oldAverages.Count() > 1
+    lastAverage = 
+    ^oldAverages[oldAverages.Count() - 2]
+  var iconX = 8 + string.Size(average)
+  ?loc.averageTime > lastAverage
+    >`@iconX@,@bottom@,#red,▲
+  :?loc.averageTime < lastAverage
+    >`@iconX@,@bottom@,#green,▼
+  :
+    >`@iconX@,@bottom@,#blue,-
+func CooldownHUD()
+  var x = screen.w - 10
+  var x2 = screen.w - 5
+  var y = 1
+  for abi : allAbilities
+    var cd = ItemCD(abi)   
+    var text = xLookup(abi,allAbilities,
+    ^abilityHUDNames)
+    var textCol = ColorCD(cd)
+    >`@x@,@y@,#@textCol@,
+    ^@string.Capitalize(text)@
+    >`@x2@,@y@,#@textCol@,
+    ^@time.FormatDigital(cd)@
+    y++
+func HUD()
+  disable hud u 
+  CooldownHUD()
+  >`0,6,State: @foe.state@ Time: @foe.time@
+  >`0,7,Dist: @foe.distance@
+  >`0,8,X: @pos.x@
+  >`0,9,Foe Count: @foe.count@
+  >`0,10,Loop GP: @runGP@
+  >`0,11,Potion: @PotionHUD()@
+  >`0,12,L: @toEquipL@ R: @toEquipR@ B: 
+  ^@toEquip@
+  >`0,13,DPS: @CalculateDPS()@ 
+  var current = 
+    ^FormatTime(totaltime) + " " + 
+    ^totaltime + "F"
+  var best = 
+    ^FormatTime(loc.bestTime) + " " + 
+    ^loc.bestTime + "F"
+  var average = 
+    ^FormatTime(loc.averageTime) + " " + 
+    ^loc.averageTime + "F"
+  >`0,@bottom - 2@,Cur:
+  >`7,@bottom - 2@,@current@
+  >`0,@bottom - 1@,Best:
+  >`7,@bottom - 1@,@best@
+  >`0,@bottom@,Avg:
+  >`7,@bottom@,@average@
+  AverageIconHUD(average)
+func Main()
+  RunAAC()
+  ResetGlobalsPerFrame()
+  ?loc.begin | loc.loop
+    ResetGlobals()
+  ?loc.loop
+    loopCount++
+  SetEquipL("triskelion")
+  SetEquipR("ouroboros")
+  PickupWhenClose()
+  ?loc = Rocky
+    Rocky()
+  :?loc = Deadwood
+    Deadwood()
+  :?loc = Caves
+    Caves()
+  :?loc = Mushroom
+    Mushroom()
+  :?loc = Halls
+    Halls()
+  :?loc = Mine
+    Mine()
+  :?loc = Icy
+    Icy()
+  :?loc = Temple
+    Temple()
+  var ppRun = shouldPermaPot & loopCount = 0
+  ?shouldPermaPot
+    UsePot()
+  ?ppRun
+    SetEquipR("mask")
+  :
+    QtrDash()
+    ?loc ! Deadwood
+      FireTalisman()
+  EquipItems()
+  ActivateItems()
+  ManageGP()
+  HUD()
+Main()
+var slimeFrames = [
+ascii
+##.——.
+#( • •)
+asciiend,
+ascii
+###.—.
+##(• •)
+asciiend,
+ascii
+#______
+(  • • ) 
+asciiend
+]
+var jumpLength = 10.0
+var jumpHeight = 5
+var slimeTargetZ = 22
+var slimeY = 0
+var slimeZ = 0
+var slimeX = 0
+var slimeDrawY = 0
+var lastPlayerX = 0
+var lastPlayerZ = 0
+var slimeAI = 0
+var slimeState = 0
+var slimeFrame = 0
+?loc.loop | loc.begin
+  slimeY = 0
+  slimeZ = 0
+  slimeX = -11
+  slimeDrawY = 0
+  lastPlayerX = 0
+  lastPlayerZ = 0 
+  slimeState = 0
+  slimeAI = 0
+  slimeTargetZ = pos.z + 1
+?slimeState = 0
+  slimeFrame = 0
+  ?slimeX < -20
+    jumpLength = 15.0
+  :
+    jumpLength = 10.0
+  ?slimeX < -15
+    slimeState = 1
+    slimeAI = 0
+:?slimeState = 1
+  slimeAI++
+  slimeFrame = math.FloorToInt(slimeAI / 3) % 2
+  ?slimeAI > 15
+    slimeAI = 0
+    slimeState = 2
+:?slimeState = 2
+  slimeFrame = 1
+  slimeAI++
+  slimeY = -math.Sin((slimeAI / jumpLength) * 
+  ^math.pi) * jumpHeight
+  slimeY = math.RoundToInt(slimeY)
+  slimeX++
+  ?slimeAI > jumpLength
+    slimeState = 3
+    slimeAI = 0
+    slimeY = 0 
+    slimeZ = math.Round((rng / 9999) * 2) - 1 
+:?slimeState = 3
+  slimeFrame = 2
+  slimeAI++
+  ?slimeAI > 5
+    slimeState = 0
+    slimeAI = 0
+slimeX = slimeX - (pos.x - lastPlayerX)
+?slimeX < -50
+  slimeX = -20
+slimeDrawY = slimeTargetZ - pos.z + 
+^slimeY + slimeZ
+lastPlayerX = pos.x
+lastPlayerZ = pos.z
+>o@slimeX@,@slimeDrawY@,#green,
+^@slimeFrames[slimeFrame]@

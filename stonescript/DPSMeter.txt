@@ -12,7 +12,11 @@ func CalculateDPS()
   // foe healed or got armour - idk how to do 
   ?eHP > dpsLastHP
     dmgHistory.Add(0)
-  // remains the same or damaged
+  // no damage done - only add if not empty
+  :?eHP = dpsLastHP
+    ?dmgHistory.Count() ! 0
+      dmgHistory.Add(0)
+  // damage done
   :  
     dmgHistory.Add(dpsLastHP - eHP)
 

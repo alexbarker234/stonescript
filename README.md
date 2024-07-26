@@ -46,6 +46,7 @@ The compiler currently doesn't support
 - [livercat - scribble](https://github.com/livercat/scribble/tree/main)
 - [TheMatjaz](https://github.com/TheMatjaz/StoneScript/tree/master)
 - [Eunomiac](https://github.com/Eunomiac/stone-story)
+- [asHOH](https://github.com/asHOH/Stonescript-for-Stone-Story-RPG/tree/master)
 
 ## Explanation
 > [!WARNING]  

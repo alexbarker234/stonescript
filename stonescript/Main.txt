@@ -50,7 +50,7 @@ var iceSwords = [
   "ice sword D +9", 
   "ice sword D +8"]
 var fireSwords = [
-  "fire sword D +18", 
+  "fire sword D +20", 
   "fire sword D +17"]
 var vigorSwords = [
   "vigor sword D +11", 
@@ -90,26 +90,22 @@ var xpFarm = false
 var hasEncountedBoss = false
 var hasPauseSkipped = false
 var shouldPermaPot = false
+var canChill
+canChill = CanApplyDebuf("debuff_chill")
 
 var aiState = 0
 var loopCount = 0
 
-var foeDebuffs = ""
+var foeDebuffs
+foeDebuffs = foe.debuffs.string
+
 var smiteStack = 0
+smiteStack = buffs.GetCount("smite")
 
 func ResetGlobals()
   hasEncountedBoss = false
   hasPauseSkipped = false
   aiState = 0
-
-func ResetGlobalsPerFrame()
-  foeDebuffs = foe.debuffs.string
-  smiteStack = buffs.GetCount("smite")
-  // Equip resets
-  toEquipL = ""
-  toEquipR = ""
-  toEquip = ""
-  shouldActivate = false
   
 // Find weak rune to use later
 var weakRune = stone
@@ -155,10 +151,15 @@ func HasBerserk()
   return buffs.GetCount("berserk") > 0
 
 // Item Equip Helper
-var toEquipL = ""
+var toEquipL
+toEquipL = ""
 var toEquipR = ""
+toEquipR = ""
 var toEquip = ""
-var shouldActivate = false
+toEquip = ""
+var shouldActivate
+shouldActivate = false
+
 
 func SetEquipL(itemName)
   toEquipL = itemName
@@ -391,6 +392,8 @@ func Rocky()
     :
       SetEquipR("star")
 
+  SetEquipR("compound shield")
+
   ?FoeWithin(16)
     ?foe = acronian_scout
       RockyMiniboss()
@@ -400,11 +403,17 @@ func Rocky()
 func RockyMiniboss()
   ?EquipDashInRange()
     return
-  EquipChillSwordsOr(stoneSwords)
+  ?canChill
+    EquipSet(chillSwords)
+  :?hp < maxhp
+    EquipSet(healingSwords)
+  : 
+    EquipSet(stoneSwords)
 
 func RockyBoss()
   // transitions
   ?foe.state = -1 | foe.state = 124
+    SetEquipL("quest") // bit of armour
     return
 
   var canChill = CanApplyDebuf("debuff_chill")
@@ -989,6 +998,40 @@ func CooldownHUD()
     ^@time.FormatDigital(cd)@
     y++
 
+var lastTime = 0
+var lastTimeTemp = 0
+func TimeHUD()
+  // set last time
+  ?lastTimeTemp > totaltime
+    lastTime = lastTimeTemp
+  lastTimeTemp = totaltime
+
+  var current = 
+    ^FormatTime(totaltime) + " " + 
+    ^totaltime + "F"
+  var last = 
+    ^FormatTime(lastTime) + " " + 
+    ^lastTime + "F"
+  var best =
+    ^FormatTime(loc.bestTime) + " " + 
+    ^loc.bestTime + "F"
+  var average = 
+    ^FormatTime(loc.averageTime) + " " + 
+    ^loc.averageTime + "F"
+
+  >`0,@bottom - 3@,Cur:
+  >`7,@bottom - 3@,@current@
+
+  >`0,@bottom - 2@,Last:
+  >`7,@bottom - 2@,@last@
+
+  >`0,@bottom - 1@,Best:
+  >`7,@bottom - 1@,@best@
+
+  >`0,@bottom@,Avg:
+  >`7,@bottom@,@average@
+  AverageIconHUD(average)
+  
 func HUD()
   // Disable utility belt
   disable hud u 
@@ -1009,33 +1052,13 @@ func HUD()
   // Item GPs
   //ItemGPHUD()
 
-  // Time
-  var current = 
-    ^FormatTime(totaltime) + " " + 
-    ^totaltime + "F"
-  var best = 
-    ^FormatTime(loc.bestTime) + " " + 
-    ^loc.bestTime + "F"
-  var average = 
-    ^FormatTime(loc.averageTime) + " " + 
-    ^loc.averageTime + "F"
-
-  >`0,@bottom - 2@,Cur:
-  >`7,@bottom - 2@,@current@
-
-  >`0,@bottom - 1@,Best:
-  >`7,@bottom - 1@,@best@
-
-  >`0,@bottom@,Avg:
-  >`7,@bottom@,@average@
-  AverageIconHUD(average)
+  TimeHUD()
 
 
 func Main()
   // Always run animation cancel
   RunAAC()
 
-  ResetGlobalsPerFrame()
   ?loc.begin | loc.loop
     ResetGlobals()
 

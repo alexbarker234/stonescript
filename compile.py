@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import os
 import re
@@ -122,6 +123,8 @@ def watch_files(entrypoint, paths):
 
         if any_change:
             compiled_text = compile(entrypoint)
+            now = datetime.now().strftime("%Y-%m-%d %H:%M")
+            compiled_text = f"// Last modified {now}\n" + compiled_text
             save_full_script(compiled_text)
             post_to_rawpad(compiled_text)
 

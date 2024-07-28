@@ -50,8 +50,8 @@ var iceSwords = [
   "ice sword D +9", 
   "ice sword D +8"]
 var fireSwords = [
-  "fire sword D +20", 
-  "fire sword D +17"]
+  "fire sword D +21", 
+  "fire sword D +18"]
 var vigorSwords = [
   "vigor sword D +11", 
   "vigor sword D +10"]
@@ -92,7 +92,8 @@ var hasPauseSkipped = false
 var shouldPermaPot = false
 var canChill
 canChill = CanApplyDebuf("debuff_chill")
-
+var canPoison
+canPoison = CanApplyDebuf("debuff_damage")
 var aiState = 0
 var loopCount = 0
 
@@ -386,13 +387,13 @@ func Rocky()
   BrewLucky()
   shouldPermaPot = true
 
+  SetEquipR("compound shield")
+
   ?pickup.distance < 10
     ?loopCount = 0
       SetEquipL("star")
     :
       SetEquipR("star")
-
-  SetEquipR("compound shield")
 
   ?FoeWithin(16)
     ?foe = acronian_scout
@@ -412,13 +413,10 @@ func RockyMiniboss()
 
 func RockyBoss()
   // transitions
-  ?foe.state = -1 | foe.state = 124
+  var transStates = [102,124,107,117,127,116]
+  ?transStates.Contains(foe.state)
     SetEquipL("quest") // bit of armour
     return
-
-  var canChill = CanApplyDebuf("debuff_chill")
-  var canPoison = 
-  ^CanApplyDebuf("debuff_damage")
 
   // Phase 1
   ?foe = dysangelos_bearer
@@ -429,7 +427,7 @@ func RockyBoss()
       EquipSet(chillSwords)    
     :?canPoison
       SetEquipL("poison sword dP")
-      SetEquipR(weakness + " sword D")
+      SetEquipR("stone sword")
     :?hp < maxhp - 40
       EquipSet(healingSwords)  
     :

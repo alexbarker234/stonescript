@@ -1,4 +1,4 @@
-// Last modified 2024-07-26 16:56
+// Last modified 2024-07-28 23:56
 var dpsLastHP = 0
 var dmgHistory = []
 func CalculateDPS()
@@ -62,8 +62,8 @@ var iceSwords = [
   "ice sword D +9", 
   "ice sword D +8"]
 var fireSwords = [
-  "fire sword D +20", 
-  "fire sword D +17"]
+  "fire sword D +21", 
+  "fire sword D +18"]
 var vigorSwords = [
   "vigor sword D +11", 
   "vigor sword D +10"]
@@ -97,6 +97,8 @@ var hasPauseSkipped = false
 var shouldPermaPot = false
 var canChill
 canChill = CanApplyDebuf("debuff_chill")
+var canPoison
+canPoison = CanApplyDebuf("debuff_damage")
 var aiState = 0
 var loopCount = 0
 var foeDebuffs
@@ -323,12 +325,12 @@ func RunAAC()
 func Rocky()
   BrewLucky()
   shouldPermaPot = true
+  SetEquipR("compound shield")
   ?pickup.distance < 10
     ?loopCount = 0
       SetEquipL("star")
     :
       SetEquipR("star")
-  SetEquipR("compound shield")
   ?FoeWithin(16)
     ?foe = acronian_scout
       RockyMiniboss()
@@ -344,12 +346,10 @@ func RockyMiniboss()
   : 
     EquipSet(stoneSwords)
 func RockyBoss()
-  ?foe.state = -1 | foe.state = 124
+  var transStates = [102,124,107,117,127,116]
+  ?transStates.Contains(foe.state)
     SetEquipL("quest") 
     return
-  var canChill = CanApplyDebuf("debuff_chill")
-  var canPoison = 
-  ^CanApplyDebuf("debuff_damage")
   ?foe = dysangelos_bearer
     ?EquipDashInRange()
       return
@@ -357,7 +357,7 @@ func RockyBoss()
       EquipSet(chillSwords)    
     :?canPoison
       SetEquipL("poison sword dP")
-      SetEquipR(weakness + " sword D")
+      SetEquipR("stone sword")
     :?hp < maxhp - 40
       EquipSet(healingSwords)  
     :
@@ -825,7 +825,9 @@ asciiend
 ]
 var jumpLength = 10.0
 var jumpHeight = 5
-var slimeTargetZ = 22
+var slimeTargetZ
+slimeTargetZ = pos.z + 1
+var slimeTargetDist = 5;
 var slimeY = 0
 var slimeZ = 0
 var slimeX = 0
@@ -844,19 +846,16 @@ var slimeFrame = 0
   lastPlayerZ = 0 
   slimeState = 0
   slimeAI = 0
-  slimeTargetZ = pos.z + 1
+  slimeZ = slimeTargetZ
 ?slimeState = 0
   slimeFrame = 0
-  ?slimeX < -20
-    jumpLength = 15.0
-  :
-    jumpLength = 10.0
   ?slimeX < -15
     slimeState = 1
     slimeAI = 0
 :?slimeState = 1
   slimeAI++
   slimeFrame = math.FloorToInt(slimeAI / 3) % 2
+  jumpLength = slimeX + slimeTargetDist
   ?slimeAI > 15
     slimeAI = 0
     slimeState = 2
@@ -871,7 +870,7 @@ var slimeFrame = 0
     slimeState = 3
     slimeAI = 0
     slimeY = 0 
-    slimeZ = math.Round((rng / 9999) * 2) - 1 
+    slimeZ = slimeTargetZ
 :?slimeState = 3
   slimeFrame = 2
   slimeAI++
@@ -881,8 +880,7 @@ var slimeFrame = 0
 slimeX = slimeX - (pos.x - lastPlayerX)
 ?slimeX < -50
   slimeX = -20
-slimeDrawY = slimeTargetZ - pos.z + 
-^slimeY + slimeZ
+slimeDrawY = slimeZ - pos.z + slimeY
 lastPlayerX = pos.x
 lastPlayerZ = pos.z
 >o@slimeX@,@slimeDrawY@,#green,

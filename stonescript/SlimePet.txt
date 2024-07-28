@@ -16,7 +16,10 @@ asciiend
 // config
 var jumpLength = 10.0
 var jumpHeight = 5
-var slimeTargetZ = 22
+var slimeTargetZ
+slimeTargetZ = pos.z + 1
+
+var slimeTargetDist = 5;
 
 // init vars
 var slimeY = 0
@@ -42,17 +45,12 @@ var slimeFrame = 0
 
   slimeState = 0
   slimeAI = 0
-  slimeTargetZ = pos.z + 1
+  slimeZ = slimeTargetZ
 
 // chilling
 ?slimeState = 0
   slimeFrame = 0
   
-  ?slimeX < -20
-    jumpLength = 15.0
-  :
-    jumpLength = 10.0
-
   ?slimeX < -15
     slimeState = 1
     slimeAI = 0
@@ -62,6 +60,9 @@ var slimeFrame = 0
   slimeAI++
   // switch slimeFrame every 5 ticks
   slimeFrame = math.FloorToInt(slimeAI / 3) % 2
+
+  jumpLength = slimeX + slimeTargetDist
+
   ?slimeAI > 15
     slimeAI = 0
     slimeState = 2
@@ -81,8 +82,7 @@ var slimeFrame = 0
     slimeState = 3
     slimeAI = 0
     slimeY = 0 
-    // random offset -1 to 1
-    slimeZ = math.Round((rng / 9999) * 2) - 1 
+    slimeZ = slimeTargetZ
 
 // land
 :?slimeState = 3
@@ -100,8 +100,7 @@ slimeX = slimeX - (pos.x - lastPlayerX)
 ?slimeX < -50
   slimeX = -20
 
-slimeDrawY = slimeTargetZ - pos.z + 
-^slimeY + slimeZ
+slimeDrawY = slimeZ - pos.z + slimeY
 
 // manage player vars 
 lastPlayerX = pos.x

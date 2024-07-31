@@ -1,4 +1,4 @@
-// Last modified 2024-07-28 23:56
+// Last modified 2024-07-29 23:31
 var dpsLastHP = 0
 var dmgHistory = []
 func CalculateDPS()
@@ -62,11 +62,11 @@ var iceSwords = [
   "ice sword D +9", 
   "ice sword D +8"]
 var fireSwords = [
-  "fire sword D +21", 
-  "fire sword D +18"]
+  "fire sword D shiny", 
+  "fire sword D -shiny"]
 var vigorSwords = [
-  "vigor sword D +11", 
-  "vigor sword D +10"]
+  "vigor sword D shiny", 
+  "vigor sword D -shiny"]
 var aetherSwords = [
   "aether sword D +11", 
   "aether sword D +9"]
@@ -173,16 +173,18 @@ func ActivateItems()
   ?shouldActivate & CanUseItem()
     activate R
 var mdc = 0
+func MoondialSet(set)
+  Moondial(set[0], set[1])
 func Moondial(equip1,equip2)
   ?mdc = 1
-    equipL moon
-    equipR (equipment1)
+    SetEquipL("moon")
+    SetEquipR(equip1)
   ?mdc = 2
-    equipL moon
-    equipR (equipment2)
+    SetEquipL("moon")
+    SetEquipR(equip1)
   ?mdc = 3
-    equipL (equipment1)
-    equipR (equipment2)
+    SetEquipL(equip1)
+    SetEquipR(equip2)
     mdc = 0
   mdc++
 func MoonjuggleSet(set)
@@ -346,7 +348,7 @@ func RockyMiniboss()
   : 
     EquipSet(stoneSwords)
 func RockyBoss()
-  var transStates = [102,124,107,117,127,116]
+  var transStates = [102,124,117,127,116]
   ?transStates.Contains(foe.state)
     SetEquipL("quest") 
     return
@@ -367,8 +369,10 @@ func RockyBoss()
       return
     ?canChill & foe ! ice
       EquipSet(chillSwords)
-      return
-    EquipSwordSet(weakRune)
+    :?weakRune = "fire" & loopCount ! 0
+      MoondialSet(fireSwords)
+    :
+      EquipSwordSet(weakRune)
   ?foe = dysangelos_perfected
     ?foe.state = 115 & foe.time > 60
       SetEquipL("mind")
@@ -389,6 +393,8 @@ func RockyBoss()
       SetEquipR(weakness + " sword D")
     :?hp < maxhp & foe.buffs.string ! vigor
       EquipSet(healingSwords)
+    :?weakness = "fire" & loopCount ! 0
+      MoondialSet(fireSwords)
     :
       EquipSwordSet(weakness)
 func FindDysaWeakness()
@@ -827,14 +833,14 @@ var jumpLength = 10.0
 var jumpHeight = 5
 var slimeTargetZ
 slimeTargetZ = pos.z + 1
-var slimeTargetDist = 5;
+var slimeTargetDist = 10
 var slimeY = 0
 var slimeZ = 0
 var slimeX = 0
 var slimeDrawY = 0
 var lastPlayerX = 0
 var lastPlayerZ = 0
-var slimeAI = 0
+var slimeTimer = 0
 var slimeState = 0
 var slimeFrame = 0
 ?loc.loop | loc.begin
@@ -845,42 +851,43 @@ var slimeFrame = 0
   lastPlayerX = 0
   lastPlayerZ = 0 
   slimeState = 0
-  slimeAI = 0
+  slimeTimer = 0
   slimeZ = slimeTargetZ
 ?slimeState = 0
   slimeFrame = 0
   ?slimeX < -15
     slimeState = 1
-    slimeAI = 0
+    slimeTimer = 0
 :?slimeState = 1
-  slimeAI++
-  slimeFrame = math.FloorToInt(slimeAI / 3) % 2
-  jumpLength = slimeX + slimeTargetDist
-  ?slimeAI > 15
-    slimeAI = 0
+  slimeTimer++
+  slimeFrame = 
+  ^math.FloorToInt(slimeTimer / 3) % 2
+  jumpLength = -(slimeX + slimeTargetDist)
+  ?slimeTimer > 15
+    slimeTimer = 0
     slimeState = 2
 :?slimeState = 2
   slimeFrame = 1
-  slimeAI++
-  slimeY = -math.Sin((slimeAI / jumpLength) * 
+  slimeTimer++
+  slimeY = -math.Sin((slimeTimer / jumpLength) * 
   ^math.pi) * jumpHeight
   slimeY = math.RoundToInt(slimeY)
   slimeX++
-  ?slimeAI > jumpLength
+  ?slimeTimer > jumpLength
     slimeState = 3
-    slimeAI = 0
+    slimeTimer = 0
     slimeY = 0 
-    slimeZ = slimeTargetZ
 :?slimeState = 3
   slimeFrame = 2
-  slimeAI++
-  ?slimeAI > 5
+  slimeTimer++
+  ?slimeTimer > 5
     slimeState = 0
-    slimeAI = 0
+    slimeTimer = 0
 slimeX = slimeX - (pos.x - lastPlayerX)
 ?slimeX < -50
   slimeX = -20
 slimeDrawY = slimeZ - pos.z + slimeY
+>`0,15,@slimeX@, @slimeDrawY@
 lastPlayerX = pos.x
 lastPlayerZ = pos.z
 >o@slimeX@,@slimeDrawY@,#green,

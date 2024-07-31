@@ -50,11 +50,11 @@ var iceSwords = [
   "ice sword D +9", 
   "ice sword D +8"]
 var fireSwords = [
-  "fire sword D +21", 
-  "fire sword D +18"]
+  "fire sword D shiny", 
+  "fire sword D -shiny"]
 var vigorSwords = [
-  "vigor sword D +11", 
-  "vigor sword D +10"]
+  "vigor sword D shiny", 
+  "vigor sword D -shiny"]
 var aetherSwords = [
   "aether sword D +11", 
   "aether sword D +9"]
@@ -196,16 +196,18 @@ func ActivateItems()
 
 // Moondialling
 var mdc = 0
+func MoondialSet(set)
+  Moondial(set[0], set[1])
 func Moondial(equip1,equip2)
   ?mdc = 1
-    equipL moon
-    equipR (equipment1)
+    SetEquipL("moon")
+    SetEquipR(equip1)
   ?mdc = 2
-    equipL moon
-    equipR (equipment2)
+    SetEquipL("moon")
+    SetEquipR(equip1)
   ?mdc = 3
-    equipL (equipment1)
-    equipR (equipment2)
+    SetEquipL(equip1)
+    SetEquipR(equip2)
     mdc = 0
   mdc++
 
@@ -413,7 +415,8 @@ func RockyMiniboss()
 
 func RockyBoss()
   // transitions
-  var transStates = [102,124,107,117,127,116]
+  // 107 is a transition but also attack
+  var transStates = [102,124,117,127,116]
   ?transStates.Contains(foe.state)
     SetEquipL("quest") // bit of armour
     return
@@ -437,12 +440,15 @@ func RockyBoss()
   ?foe = dysangelos_elementalist
     ?EquipDashInRange()
       return
-    // chill
+    // Chill
     ?canChill & foe ! ice
       EquipSet(chillSwords)
-      return
-
-    EquipSwordSet(weakRune)
+    // Moondialling
+    :?weakRune = "fire" & loopCount ! 0
+      MoondialSet(fireSwords)
+    // Attack
+    :
+      EquipSwordSet(weakRune)
 
   // Phase 3
   ?foe = dysangelos_perfected
@@ -474,6 +480,9 @@ func RockyBoss()
     // Heal
     :?hp < maxhp & foe.buffs.string ! vigor
       EquipSet(healingSwords)
+    // Moondialling
+    :?weakness = "fire" & loopCount ! 0
+      MoondialSet(fireSwords)
     // Attack
     :
       EquipSwordSet(weakness)

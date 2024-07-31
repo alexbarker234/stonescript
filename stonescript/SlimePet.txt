@@ -19,7 +19,7 @@ var jumpHeight = 5
 var slimeTargetZ
 slimeTargetZ = pos.z + 1
 
-var slimeTargetDist = 5;
+var slimeTargetDist = 10
 
 // init vars
 var slimeY = 0
@@ -30,7 +30,7 @@ var lastPlayerX = 0
 var lastPlayerZ = 0
 
 // ai
-var slimeAI = 0
+var slimeTimer = 0
 var slimeState = 0
 var slimeFrame = 0
 
@@ -44,7 +44,7 @@ var slimeFrame = 0
   lastPlayerZ = 0 
 
   slimeState = 0
-  slimeAI = 0
+  slimeTimer = 0
   slimeZ = slimeTargetZ
 
 // chilling
@@ -53,45 +53,46 @@ var slimeFrame = 0
   
   ?slimeX < -15
     slimeState = 1
-    slimeAI = 0
+    slimeTimer = 0
 
 // charge jump
 :?slimeState = 1
-  slimeAI++
+  slimeTimer++
   // switch slimeFrame every 5 ticks
-  slimeFrame = math.FloorToInt(slimeAI / 3) % 2
+  slimeFrame = 
+  ^math.FloorToInt(slimeTimer / 3) % 2
 
-  jumpLength = slimeX + slimeTargetDist
+  jumpLength = -(slimeX + slimeTargetDist)
 
-  ?slimeAI > 15
-    slimeAI = 0
+  ?slimeTimer > 15
+    slimeTimer = 0
     slimeState = 2
 // jump
 :?slimeState = 2
   slimeFrame = 1
 
-  slimeAI++
+  slimeTimer++
   // Sin arc jump
-  slimeY = -math.Sin((slimeAI / jumpLength) * 
+  slimeY = -math.Sin((slimeTimer / jumpLength) * 
   ^math.pi) * jumpHeight
   slimeY = math.RoundToInt(slimeY)
 
   slimeX++
 
-  ?slimeAI > jumpLength
+  ?slimeTimer > jumpLength
     slimeState = 3
-    slimeAI = 0
+    slimeTimer = 0
     slimeY = 0 
-    slimeZ = slimeTargetZ
+    // slimeZ = slimeTargetZ
 
 // land
 :?slimeState = 3
   slimeFrame = 2
-  slimeAI++
+  slimeTimer++
 
-  ?slimeAI > 5
+  ?slimeTimer > 5
     slimeState = 0
-    slimeAI = 0
+    slimeTimer = 0
 
 // increment distance from player
 slimeX = slimeX - (pos.x - lastPlayerX)
@@ -101,6 +102,8 @@ slimeX = slimeX - (pos.x - lastPlayerX)
   slimeX = -20
 
 slimeDrawY = slimeZ - pos.z + slimeY
+
+>`0,15,@slimeX@, @slimeDrawY@
 
 // manage player vars 
 lastPlayerX = pos.x

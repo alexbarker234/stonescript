@@ -58,10 +58,11 @@ app.get("/", (req, res) => {
 });
 
 app.post("/save", (req, res) => {
-    if (!req.headers.authorization.includes(process.env.PASS)) return res.status(401);
-
-    const newContent = req.body.content;
     try {
+      if (!req.headers.authorization?.includes(process.env.PASS)) return res.status(401);
+
+      const newContent = req.body.content;
+
         fs.writeFileSync(filePath, newContent, "utf8");
         content = newContent;
         lastCopy = new Date();

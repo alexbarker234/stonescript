@@ -63,6 +63,7 @@ var slimeFrame = 0
   ^math.FloorToInt(slimeTimer / 3) % 2
 
   jumpLength = -(slimeX + slimeTargetDist)
+  jumpLength = jumpLength * 1.0
 
   ?slimeTimer > 15
     slimeTimer = 0

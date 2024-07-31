@@ -1051,7 +1051,22 @@ func TimeHUD()
   >`0,@bottom@,Avg:
   >`7,@bottom@,@average@
   AverageIconHUD(average)
-  
+
+var lastFPSTime = time.msbn
+var frameCount = 0
+var fps = 0
+func CalculateFPS()
+  frameCount++
+  var nowTime = time.msbn
+  // stupid int cast
+  var elapsed = int.Parse
+  ^(nowTime.Sub(lastFPSTime).ToString())
+  ?elapsed >= 1000
+    fps = Math.RoundToInt(frameCount / 
+    ^(elapsed / 1000.0))
+    frameCount = 0
+    lastFPSTime = time.msbn
+
 func HUD()
   // Disable utility belt
   disable hud u 
@@ -1076,8 +1091,10 @@ func HUD()
   // Item GPs
   //ItemGPHUD()
 
-  TimeHUD()
+  CalculateFPS()
+  >`28,@screen.h - 1@,@fps@ FPS
 
+  TimeHUD()
 
 func Main()
   // Always run animation cancel

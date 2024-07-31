@@ -104,8 +104,6 @@ slimeX = slimeX - (pos.x - lastPlayerX)
 
 slimeDrawY = slimeZ - pos.z + slimeY
 
->`0,15,@slimeX@, @slimeDrawY@
-
 // manage player vars 
 lastPlayerX = pos.x
 lastPlayerZ = pos.z

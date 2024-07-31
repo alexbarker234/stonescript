@@ -437,9 +437,6 @@ func RockyBoss()
 
     ?canChill
       EquipSet(chillSwords)    
-    :?canPoison
-      SetEquipL("poison sword dP")
-      SetEquipR("stone sword")
     :?hp < maxhp - 40
       EquipSet(healingSwords)  
     :?loopCount = 0
@@ -482,10 +479,6 @@ func RockyBoss()
     // Delete armor 
     :?foe.armor > 0
       EquipSet(armorHammers)
-    // Reduce Damage
-    :?canPoison
-      SetEquipL("poison sword dP")
-      SetEquipR(weakness + " sword D")
     // Heal
     :?hp < maxhp & foe.buffs.string ! vigor
       EquipSet(healingSwords)

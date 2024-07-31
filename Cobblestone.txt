@@ -1,4 +1,4 @@
-// Last modified 2024-07-31 16:36
+// Last modified 2024-07-31 17:12
 var dpsLastHP = 0
 var dmgHistory = []
 func CalculateDPS()
@@ -364,9 +364,6 @@ func RockyBoss()
       return
     ?canChill
       EquipSet(chillSwords)    
-    :?canPoison
-      SetEquipL("poison sword dP")
-      SetEquipR("stone sword")
     :?hp < maxhp - 40
       EquipSet(healingSwords)  
     :?loopCount = 0
@@ -395,9 +392,6 @@ func RockyBoss()
       EquipSet(chillSwords)
     :?foe.armor > 0
       EquipSet(armorHammers)
-    :?canPoison
-      SetEquipL("poison sword dP")
-      SetEquipR(weakness + " sword D")
     :?hp < maxhp & foe.buffs.string ! vigor
       EquipSet(healingSwords)
     :?weakness = "fire" & loopCount ! 0

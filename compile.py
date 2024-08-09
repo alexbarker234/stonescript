@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 import os
 import re
+import sys
 import time
 import hashlib
 import http.client
@@ -109,14 +110,32 @@ def save_full_script(content):
         print(f"An error occurred while saving the content: {e}")
 
 
+def restart_script():
+    """Restart the current script."""
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
+
+
 def watch_files(entrypoint, paths):
     """Watch multiple files for changes and post the contents when changed."""
+    script_path = sys.argv[0]
     last_hashes = {path: calculate_md5(path) for path in paths}
+    last_self_hash = calculate_md5(script_path)
+
     print(f"Watching {paths}")
 
     while True:
         try:
-            time.sleep(1)  # Wait for 1 second
+            time.sleep(1)
+
+            # Check self for auto reload
+            current_hash = calculate_md5(script_path)
+            if current_hash != last_self_hash:
+                print(f"Change detected in {script_path}. Restarting...")
+                restart_script()
+            last_self_hash = current_hash
+
+            # Watch stonescript
             any_change = False
             for file_path in paths:
                 current_hash = calculate_md5(file_path)
@@ -128,8 +147,8 @@ def watch_files(entrypoint, paths):
             if any_change:
                 compiled_text = compile(entrypoint)
                 now = datetime.now().strftime("%Y-%m-%d %H:%M")
-                compiled_text = f"// Last modified {now}\n" + compiled_text
                 save_full_script(compiled_text)
+                compiled_text = f"// Last modified {now}\n" + compiled_text
                 post_to_rawpad(compiled_text)
         except Exception as e:
             print(f"An error occurred while watching files: {e}")

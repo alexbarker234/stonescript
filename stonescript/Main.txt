@@ -36,7 +36,7 @@ var unmakeSwords = [
   "aether sword dU +10", 
   "aether sword dU +9"]
 var chillSwords = [
-  "ice sword dI", 
+  "ice sword dI gold", 
   "ice sword dI -gold"]
 var healingSwords = [
   "vigor sword dL +10",
@@ -286,7 +286,7 @@ func EquipDashInRange()
 // Uses chill until fully chilled
 func EquipChillSwordsOr(set)
   ?CanApplyDebuf("debuff_chill")
-    EquipSet(chillSwords)
+    MoondialSet(chillSwords)
   :
     EquipSet(set)
 
@@ -311,11 +311,18 @@ func IsMushroomBoss()
   ^foe = mushroom_boss_skinny
 
 // ABILITIES
-func TryBardicheAbility()
+func BardicheAbility()
   var cooldown = ItemCD("bardiche")
   ?FoeWithin(10) &
   ^cooldown <= 0 | cooldown > 870
     SetEquip("bardiche")
+    ActivateItem()
+
+func HammerAbility()
+  var cooldown = ItemCD("hammer")
+  ?FoeWithin(10) &
+  ^cooldown <= 0 | cooldown > 640
+    SetEquip("hammer")
     ActivateItem()
 
 var qtrTimer = 0
@@ -410,7 +417,7 @@ func RockyMiniboss()
   ?EquipDashInRange()
     return
   ?canChill
-    EquipSet(chillSwords)
+    MoondialSet(chillSwords)
   :?hp < maxhp
     EquipSet(healingSwords)
   :?loopCount = 0
@@ -433,7 +440,7 @@ func RockyBoss()
       return
 
     ?canChill
-      EquipSet(chillSwords)    
+      MoondialSet(chillSwords)    
     :?hp < maxhp - 40
       EquipSet(healingSwords)  
     :?loopCount = 0
@@ -472,7 +479,7 @@ func RockyBoss()
     var weakness = FindDysaWeakness()
     // Chill
     ?canChill
-      EquipSet(chillSwords)
+      MoondialSet(chillSwords)
     // Delete armor 
     :?foe.armor > 0
       EquipSet(armorHammers)
@@ -557,7 +564,7 @@ func DeadwoodBoss()
 
   ?foe = poena
     EquipSet(stunlock)
-    TryBardicheAbility()
+    BardicheAbility()
 
     // Just restore HP at the end
     ?PotionIs("health") & hp ! maxhp
@@ -593,8 +600,11 @@ func Caves()
   ?EquipDashInRange()
     return
 
-  ?FoeWithin(16)
-    EquipSet(iceWands)
+  ?FoeWithin(16) 
+    ?smiteStack ! 0
+      EquipSet(chillWands)
+    :
+      EquipSet(iceWands)
 
 func CavesMiniBoss()
   ?EquipDashInRange()
@@ -619,7 +629,7 @@ func CavesBoss()
   MaskAbility()
 
   EquipChillSwordsOr(iceSwords)
-  TryBardicheAbility()
+  BardicheAbility()
 
 // ===================
 // Mushroom forest
@@ -646,7 +656,7 @@ func Mushroom()
   DoubleBlade()
 
   ?FoeWithin(16)
-    EquipSet(chillWands)
+    EquipSet(poisonWands)
 
 func MushroomBoss() 
   UsePot()
@@ -655,7 +665,7 @@ func MushroomBoss()
     MaskAbility()
     
   EquipChillSwordsOr(poisonSwords)
-  TryBardicheAbility()   
+  BardicheAbility()   
 
   ?foe ! mushroom_boss
     QtrDash()
@@ -723,7 +733,7 @@ func HallsBoss()
   ?foe.count > 2
     SetEquip("bardiche")
 
-  TryBardicheAbility()   
+  BardicheAbility()   
 
 // ===================
 // Boiling Mine
@@ -760,7 +770,10 @@ func Mine()
     ?foe.GetCount(10) = 1 & smiteStack = 0
       EquipSet(unmakeSwords)
       return
-    EquipSet(chillWands)
+    ?smiteStack = 0
+      EquipSet(chillWands)
+    :
+      EquipSet(aetherWands)
         
 func MineMiniboss()
   ?FoeBetween(11,16)
@@ -788,7 +801,7 @@ func MineBoss()
         aiState = 2
     :
       EquipSet(unmakeSwords)
-      TryBardicheAbility()
+      BardicheAbility()
   :
     aiState = 0
     SetEquip("aether crossbow")
@@ -837,18 +850,18 @@ func IceMiniboss()
   ?EquipDashInRange()
     return
 
-  EquipSet(fireSwords)
+  MoondialSet(fireSwords)
 
 func IceBoss() 
-  UsePot()
-
   // intro state
   ?foe.armor > 0
     ?EquipDashInRange()
       return
 
-    MoonjuggleSet(fireSwords)
+    MoondialSet(fireSwords)
     return
+
+  UsePot()
 
   MaskAbility()
 
@@ -861,15 +874,17 @@ func IceBoss()
   ?EquipDashInRange()
     return
 
-  ?CanApplyDebuf("debuff_chill")
-    EquipSet(chillSwords)
-    return
-
-  // jugglo
-  ?HasBerserk()
-    MoonjuggleSet(fireSwords)
-  :
+  // ?CanApplyDebuf("debuff_chill")
+  //   EquipSet(chillSwords)
+  //   return
+  // why is it a different name
+  ?debuffs.GetCount("debuff_yeti_chill") > 0
     EquipSet(fireSwords)
+  :
+    MoondialSet(fireSwords)
+
+  HammerAbility()
+  BardicheAbility()
 
 // ===================
 // Temple 
@@ -896,7 +911,10 @@ func Temple()
       EquipChillSwordsOr(iceSwords)
       return
 
-    EquipSet(chillWands)
+    ?smiteStack = 0
+      EquipSet(chillWands)
+    :
+      EquipSet(iceWands)
 
 func TempleBoss()
   UsePot()

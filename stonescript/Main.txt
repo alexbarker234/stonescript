@@ -83,12 +83,10 @@ var abilityHUDNames = [
 ]
 // Config vars
 var shouldHarvest = false
-var shouldPauseSkip = true
 var xpFarm = false
 
 // Globals
 var hasEncountedBoss = false
-var hasPauseSkipped = false
 var shouldPermaPot = false
 var canChill
 canChill = CanApplyDebuf("debuff_chill")
@@ -105,7 +103,6 @@ smiteStack = buffs.GetCount("smite")
 
 func ResetGlobals()
   hasEncountedBoss = false
-  hasPauseSkipped = false
   aiState = 0
   
 // Find weak rune to use later
@@ -711,13 +708,6 @@ func HallsBoss()
 
   MaskAbility()
 
-  // Pause skip
-  ?shouldPauseSkip & !hasPauseSkipped &
-  ^foe = legless
-    hasPauseSkipped = true
-    ui.OpenInv()
-    return
-
   ?EquipDashInRange()
     return
 
@@ -852,12 +842,6 @@ func IceBoss()
       return
 
     MoonjuggleSet(fireSwords)
-    return
-
-  // Pause skip
-  ?shouldPauseSkip & !hasPauseSkipped
-    hasPauseSkipped = true
-    ui.OpenInv()
     return
 
   MaskAbility()

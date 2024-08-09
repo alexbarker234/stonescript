@@ -1,5 +1,8 @@
 {
     "editor.rulers": [48],
     "editor.tabSize": 2,
+    "[python]": {
+        "editor.tabSize": 4
+    },
     "task.allowAutomaticTasks": "on"
 }

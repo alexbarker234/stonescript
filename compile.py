@@ -88,13 +88,16 @@ def post_to_rawpad(content):
     if PASS == None:
         return
 
-    conn = http.client.HTTPSConnection(URL)
-    headers = {'Content-type': 'application/json', "Authorization": PASS}
-    body = json.dumps({"content": content})
-    conn.request('POST', '/save', body, headers)
-    response = conn.getresponse()
-    print(response.status, response.reason)
-    conn.close()
+    try:
+        conn = http.client.HTTPSConnection(URL)
+        headers = {'Content-type': 'application/json', "Authorization": PASS}
+        body = json.dumps({"content": content})
+        conn.request('POST', '/save', body, headers)
+        response = conn.getresponse()
+        print(response.status, response.reason)
+        conn.close()
+    except Exception as e:
+        print(f"An error occurred while posting to rawpad: {e}")
 
 
 def save_full_script(content):
@@ -112,21 +115,24 @@ def watch_files(entrypoint, paths):
     print(f"Watching {paths}")
 
     while True:
-        time.sleep(1)  # Wait for 1 second
-        any_change = False
-        for file_path in paths:
-            current_hash = calculate_md5(file_path)
-            if current_hash != last_hashes[file_path]:
-                print(f"Change detected in {file_path}.")
-                last_hashes[file_path] = current_hash
-                any_change = True
+        try:
+            time.sleep(1)  # Wait for 1 second
+            any_change = False
+            for file_path in paths:
+                current_hash = calculate_md5(file_path)
+                if current_hash != last_hashes[file_path]:
+                    print(f"Change detected in {file_path}.")
+                    last_hashes[file_path] = current_hash
+                    any_change = True
 
-        if any_change:
-            compiled_text = compile(entrypoint)
-            now = datetime.now().strftime("%Y-%m-%d %H:%M")
-            compiled_text = f"// Last modified {now}\n" + compiled_text
-            save_full_script(compiled_text)
-            post_to_rawpad(compiled_text)
+            if any_change:
+                compiled_text = compile(entrypoint)
+                now = datetime.now().strftime("%Y-%m-%d %H:%M")
+                compiled_text = f"// Last modified {now}\n" + compiled_text
+                save_full_script(compiled_text)
+                post_to_rawpad(compiled_text)
+        except Exception as e:
+            print(f"An error occurred while watching files: {e}")
 
 
 def get_imported_files(entrypoint):

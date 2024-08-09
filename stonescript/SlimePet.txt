@@ -63,6 +63,7 @@ var slimeFrame = 0
   ^math.FloorToInt(slimeTimer / 3) % 2
 
   jumpLength = -(slimeX + slimeTargetDist)
+  jumpLength = jumpLength * 1.0
 
   ?slimeTimer > 15
     slimeTimer = 0
@@ -102,8 +103,6 @@ slimeX = slimeX - (pos.x - lastPlayerX)
   slimeX = -20
 
 slimeDrawY = slimeZ - pos.z + slimeY
-
->`0,15,@slimeX@, @slimeDrawY@
 
 // manage player vars 
 lastPlayerX = pos.x

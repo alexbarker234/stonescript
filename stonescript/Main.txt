@@ -60,8 +60,8 @@ var aetherSwords = [
   "aether sword D +9"]
 
 var stoneSwords = [
-  "stone sword +10",
-  "stone sword +11"]
+  "stone sword +15",
+  "stone sword +14"]
 
 var elementalSwordDict = [
   ["ice", iceSwords],
@@ -201,7 +201,7 @@ func Moondial(equip1,equip2)
     SetEquipR(equip1)
   ?mdc = 2
     SetEquipL("moon")
-    SetEquipR(equip1)
+    SetEquipR(equip2)
   ?mdc = 3
     SetEquipL(equip1)
     SetEquipR(equip2)
@@ -386,6 +386,9 @@ func Rocky()
   BrewLucky()
   shouldPermaPot = true
 
+  SetEquipL("triskelion")
+  ?!ai.enabled | ai.paused
+    SetEquipL("quest")
   SetEquipR("compound shield")
 
   ?pickup.distance < 10
@@ -394,11 +397,14 @@ func Rocky()
     :
       SetEquipR("star")
 
-  ?FoeWithin(16)
-    ?foe = acronian_scout
-      RockyMiniboss()
-    :
-      RockyBoss()
+  ?FoeWithin(16) & foe = acronian_scout
+    RockyMiniboss()
+  // 18 is standing dist from dysa
+  // no foe during some part of transition
+  :?(FoeWithin(18) & foe = dysangelos) | 
+    ^hasEncountedBoss
+    hasEncountedBoss = true
+    RockyBoss()
 
 func RockyMiniboss()
   ?EquipDashInRange()
@@ -407,14 +413,17 @@ func RockyMiniboss()
     EquipSet(chillSwords)
   :?hp < maxhp
     EquipSet(healingSwords)
-  : 
+  :?loopCount = 0
     EquipSet(stoneSwords)
+  : 
+    MoondialSet(fireSwords)
 
 func RockyBoss()
   // transitions
+  var transStates = [-1,102,124,117,127,116]
+  ?transStates.Contains(foe.state) |
   // 107 is a transition but also attack
-  var transStates = [102,124,117,127,116]
-  ?transStates.Contains(foe.state)
+  ^foe.state = 107 & foe = elementalist
     SetEquipL("quest") // bit of armour
     return
 
@@ -425,23 +434,20 @@ func RockyBoss()
 
     ?canChill
       EquipSet(chillSwords)    
-    :?canPoison
-      SetEquipL("poison sword dP")
-      SetEquipR("stone sword")
     :?hp < maxhp - 40
       EquipSet(healingSwords)  
-    :
+    :?loopCount = 0
       EquipSet(stoneSwords)
+    : 
+      MoondialSet(fireSwords)
 
   // Phase 2
   ?foe = dysangelos_elementalist
     ?EquipDashInRange()
       return
-    // Chill
-    ?canChill & foe ! ice
-      EquipSet(chillSwords)
+
     // Moondialling
-    :?weakRune = "fire" & loopCount ! 0
+    ?weakRune = "fire" & loopCount ! 0
       MoondialSet(fireSwords)
     // Attack
     :
@@ -470,10 +476,6 @@ func RockyBoss()
     // Delete armor 
     :?foe.armor > 0
       EquipSet(armorHammers)
-    // Reduce Damage
-    :?canPoison
-      SetEquipL("poison sword dP")
-      SetEquipR(weakness + " sword D")
     // Heal
     :?hp < maxhp & foe.buffs.string ! vigor
       EquipSet(healingSwords)
@@ -483,6 +485,10 @@ func RockyBoss()
     // Attack
     :
       EquipSwordSet(weakness)
+
+    // use mask ability to nerf damage
+    ?foe.state = 32 & foe.time > 50
+      MaskAbility()
 
 // For Phase 3 - gets strong to some elements
 func FindDysaWeakness()
@@ -1022,7 +1028,22 @@ func TimeHUD()
   >`0,@bottom@,Avg:
   >`7,@bottom@,@average@
   AverageIconHUD(average)
-  
+
+var lastFPSTime = time.msbn
+var frameCount = 0
+var fps = 0
+func CalculateFPS()
+  frameCount++
+  var nowTime = time.msbn
+  // stupid int cast
+  var elapsed = int.Parse
+  ^(nowTime.Sub(lastFPSTime).ToString())
+  ?elapsed >= 1000
+    fps = Math.RoundToInt(frameCount / 
+    ^(elapsed / 1000.0))
+    frameCount = 0
+    lastFPSTime = time.msbn
+
 func HUD()
   // Disable utility belt
   disable hud u 
@@ -1031,20 +1052,26 @@ func HUD()
 
   // Misc states
   >`0,6,State: @foe.state@ Time: @foe.time@
+  ^ Damage: @foe.damage@
   >`0,7,Dist: @foe.distance@
   >`0,8,X: @pos.x@
   >`0,9,Foe Count: @foe.count@
   >`0,10,Loop GP: @runGP@
   >`0,11,Potion: @PotionHUD()@
-  >`0,12,L: @toEquipL@ R: @toEquipR@ B: 
-  ^@toEquip@
-  >`0,13,DPS: @CalculateDPS()@ 
+  >`0,12,DPS: @CalculateDPS()@ 
+
+  // More debuggy stuff
+  // >`0,13,L: @toEquipL@ R: @toEquipR@ B: 
+  // ^@toEquip@
+  // >`0,14,foe: @foe@
 
   // Item GPs
   //ItemGPHUD()
 
-  TimeHUD()
+  CalculateFPS()
+  >`28,@screen.h - 1@,@fps@ FPS
 
+  TimeHUD()
 
 func Main()
   // Always run animation cancel

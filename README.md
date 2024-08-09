@@ -42,25 +42,44 @@ Since web imports are broken & mobile does not have importing from folders, I cr
 The compiler currently doesn't support
 - Nested or duplicate imports
 
-## Other Stonescript Repos
+## Useful Links
+### Script GitHub Repos
 - [livercat - scribble](https://github.com/livercat/scribble/tree/main)
 - [TheMatjaz](https://github.com/TheMatjaz/StoneScript/tree/master)
 - [Eunomiac](https://github.com/Eunomiac/stone-story)
 - [asHOH](https://github.com/asHOH/Stonescript-for-Stone-Story-RPG/tree/master)
-
+### Other 
+- [Foe states](https://github.com/Hukutus/stone-script-reference)
+- [Timewise](https://docs.google.com/spreadsheets/d/1s3VKhQfTcsVihIPGRHgRq-6VSwmFtNuyelh8OdkXzFo/edit?usp=sharing) - Input your offline times to see which is the best enchant farm location
+- [Lunar phone book (Moondialling)](https://docs.google.com/spreadsheets/d/1OiiPNoB4bg0FBuW9si7GpYBoTzafNBGE10y_L324rKA/edit?usp=sharing) - Learn how moondialling works
+- [Item Factory](https://docs.google.com/spreadsheets/d/14AwQNn11qSGf9aQAi89p5QEAKClMnJYvzfDXiuWHtGw/edit?usp=sharing) - See which enchants are best for your current level
 ## Explanation
 > [!WARNING]  
 > This might not be fully up to date with what the script actually does
 ### Rocky Plateau
+- Hold Triskelion for speed & Compound Shield to block damage
+- Hold Quest stone if standing still/waiting
+- Always try dash to enemies, summon fire guy & use Quarterstaff dash
+
+### Setup Run
+- The first loop is a setup run where permapot is set up using the Lucky Potion by holding the mask
+
 #### Miniboss - Arconian Scout
-TODO
+1. Chill with ice swords
+2. Use healing swords if needed
+3. [Moondial](https://docs.google.com/spreadsheets/d/1OiiPNoB4bg0FBuW9si7GpYBoTzafNBGE10y_L324rKA/edit?gid=1211455267#gid=1211455267) 2 fire swords
+
 #### Boss - Dysangelos
 ##### Phase 1
-- Use bardiche
+1. Chill with ice swords
+2. Use healing swords if needed up to 40hp
+3. Moondial 2 fire swords
 ##### Phase 2
-- Use wand & shield that current state is weak to
+- Use 2 swords of the current weak element. Will moondial fire swords if it can
 ##### Phase 3
-- Use bardiche
+1. Chill with ice swords
+2. Use healing swords if needed
+3. Moondial 2 fire swords until resistance, then use other elemental swords.
 
 ### Deadwood Canyon
 - <= 5★ will XP farm using experience potion

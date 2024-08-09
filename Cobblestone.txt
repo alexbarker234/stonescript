@@ -1,4 +1,4 @@
-// Last modified 2024-08-09 08:39
+// Last modified 2024-07-31 17:12
 var dpsLastHP = 0
 var dmgHistory = []
 func CalculateDPS()
@@ -71,8 +71,8 @@ var aetherSwords = [
   "aether sword D +11", 
   "aether sword D +9"]
 var stoneSwords = [
-  "stone sword +10",
-  "stone sword +11"]
+  "stone sword +15",
+  "stone sword +14"]
 var elementalSwordDict = [
   ["ice", iceSwords],
   ["fire", fireSwords],
@@ -178,7 +178,7 @@ func Moondial(equip1,equip2)
     SetEquipR(equip1)
   ?mdc = 2
     SetEquipL("moon")
-    SetEquipR(equip1)
+    SetEquipR(equip2)
   ?mdc = 3
     SetEquipL(equip1)
     SetEquipR(equip2)
@@ -324,17 +324,21 @@ func RunAAC()
 func Rocky()
   BrewLucky()
   shouldPermaPot = true
+  SetEquipL("triskelion")
+  ?!ai.enabled | ai.paused
+    SetEquipL("quest")
   SetEquipR("compound shield")
   ?pickup.distance < 10
     ?loopCount = 0
       SetEquipL("star")
     :
       SetEquipR("star")
-  ?FoeWithin(16)
-    ?foe = acronian_scout
-      RockyMiniboss()
-    :
-      RockyBoss()
+  ?FoeWithin(16) & foe = acronian_scout
+    RockyMiniboss()
+  :?(FoeWithin(18) & foe = dysangelos) | 
+    ^hasEncountedBoss
+    hasEncountedBoss = true
+    RockyBoss()
 func RockyMiniboss()
   ?EquipDashInRange()
     return
@@ -342,11 +346,14 @@ func RockyMiniboss()
     EquipSet(chillSwords)
   :?hp < maxhp
     EquipSet(healingSwords)
-  : 
+  :?loopCount = 0
     EquipSet(stoneSwords)
+  : 
+    MoondialSet(fireSwords)
 func RockyBoss()
-  var transStates = [102,124,117,127,116]
-  ?transStates.Contains(foe.state)
+  var transStates = [-1,102,124,117,127,116]
+  ?transStates.Contains(foe.state) |
+  ^foe.state = 107 & foe = elementalist
     SetEquipL("quest") 
     return
   ?foe = dysangelos_bearer
@@ -354,19 +361,16 @@ func RockyBoss()
       return
     ?canChill
       EquipSet(chillSwords)    
-    :?canPoison
-      SetEquipL("poison sword dP")
-      SetEquipR("stone sword")
     :?hp < maxhp - 40
       EquipSet(healingSwords)  
-    :
+    :?loopCount = 0
       EquipSet(stoneSwords)
+    : 
+      MoondialSet(fireSwords)
   ?foe = dysangelos_elementalist
     ?EquipDashInRange()
       return
-    ?canChill & foe ! ice
-      EquipSet(chillSwords)
-    :?weakRune = "fire" & loopCount ! 0
+    ?weakRune = "fire" & loopCount ! 0
       MoondialSet(fireSwords)
     :
       EquipSwordSet(weakRune)
@@ -385,15 +389,14 @@ func RockyBoss()
       EquipSet(chillSwords)
     :?foe.armor > 0
       EquipSet(armorHammers)
-    :?canPoison
-      SetEquipL("poison sword dP")
-      SetEquipR(weakness + " sword D")
     :?hp < maxhp & foe.buffs.string ! vigor
       EquipSet(healingSwords)
     :?weakness = "fire" & loopCount ! 0
       MoondialSet(fireSwords)
     :
       EquipSwordSet(weakness)
+    ?foe.state = 32 & foe.time > 50
+      MaskAbility()
 func FindDysaWeakness()
   ?foe.buffs.string ! "fire"
     return "fire"
@@ -751,18 +754,32 @@ func TimeHUD()
   >`0,@bottom@,Avg:
   >`7,@bottom@,@average@
   AverageIconHUD(average)
+var lastFPSTime = time.msbn
+var frameCount = 0
+var fps = 0
+func CalculateFPS()
+  frameCount++
+  var nowTime = time.msbn
+  var elapsed = int.Parse
+  ^(nowTime.Sub(lastFPSTime).ToString())
+  ?elapsed >= 1000
+    fps = Math.RoundToInt(frameCount / 
+    ^(elapsed / 1000.0))
+    frameCount = 0
+    lastFPSTime = time.msbn
 func HUD()
   disable hud u 
   CooldownHUD()
   >`0,6,State: @foe.state@ Time: @foe.time@
+  ^ Damage: @foe.damage@
   >`0,7,Dist: @foe.distance@
   >`0,8,X: @pos.x@
   >`0,9,Foe Count: @foe.count@
   >`0,10,Loop GP: @runGP@
   >`0,11,Potion: @PotionHUD()@
-  >`0,12,L: @toEquipL@ R: @toEquipR@ B: 
-  ^@toEquip@
-  >`0,13,DPS: @CalculateDPS()@ 
+  >`0,12,DPS: @CalculateDPS()@ 
+  CalculateFPS()
+  >`28,@screen.h - 1@,@fps@ FPS
   TimeHUD()
 func Main()
   RunAAC()
@@ -851,6 +868,7 @@ var slimeFrame = 0
   slimeFrame = 
   ^math.FloorToInt(slimeTimer / 3) % 2
   jumpLength = -(slimeX + slimeTargetDist)
+  jumpLength = jumpLength * 1.0
   ?slimeTimer > 15
     slimeTimer = 0
     slimeState = 2
@@ -875,7 +893,6 @@ slimeX = slimeX - (pos.x - lastPlayerX)
 ?slimeX < -50
   slimeX = -20
 slimeDrawY = slimeZ - pos.z + slimeY
->`0,15,@slimeX@, @slimeDrawY@
 lastPlayerX = pos.x
 lastPlayerZ = pos.z
 >o@slimeX@,@slimeDrawY@,#green,

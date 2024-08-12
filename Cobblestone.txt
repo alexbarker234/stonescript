@@ -370,35 +370,37 @@ func RockyMiniboss()
   :
     MoondialIf(fireSwords, loopCount ! 0)
 var splitStart = 0
-var splitFoe = 0
+var splPhase = 0
 func SaveSplit(splitKey)
   var old = storage.Get(splitKey, 99999)
-  var new = time - splitStart
-  ?new < old
-    storage.Set(splitKey, time - splitStart)
+  var newSpl = time - splitStart
+  ?newSpl < int.Parse(old)
+    storage.Set(splitKey, newSpl)
   splitStart = 0
   splPhase = 0
 func RockySplits()
+  ?loc.begin
+    storage.Delete("p1Split")
+    storage.Delete("p2Split")
+    storage.Delete("p3Split")
   ?splPhase = 1 & foe ! dysangelos_bearer
     SaveSplit("p1Split")
   :?splPhase = 2 & foe ! dysangelos_elementalist
     SaveSplit("p2Split")
   :?splPhase = 3 & foe ! dysangelos_perfected
-    SaveSplit("p2Split")
+    SaveSplit("p3Split")
   ?foe = dysangelos_bearer
     ?splitStart = 0
-      splitStart = time
-    splPhase = 1
+      splitStart = totaltime
+      splPhase = 1
   :?foe = dysangelos_elementalist
     ?splitStart = 0
-      splitStart = time
-    splPhase = 2
+      splitStart = totaltime
+      splPhase = 2
   :?foe = dysangelos_perfected
     ?splitStart = 0
-      splitStart = time
-    splPhase = 3
-  ?splitFoe != foe.id
-  splitFoe = foe.id
+      splitStart = totaltime
+      splPhase = 3
 func RockyBoss()
   ?loopCount ! 0
     var hammerStates = [100, 101, 102]
@@ -476,7 +478,7 @@ func Deadwood()
   ?loc.stars <= 5 & xpFarm
     brew wood
     ?item.potion ! empty & 
-    ^Between(time, 60, 500)
+    ^Between(totaltime, 60, 500)
       activate potion
   :?loc.stars <= 10
     BrewBerserk()
@@ -764,8 +766,10 @@ func ItemGPHUD()
 func DysaSplitHUD()
   var x = screen.w - 18
   var y = bottom - 6
-  var curSplit = TimeDisplay(splitStart - time)
-  >@x@,@y@,Cur: @curSplit@
+  ?splitStart ! 0
+    var curSplit = 
+    ^TimeDisplay(totaltime - splitStart)
+    >`@x@,@y@,Cur: @curSplit@
   y++
   for i = 1 .. 3 
     var splitName = "p" + i + "Split"

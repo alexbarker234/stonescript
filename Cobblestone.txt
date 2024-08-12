@@ -335,6 +335,7 @@ func RunAAC()
     equipR *0 shield 
     equip @item.right@
 func Rocky()
+  RockySplits()
   BrewLucky()
   shouldPermaPot = true
   ?loopCount = 0
@@ -368,38 +369,52 @@ func RockyMiniboss()
     EquipSet(healingSwords)
   :
     MoondialIf(fireSwords, loopCount ! 0)
-var p1Split = 0
-var p2Split = 0
-var p3Split = 0
 var splitStart = 0
-var isFighting = 0
+var splitFoe = 0
+func SaveSplit(splitKey)
+  var old = storage.Get(splitKey, 99999)
+  var new = time - splitStart
+  ?new < old
+    storage.Set(splitKey, time - splitStart)
+  splitStart = 0
+  splPhase = 0
 func RockySplits()
-  ?isFighting = 1 & foe ! dysangelos_bearer
-    splitStart = 0
-  :?isFighting = 2
-    return
-  :?isFighting = 3
+  ?splPhase = 1 & foe ! dysangelos_bearer
+    SaveSplit("p1Split")
+  :?splPhase = 2 & foe ! dysangelos_elementalist
+    SaveSplit("p2Split")
+  :?splPhase = 3 & foe ! dysangelos_perfected
+    SaveSplit("p2Split")
   ?foe = dysangelos_bearer
     ?splitStart = 0
       splitStart = time
-    isFighting = 1
+    splPhase = 1
   :?foe = dysangelos_elementalist
-    isFighting = 2
+    ?splitStart = 0
+      splitStart = time
+    splPhase = 2
   :?foe = dysangelos_perfected
-    isFighting = 3
+    ?splitStart = 0
+      splitStart = time
+    splPhase = 3
+  ?splitFoe != foe.id
+  splitFoe = foe.id
 func RockyBoss()
   ?loopCount ! 0
     var hammerStates = [100, 101, 102]
     ?hammerStates.Contains(foe.state) & 
     ^FoeWithin(18) 
+      UsePot() 
       ?HammerAbility()
         return
     ?foe.state = 118
-      UsePot() 
       QtrDash()
       EquipDashInRange()
       BardicheAbility()
       return
+    ?foe.state = -1 
+      ?HammerAbility()
+        return
   var transStates = [-1,102,124,117,127,116]
   ?transStates.Contains(foe.state) |
   ^foe.state = 107 & foe = elementalist
@@ -746,6 +761,17 @@ func ItemGPHUD()
   for itemGP : itemGPs
     >`10,@y@,@itemGP[0]@ - @itemGP[1]@
     y++
+func DysaSplitHUD()
+  var x = screen.w - 18
+  var y = bottom - 6
+  var curSplit = TimeDisplay(splitStart - time)
+  >@x@,@y@,Cur: @curSplit@
+  y++
+  for i = 1 .. 3 
+    var splitName = "p" + i + "Split"
+    var split = storage.Get(splitName, -1)
+    >`@x@,@y@,P@i@: @TimeDisplay(split)@
+    y++
 var potionEffectNames = ["berserk", 
   "lucky_crit"]
 func PotionHUD()
@@ -786,22 +812,17 @@ func CooldownHUD()
     y++
 var lastTime = 0
 var lastTimeTemp = 0
+func TimeDisplay(value)
+  return FormatTime(value) + " " + 
+    ^value + "F"
 func TimeHUD()
   ?lastTimeTemp > totaltime
     lastTime = lastTimeTemp
   lastTimeTemp = totaltime
-  var current = 
-    ^FormatTime(totaltime) + " " + 
-    ^totaltime + "F"
-  var last = 
-    ^FormatTime(lastTime) + " " + 
-    ^lastTime + "F"
-  var best =
-    ^FormatTime(loc.bestTime) + " " + 
-    ^loc.bestTime + "F"
-  var average = 
-    ^FormatTime(loc.averageTime) + " " + 
-    ^loc.averageTime + "F"
+  var current = TimeDisplay(totaltime)
+  var last = TimeDisplay(lastTime)
+  var best = TimeDisplay(loc.bestTime)
+  var average = TimeDisplay(loc.averageTime)
   >`0,@bottom - 3@,Cur:
   >`7,@bottom - 3@,@current@
   >`0,@bottom - 2@,Last:
@@ -838,6 +859,7 @@ func HUD()
   CalculateFPS()
   >`28,@screen.h - 1@,@fps@ FPS
   TimeHUD()
+  DysaSplitHUD()
 func Main()
   RunAAC()
   ?loc.begin | loc.loop

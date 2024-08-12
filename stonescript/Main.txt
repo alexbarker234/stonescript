@@ -398,6 +398,7 @@ func RunAAC()
 // Rocky Plateau
 // ===================
 func Rocky()
+  RockySplits()
   BrewLucky()
   shouldPermaPot = true
 
@@ -443,27 +444,38 @@ func RockyMiniboss()
   :
     MoondialIf(fireSwords, loopCount ! 0)
 
-var p1Split = 0
-var p2Split = 0
-var p3Split = 0
 var splitStart = 0
-var isFighting = 0
+var splPhase = 0
+func SaveSplit(splitKey)
+  var old = storage.Get(splitKey, 99999)
+  var new = time - splitStart
+  ?new < old
+    storage.Set(splitKey, time - splitStart)
+  splitStart = 0
+  splPhase = 0
+
 func RockySplits()
   // save splits
-  ?isFighting = 1 & foe ! dysangelos_bearer
-    splitStart = 0
-  :?isFighting = 2
-    return
-  :?isFighting = 3
+  ?splPhase = 1 & foe ! dysangelos_bearer
+    SaveSplit("p1Split")
+  :?splPhase = 2 & foe ! dysangelos_elementalist
+    SaveSplit("p2Split")
+  :?splPhase = 3 & foe ! dysangelos_perfected
+    SaveSplit("p2Split")
 
   ?foe = dysangelos_bearer
     ?splitStart = 0
       splitStart = time
-    isFighting = 1
+    splPhase = 1
   :?foe = dysangelos_elementalist
-    isFighting = 2
+    ?splitStart = 0
+      splitStart = time
+    splPhase = 2
   :?foe = dysangelos_perfected
-    isFighting = 3
+    ?splitStart = 0
+      splitStart = time
+    splPhase = 3
+
 
 func RockyBoss()
   ?loopCount ! 0
@@ -472,18 +484,22 @@ func RockyBoss()
     var hammerStates = [100, 101, 102]
     ?hammerStates.Contains(foe.state) & 
     ^FoeWithin(18) 
+      UsePot() // crit mult
       ?HammerAbility()
         return
 
     // Probably ideal to use the potion here for
     // multiplier
-    // After cutscene, bardiche
+    // After first cutscene, bardiche
     ?foe.state = 118
-      UsePot() // crit mult
       QtrDash()
       EquipDashInRange()
       BardicheAbility()
       return
+    // After other cutscenes, hammer
+    ?foe.state = -1 // not sure if i cooked
+      ?HammerAbility()
+        return
 
   // transitions
   var transStates = [-1,102,124,117,127,116]
@@ -1026,6 +1042,18 @@ func ItemGPHUD()
     >`10,@y@,@itemGP[0]@ - @itemGP[1]@
     y++
 
+func DysaSplitHUD()
+  var x = screen.w - 18
+  var y = bottom - 6
+  var curSplit = TimeDisplay(splitStart - time)
+  >@x@,@y@,Cur: @curSplit@
+  y++
+  for i = 1 .. 3 
+    var splitName = "p" + i + "Split"
+    var split = storage.Get(splitName, -1)
+    >`@x@,@y@,P@i@: @TimeDisplay(split)@
+    y++
+
 // TODO, complete list
 var potionEffectNames = ["berserk", 
   "lucky_crit"]
@@ -1075,24 +1103,20 @@ func CooldownHUD()
 
 var lastTime = 0
 var lastTimeTemp = 0
+
+func TimeDisplay(value)
+  return FormatTime(value) + " " + 
+    ^value + "F"
 func TimeHUD()
   // set last time
   ?lastTimeTemp > totaltime
     lastTime = lastTimeTemp
   lastTimeTemp = totaltime
 
-  var current = 
-    ^FormatTime(totaltime) + " " + 
-    ^totaltime + "F"
-  var last = 
-    ^FormatTime(lastTime) + " " + 
-    ^lastTime + "F"
-  var best =
-    ^FormatTime(loc.bestTime) + " " + 
-    ^loc.bestTime + "F"
-  var average = 
-    ^FormatTime(loc.averageTime) + " " + 
-    ^loc.averageTime + "F"
+  var current = TimeDisplay(totaltime)
+  var last = TimeDisplay(lastTime)
+  var best = TimeDisplay(loc.bestTime)
+  var average = TimeDisplay(loc.averageTime)
 
   >`0,@bottom - 3@,Cur:
   >`7,@bottom - 3@,@current@
@@ -1150,6 +1174,7 @@ func HUD()
   >`28,@screen.h - 1@,@fps@ FPS
 
   TimeHUD()
+  DysaSplitHUD()
 
 func Main()
   // Always run animation cancel

@@ -373,8 +373,8 @@ var splitStart = 0
 var splPhase = 0
 func SaveSplit(splitKey)
   var old = storage.Get(splitKey, 99999)
-  var newSpl = time - splitStart
-  ?newSpl < int.Parse(old)
+  var newSpl = totaltime - splitStart
+  ?newSpl < old
     storage.Set(splitKey, newSpl)
   splitStart = 0
   splPhase = 0

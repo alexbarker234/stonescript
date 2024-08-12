@@ -49,10 +49,10 @@ var unmakeSwords = [
   "aether sword dU +10", 
   "aether sword dU +9"]
 var chillSwords = [
-  "ice sword dI gold", 
-  "ice sword dI -gold"]
+  "ice sword dI shiny", 
+  "ice sword dI -shiny"]
 var healingSwords = [
-  "vigor sword dL +10",
+  "vigor sword dL +16",
   "vigor sword dL +11"]
 var poisonSwords = [
   "poison sword D +10", 
@@ -169,6 +169,11 @@ func ActivateItems()
   ?shouldActivate & CanUseItem()
     activate R
 var mdc = 0
+func MoondialIf(set, condition)
+  ?condition
+    MoondialSet(set)
+  :
+    EquipSet(set)
 func MoondialSet(set)
   Moondial(set[0], set[1])
 func Moondial(equip1,equip2)
@@ -270,12 +275,15 @@ func BardicheAbility()
   ^cooldown <= 0 | cooldown > 870
     SetEquip("bardiche")
     ActivateItem()
+    return true
+  return false
 func HammerAbility()
   var cooldown = ItemCD("hammer")
-  ?FoeWithin(10) &
-  ^cooldown <= 0 | cooldown > 640
-    SetEquip("hammer")
+  ?cooldown <= 0 | cooldown > 640
+    SetEquip("heavy hammer")
     ActivateItem()
+    return true
+  return false
 var qtrTimer = 0
 func QtrDash()
   ?foe.distance <= 16
@@ -329,6 +337,10 @@ func RunAAC()
 func Rocky()
   BrewLucky()
   shouldPermaPot = true
+  ?loopCount = 0
+    UsePot()
+  :?time > 1000 
+    UsePot()
   SetEquipL("triskelion")
   ?!ai.enabled | ai.paused
     SetEquipL("quest")
@@ -338,6 +350,9 @@ func Rocky()
       SetEquipL("star")
     :
       SetEquipR("star")
+  ?loopCount ! 0 & (!foe | 
+    ^foe = acronian_scout | !FoeWithin(30))
+    QtrDash()
   ?FoeWithin(16) & foe = acronian_scout
     RockyMiniboss()
   :?(FoeWithin(18) & foe = dysangelos) | 
@@ -348,30 +363,59 @@ func RockyMiniboss()
   ?EquipDashInRange()
     return
   ?canChill
-    MoondialSet(chillSwords)
+    MoondialIf(chillSwords, loopCount ! 0)
   :?hp < maxhp
     EquipSet(healingSwords)
-  :?loopCount = 0
-    EquipSet(stoneSwords)
-  : 
-    MoondialSet(fireSwords)
+  :
+    MoondialIf(fireSwords, loopCount ! 0)
+var p1Split = 0
+var p2Split = 0
+var p3Split = 0
+var splitStart = 0
+var isFighting = 0
+func RockySplits()
+  ?isFighting = 1 & foe ! dysangelos_bearer
+    splitStart = 0
+  :?isFighting = 2
+    return
+  :?isFighting = 3
+  ?foe = dysangelos_bearer
+    ?splitStart = 0
+      splitStart = time
+    isFighting = 1
+  :?foe = dysangelos_elementalist
+    isFighting = 2
+  :?foe = dysangelos_perfected
+    isFighting = 3
 func RockyBoss()
+  ?loopCount ! 0
+    var hammerStates = [100, 101, 102]
+    ?hammerStates.Contains(foe.state) & 
+    ^FoeWithin(18) 
+      ?HammerAbility()
+        return
+    ?foe.state = 118
+      UsePot() 
+      QtrDash()
+      EquipDashInRange()
+      BardicheAbility()
+      return
   var transStates = [-1,102,124,117,127,116]
   ?transStates.Contains(foe.state) |
   ^foe.state = 107 & foe = elementalist
     SetEquipL("quest") 
     return
   ?foe = dysangelos_bearer
+    ?foe.state = 101
+      return
     ?EquipDashInRange()
       return
     ?canChill
-      MoondialSet(chillSwords)    
+      MoondialIf(chillSwords, loopCount ! 0)
     :?hp < maxhp - 40
       EquipSet(healingSwords)  
-    :?loopCount = 0
-      EquipSet(stoneSwords)
     : 
-      MoondialSet(fireSwords)
+      MoondialIf(fireSwords, loopCount ! 0)
   ?foe = dysangelos_elementalist
     ?EquipDashInRange()
       return
@@ -391,7 +435,7 @@ func RockyBoss()
       return
     var weakness = FindDysaWeakness()
     ?canChill
-      MoondialSet(chillSwords)
+      MoondialIf(chillSwords, loopCount ! 0)
     :?foe.armor > 0
       EquipSet(armorHammers)
     :?hp < maxhp & foe.buffs.string ! vigor
@@ -820,12 +864,11 @@ func Main()
   :?loc = Temple
     Temple()
   var ppRun = shouldPermaPot & loopCount = 0
-  ?shouldPermaPot
-    UsePot()
   ?ppRun
     SetEquipR("mask")
   :
-    QtrDash()
+    ?loc ! Rocky
+      QtrDash()
     ?loc ! Deadwood
       FireTalisman()
   EquipItems()

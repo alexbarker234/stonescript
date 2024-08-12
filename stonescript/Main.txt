@@ -36,10 +36,10 @@ var unmakeSwords = [
   "aether sword dU +10", 
   "aether sword dU +9"]
 var chillSwords = [
-  "ice sword dI gold", 
-  "ice sword dI -gold"]
+  "ice sword dI shiny", 
+  "ice sword dI -shiny"]
 var healingSwords = [
-  "vigor sword dL +10",
+  "vigor sword dL +16",
   "vigor sword dL +11"]
 
 // D Swords
@@ -193,6 +193,11 @@ func ActivateItems()
 
 // Moondialling
 var mdc = 0
+func MoondialIf(set, condition)
+  ?condition
+    MoondialSet(set)
+  :
+    EquipSet(set)
 func MoondialSet(set)
   Moondial(set[0], set[1])
 func Moondial(equip1,equip2)
@@ -317,13 +322,16 @@ func BardicheAbility()
   ^cooldown <= 0 | cooldown > 870
     SetEquip("bardiche")
     ActivateItem()
+    return true
+  return false
 
 func HammerAbility()
   var cooldown = ItemCD("hammer")
-  ?FoeWithin(10) &
-  ^cooldown <= 0 | cooldown > 640
-    SetEquip("hammer")
+  ?cooldown <= 0 | cooldown > 640
+    SetEquip("heavy hammer")
     ActivateItem()
+    return true
+  return false
 
 var qtrTimer = 0
 func QtrDash()
@@ -393,6 +401,13 @@ func Rocky()
   BrewLucky()
   shouldPermaPot = true
 
+  ?loopCount = 0
+    UsePot()
+  // use it end of stage, arbitrary number
+  // so that doesnt get used before bardiche
+  :?time > 1000 
+    UsePot()
+
   SetEquipL("triskelion")
   ?!ai.enabled | ai.paused
     SetEquipL("quest")
@@ -404,9 +419,14 @@ func Rocky()
     :
       SetEquipR("star")
 
+  // dash whenever, dont interrupt bardiche dash
+  ?loopCount ! 0 & (!foe | 
+    ^foe = acronian_scout | !FoeWithin(30))
+    QtrDash()
+
   ?FoeWithin(16) & foe = acronian_scout
     RockyMiniboss()
-  // 18 is standing dist from dysa
+  // 18 dysa waypoint
   // no foe during some part of transition
   :?(FoeWithin(18) & foe = dysangelos) | 
     ^hasEncountedBoss
@@ -417,15 +437,54 @@ func RockyMiniboss()
   ?EquipDashInRange()
     return
   ?canChill
-    MoondialSet(chillSwords)
+    MoondialIf(chillSwords, loopCount ! 0)
   :?hp < maxhp
     EquipSet(healingSwords)
-  :?loopCount = 0
-    EquipSet(stoneSwords)
-  : 
-    MoondialSet(fireSwords)
+  :
+    MoondialIf(fireSwords, loopCount ! 0)
+
+var p1Split = 0
+var p2Split = 0
+var p3Split = 0
+var splitStart = 0
+var isFighting = 0
+func RockySplits()
+  // save splits
+  ?isFighting = 1 & foe ! dysangelos_bearer
+    splitStart = 0
+  :?isFighting = 2
+    return
+  :?isFighting = 3
+
+  ?foe = dysangelos_bearer
+    ?splitStart = 0
+      splitStart = time
+    isFighting = 1
+  :?foe = dysangelos_elementalist
+    isFighting = 2
+  :?foe = dysangelos_perfected
+    isFighting = 3
 
 func RockyBoss()
+  ?loopCount ! 0
+    // 20f window after waypoint
+    // Before cutscene, Hammer
+    var hammerStates = [100, 101, 102]
+    ?hammerStates.Contains(foe.state) & 
+    ^FoeWithin(18) 
+      ?HammerAbility()
+        return
+
+    // Probably ideal to use the potion here for
+    // multiplier
+    // After cutscene, bardiche
+    ?foe.state = 118
+      UsePot() // crit mult
+      QtrDash()
+      EquipDashInRange()
+      BardicheAbility()
+      return
+
   // transitions
   var transStates = [-1,102,124,117,127,116]
   ?transStates.Contains(foe.state) |
@@ -436,17 +495,18 @@ func RockyBoss()
 
   // Phase 1
   ?foe = dysangelos_bearer
+    ?foe.state = 101
+      return
+
     ?EquipDashInRange()
       return
 
     ?canChill
-      MoondialSet(chillSwords)    
+      MoondialIf(chillSwords, loopCount ! 0)
     :?hp < maxhp - 40
       EquipSet(healingSwords)  
-    :?loopCount = 0
-      EquipSet(stoneSwords)
     : 
-      MoondialSet(fireSwords)
+      MoondialIf(fireSwords, loopCount ! 0)
 
   // Phase 2
   ?foe = dysangelos_elementalist
@@ -479,7 +539,7 @@ func RockyBoss()
     var weakness = FindDysaWeakness()
     // Chill
     ?canChill
-      MoondialSet(chillSwords)
+      MoondialIf(chillSwords, loopCount ! 0)
     // Delete armor 
     :?foe.armor > 0
       EquipSet(armorHammers)
@@ -1126,8 +1186,8 @@ func Main()
   var ppRun = shouldPermaPot & loopCount = 0
 
   // always use potion when available
-  ?shouldPermaPot
-    UsePot()
+  // ?shouldPermaPot
+  //   UsePot()
 
   // mask when permapotting
   ?ppRun
@@ -1135,7 +1195,8 @@ func Main()
   // abilities when not permapotting
   :
     // always dash
-    QtrDash()
+    ?loc ! Rocky
+      QtrDash()
 
     // No deadwood - poena bites 
     ?loc ! Deadwood

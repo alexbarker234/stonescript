@@ -6,8 +6,8 @@ var vigorWands = [
   "vigor wand D +11", 
   "vigor wand D +12"]
 var aetherWands = [
-  "aether wand D *8", 
-  "aether wand D *7"]
+  "aether wand D +12", 
+  "aether wand D +10"]
 var fireWands = [
   "fire wand D +11", 
   "fire wand D +10"]
@@ -378,6 +378,19 @@ func FireTalisman()
   ^CanUseItem()
     SetEquipR("fire talisman")
     ActivateItem()
+    return true
+  return false
+
+func AetherTalisman()
+  var cooldown = ItemCD("aether_talisman")
+  ?cooldown > 130
+    SetEquipR("aether talisman")
+  ?summon.count = 0 & cooldown <= 0 &
+  ^CanUseItem()
+    SetEquipR("aether talisman")
+    ActivateItem()
+    return true
+  return false
 
 func MaskAbility()
   ?ItemCD("mask") <= 0 
@@ -398,7 +411,6 @@ func RunAAC()
 // Rocky Plateau
 // ===================
 func Rocky()
-  RockySplits()
   BrewLucky()
   shouldPermaPot = true
 
@@ -443,44 +455,6 @@ func RockyMiniboss()
     EquipSet(healingSwords)
   :
     MoondialIf(fireSwords, loopCount ! 0)
-
-var splitStart = 0
-var splPhase = 0
-func SaveSplit(splitKey)
-  var old = storage.Get(splitKey, 99999)
-  var newSpl = totaltime - splitStart
-  ?newSpl < old
-    storage.Set(splitKey, newSpl)
-  splitStart = 0
-  splPhase = 0
-
-func RockySplits()
-  ?loc.begin
-    storage.Delete("p1Split")
-    storage.Delete("p2Split")
-    storage.Delete("p3Split")
-
-  // save splits
-  ?splPhase = 1 & foe ! dysangelos_bearer
-    SaveSplit("p1Split")
-  :?splPhase = 2 & foe ! dysangelos_elementalist
-    SaveSplit("p2Split")
-  :?splPhase = 3 & foe ! dysangelos_perfected
-    SaveSplit("p3Split")
-
-  ?foe = dysangelos_bearer
-    ?splitStart = 0
-      splitStart = totaltime
-      splPhase = 1
-  :?foe = dysangelos_elementalist
-    ?splitStart = 0
-      splitStart = totaltime
-      splPhase = 2
-  :?foe = dysangelos_perfected
-    ?splitStart = 0
-      splitStart = totaltime
-      splPhase = 3
-
 
 func RockyBoss()
   ?loopCount ! 0
@@ -605,10 +579,10 @@ func Deadwood()
   :?loc.stars <= 10
     BrewBerserk()
   :
-    brew tar
+    BrewLucky()
     
   SetEquipL("triskelion")
-  SetEquipR("ice shield")
+  SetEquipR("compound shield")
   PickupWhenClose()
 
   // Harvesting
@@ -630,6 +604,7 @@ func Deadwood()
   ?FoeWithin(16)   
     ?EquipDashInRange()
       return
+
     SetEquip("ice staff")
 
 func DeadwoodMinibosss()
@@ -638,15 +613,20 @@ func DeadwoodMinibosss()
   EquipSet(chillWands)
 
 func DeadwoodBoss()
-  ?EquipDashInRange()
-    return
-
-  ?PotionIs("berserk")
-    activate potion
-
   ?foe = poena
-    EquipSet(stunlock)
-    BardicheAbility()
+    // trans
+    ?foe.state = 1
+      BardicheAbility()
+      return
+
+    // dont bash
+    ?InDashRange()
+      ?ItemCD("dash") <= 0
+        SetEquipR("dashing shield")
+        return
+        
+    UsePot()
+    MoondialSet(fireSwords)
 
     // Just restore HP at the end
     ?PotionIs("health") & hp ! maxhp
@@ -655,7 +635,15 @@ func DeadwoodBoss()
     // ?foe.state = 32
     //   SetEquipL("mind")
   :?foe = tree_boss
-    EquipChillSwordsOr(vigorSwords)
+    ?EquipDashInRange()
+      return  
+    
+    ?canChill
+      MoondialSet(chillSwords)
+    :
+      MoondialSet(fireSwords)
+
+    MaskAbility()
 
 // ===================
 // Caves of Fear
@@ -692,16 +680,11 @@ func CavesMiniBoss()
   ?EquipDashInRange()
     return
 
-  EquipChillSwordsOr(iceSwords)
+  MoondialSet(chillSwords)
   //EquipSet(stunlock)
 
 func CavesBoss()
   UsePot()
-
-  // Dash
-  ?foe.state ! 142 & InDashRange()
-    EquipDash()
-    return
     
   // Dodge
   ?foe.state = 142 & foe.time = 60
@@ -710,8 +693,7 @@ func CavesBoss()
 
   MaskAbility()
 
-  EquipChillSwordsOr(iceSwords)
-  BardicheAbility()
+  SetEquip("ice crossbow")
 
 // ===================
 // Mushroom forest
@@ -722,11 +704,19 @@ func Mushroom()
   SetEquipL("triskelion")
   SetEquipR("poison shield")
 
+  ?AetherTalisman()
+    return
+
   ?EquipDashInRange()
     return
 
+  // transition unmake patched
+  // ?hasEncountedBoss & !foe
+  //   activate voidweaver
+
   // Boss
   ?IsMushroomBoss() & FoeWithin(16)
+    hasEncountedBoss = true
     MushroomBoss()
     return
 
@@ -739,6 +729,7 @@ func Mushroom()
 
   ?FoeWithin(16)
     EquipSet(poisonWands)
+  
 
 func MushroomBoss() 
   UsePot()
@@ -852,7 +843,7 @@ func Mine()
     ?foe.GetCount(10) = 1 & smiteStack = 0
       EquipSet(unmakeSwords)
       return
-    ?smiteStack = 0
+    ?smiteStack ! 0
       EquipSet(chillWands)
     :
       EquipSet(aetherWands)
@@ -872,7 +863,7 @@ func MineBoss()
   ?foe.state = 32
     ?foe.time > 15
       SetEquipL("mind")
-      SetEquipR("aether shield")
+       SetEquipR("aether shield")
       aiState = 1
   // Cooldown - can melee
   :?foe.state = 33
@@ -993,7 +984,7 @@ func Temple()
       EquipChillSwordsOr(iceSwords)
       return
 
-    ?smiteStack = 0
+    ?smiteStack ! 0
       EquipSet(chillWands)
     :
       EquipSet(iceWands)
@@ -1048,7 +1039,53 @@ func ItemGPHUD()
     >`10,@y@,@itemGP[0]@ - @itemGP[1]@
     y++
 
+
+// Manage Dysangelos splits
+var splitStart = 0
+var splPhase = 0
+func SaveSplit(splitKey)
+  var old = storage.Get(splitKey, 99999)
+  var newSpl = totaltime - splitStart
+  // Overwrite best split
+  ?newSpl < old
+    storage.Set(splitKey, newSpl)
+  // Save current split
+  storage.Set(splitKey + "Cur", newSpl)
+  splitStart = 0
+  splPhase = 0  
+
 func DysaSplitHUD()
+  ?loc ! Rocky
+    return
+
+  // Manage splits
+  ?loc.begin | loc.loop
+    storage.Delete("p1SplitCur")
+    storage.Delete("p2SplitCur")
+    storage.Delete("p3SplitCur")
+
+  // save splits
+  ?splPhase = 1 & foe ! dysangelos_bearer
+    SaveSplit("p1Split")
+  :?splPhase = 2 & foe ! dysangelos_elementalist
+    SaveSplit("p2Split")
+  :?splPhase = 3 & foe ! dysangelos_perfected
+    SaveSplit("p3Split")
+
+  ?foe = dysangelos_bearer
+    ?splitStart = 0
+      splitStart = totaltime
+      splPhase = 1
+  :?foe = dysangelos_elementalist
+    ?splitStart = 0
+      splitStart = totaltime
+      splPhase = 2
+  :?foe = dysangelos_perfected
+    ?splitStart = 0
+      splitStart = totaltime
+      splPhase = 3
+
+  // Draw splits
   var x = screen.w - 18
   var y = bottom - 6
   ?splitStart ! 0
@@ -1059,7 +1096,18 @@ func DysaSplitHUD()
   for i = 1 .. 3 
     var splitName = "p" + i + "Split"
     var split = storage.Get(splitName, -1)
-    >`@x@,@y@,P@i@: @TimeDisplay(split)@
+    var curSplit = storage.Get
+    ^(splitName + "Cur", "-")
+    // color based on if new split is better
+    var textCol = "#red"
+    ?curSplit = "-"
+      textCol = "#adadad"
+    :?curSplit <= split
+      textCol = "#green"
+
+    >`@x@,@y@,P@i@: 
+    >`@x + 5@,@y@,@textCol@,@curSplit@F
+    >`@x + 10@,@y@,| @split@F
     y++
 
 // TODO, complete list
@@ -1232,7 +1280,7 @@ func Main()
       QtrDash()
 
     // No deadwood - poena bites 
-    ?loc ! Deadwood
+    ?loc ! Deadwood & loc ! Mushroom
       FireTalisman()
 
   EquipItems()

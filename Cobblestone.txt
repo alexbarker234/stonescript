@@ -340,7 +340,7 @@ func Rocky()
   shouldPermaPot = true
   ?loopCount = 0
     UsePot()
-  :?time > 1000 
+  :?time > 2000 
     UsePot()
   SetEquipL("triskelion")
   ?!ai.enabled | ai.paused
@@ -406,7 +406,6 @@ func RockyBoss()
     var hammerStates = [100, 101, 102]
     ?hammerStates.Contains(foe.state) & 
     ^FoeWithin(18) 
-      UsePot() 
       ?HammerAbility()
         return
     ?foe.state = 118
@@ -441,6 +440,7 @@ func RockyBoss()
     :
       EquipSwordSet(weakRune)
   ?foe = dysangelos_perfected
+    UsePot() 
     ?foe.state = 115 & foe.time > 60
       SetEquipL("mind")
       return

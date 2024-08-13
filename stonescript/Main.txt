@@ -405,8 +405,8 @@ func Rocky()
   ?loopCount = 0
     UsePot()
   // use it end of stage, arbitrary number
-  // so that doesnt get used before bardiche
-  :?time > 1000 
+  // find a better way to do this
+  :?time > 2000 
     UsePot()
 
   SetEquipL("triskelion")
@@ -489,7 +489,6 @@ func RockyBoss()
     var hammerStates = [100, 101, 102]
     ?hammerStates.Contains(foe.state) & 
     ^FoeWithin(18) 
-      UsePot() // crit mult
       ?HammerAbility()
         return
 
@@ -543,6 +542,8 @@ func RockyBoss()
 
   // Phase 3
   ?foe = dysangelos_perfected
+    UsePot() // crit mult
+    
     // Dodge sky laser
     ?foe.state = 115 & foe.time > 60
       SetEquipL("mind")

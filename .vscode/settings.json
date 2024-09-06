@@ -4,5 +4,8 @@
     "[python]": {
         "editor.tabSize": 4
     },
-    "task.allowAutomaticTasks": "on"
+    "task.allowAutomaticTasks": "on",
+    "[html]": {
+        "editor.formatOnSave": false
+    }
 }

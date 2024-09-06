@@ -54,6 +54,7 @@
     <div>╚═════════════════════════════════════════════════╝</div>
   </button>
   <div>Last Updated: <span id="updated">{{ lastCopy }}</span></div>
+  <div>Hash: <span id="hash"></span></div>
 
   <!-- easiest way to store text with symbols -->
   <textarea id="text-area" style="display: none;">{{ content }}</textarea>
@@ -65,16 +66,27 @@
       navigator.clipboard.writeText(textArea.value)
     }
 
+    function onLoad() {
+      updateHash()
+    }
+
+    function updateHash() {
+      var hash = document.getElementById("hash")
+      hash.innerHTML = crypto.createHash('md5').update(textArea.value).digest('hex')
+    }
+
     function fetchData() {
       fetch('/fetch')
         .then(response => response.json())
-        .then(data => {
-          scriptData = data.content
-          var e = document.getElementById("updated")
+      .then(data => {
+        scriptData = data.content
+        var e = document.getElementById("updated")
           e.innerHTML = data.lastCopy
+          updateHash()
         })
         .catch(error => console.error('Error fetching data:', error));
     }
+    document.addEventListener('DOMContentLoaded', onLoad);
   </script>
 </body>
 

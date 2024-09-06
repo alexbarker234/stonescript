@@ -88,8 +88,6 @@ var abilityHUDNames = [
   "mind","ham","bard", "bfg","arm","mask",
   "tali","wisp","qtr","dash","bash"
 ]
-var shouldHarvest = false
-var xpFarm = false
 var hasEncountedBoss = false
 var shouldPermaPot = false
 var canChill
@@ -319,6 +317,7 @@ func FireTalisman()
   var cooldown = ItemCD("fire_talisman")
   ?cooldown > 130
     SetEquipR("fire talisman")
+    return true
   ?summon.count = 0 & cooldown <= 0 &
   ^CanUseItem()
     SetEquipR("fire talisman")
@@ -329,6 +328,7 @@ func AetherTalisman()
   var cooldown = ItemCD("aether_talisman")
   ?cooldown > 130
     SetEquipR("aether talisman")
+    return true
   ?summon.count = 0 & cooldown <= 0 &
   ^CanUseItem()
     SetEquipR("aether talisman")
@@ -454,20 +454,18 @@ func FindDysaWeakness()
   :
     return "poison"
 func Deadwood()
-  ?loc.stars <= 5 & xpFarm
-    brew wood
-    ?item.potion ! empty & 
-    ^Between(totaltime, 60, 500)
-      activate potion
-  :?loc.stars <= 10
-    BrewBerserk()
-  :
-    BrewLucky()
+  BrewLucky()
+  ?shouldPermaPot
+    ?loopCount = 0 
+      UsePot()
+    :?time > 2000 
+      UsePot()
+  ?loopCount ! 0 | !shouldPermaPot
+    ?AetherTalisman()
+      return
   SetEquipL("triskelion")
   SetEquipR("compound shield")
   PickupWhenClose()
-  ?harvest.distance < 10 & shouldHarvest
-    SetEquip("hatchet")
   ?(foe = wasp | foe = wasp_nest) & 
   ^FoeWithin(16)
     DeadwoodMinibosss()
@@ -475,20 +473,28 @@ func Deadwood()
   ?foe = boss & FoeWithin(16)
     DeadwoodBoss()
     return
-  DoubleBlade()
+  ?loopCount ! 0 | !shouldPermaPot
+    DoubleBlade()
   ?FoeWithin(16)   
     ?EquipDashInRange()
       return
-    SetEquip("ice staff")
+    ?loopCount = 0 & shouldPermaPot
+      ?foe = scarab
+        SetEquipL("fire sword")
+      :
+        SetEquipL("stone wand")
+    :
+      SetEquip("ice staff")
 func DeadwoodMinibosss()
   ?EquipDashInRange()
     return
+  activate voidweaver
   EquipSet(chillWands)
 func DeadwoodBoss()
   ?foe = poena
     ?foe.state = 1
-      BardicheAbility()
-      return
+      ?BardicheAbility()
+        return
     ?InDashRange()
       ?ItemCD("dash") <= 0
         SetEquipR("dashing shield")
@@ -634,6 +640,7 @@ func MineMiniboss()
 func MineBoss() 
   UsePot()
   MaskAbility()
+  HammerAbility()
   ?foe.state = 32
     ?foe.time > 15
       SetEquipL("mind")

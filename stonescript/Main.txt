@@ -81,9 +81,6 @@ var abilityHUDNames = [
   "mind","ham","bard", "bfg","arm","mask",
   "tali","wisp","qtr","dash","bash"
 ]
-// Config vars
-var shouldHarvest = false
-var xpFarm = false
 
 // Globals
 var hasEncountedBoss = false
@@ -374,6 +371,7 @@ func FireTalisman()
   var cooldown = ItemCD("fire_talisman")
   ?cooldown > 130
     SetEquipR("fire talisman")
+    return true
   ?summon.count = 0 & cooldown <= 0 &
   ^CanUseItem()
     SetEquipR("fire talisman")
@@ -385,6 +383,7 @@ func AetherTalisman()
   var cooldown = ItemCD("aether_talisman")
   ?cooldown > 130
     SetEquipR("aether talisman")
+    return true
   ?summon.count = 0 & cooldown <= 0 &
   ^CanUseItem()
     SetEquipR("aether talisman")
@@ -570,24 +569,25 @@ func FindDysaWeakness()
 // Deadwood Canyon
 // ===================
 func Deadwood()
-  // Experience Potion
-  ?loc.stars <= 5 & xpFarm
-    brew wood
-    ?item.potion ! empty & 
-    ^Between(totaltime, 60, 500)
-      activate potion
-  :?loc.stars <= 10
-    BrewBerserk()
-  :
-    BrewLucky()
+
+  // shouldPermaPot = true
+  BrewLucky()
+
+  ?shouldPermaPot
+    ?loopCount = 0 
+      UsePot()
+    // use it end of stage, arbitrary number
+    // find a better way to do this
+    :?time > 2000 
+      UsePot()
     
+  ?loopCount ! 0 | !shouldPermaPot
+    ?AetherTalisman()
+      return
+
   SetEquipL("triskelion")
   SetEquipR("compound shield")
   PickupWhenClose()
-
-  // Harvesting
-  ?harvest.distance < 10 & shouldHarvest
-    SetEquip("hatchet")
 
   // Miniboss
   ?(foe = wasp | foe = wasp_nest) & 
@@ -600,24 +600,37 @@ func Deadwood()
     return
 
   // General
-  DoubleBlade()
+  ?loopCount ! 0 | !shouldPermaPot
+    DoubleBlade()
+
   ?FoeWithin(16)   
     ?EquipDashInRange()
       return
 
-    SetEquip("ice staff")
+    ?loopCount = 0 & shouldPermaPot
+      ?foe = scarab
+        SetEquipL("fire sword")
+      :
+        SetEquipL("stone wand")
+    :
+      SetEquip("ice staff")
 
 func DeadwoodMinibosss()
   ?EquipDashInRange()
     return
+
+  activate voidweaver
+
   EquipSet(chillWands)
 
 func DeadwoodBoss()
   ?foe = poena
     // trans
     ?foe.state = 1
-      BardicheAbility()
-      return
+      ?BardicheAbility()
+        return
+      // ?HammerAbility()
+      //   return
 
     // dont bash
     ?InDashRange()
@@ -709,10 +722,6 @@ func Mushroom()
 
   ?EquipDashInRange()
     return
-
-  // transition unmake patched
-  // ?hasEncountedBoss & !foe
-  //   activate voidweaver
 
   // Boss
   ?IsMushroomBoss() & FoeWithin(16)
@@ -858,7 +867,8 @@ func MineBoss()
   UsePot()
 
   MaskAbility()
-
+  
+  HammerAbility()
   // Attack
   ?foe.state = 32
     ?foe.time > 15

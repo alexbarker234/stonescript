@@ -139,8 +139,10 @@ var toEquipR = ""
 toEquipR = ""
 var toEquip = ""
 toEquip = ""
-var shouldActivate
-shouldActivate = false
+var shouldActivateR
+shouldActivateR = false
+var shouldActivateL
+shouldActivateL = false
 func SetEquipL(itemName)
   toEquipL = itemName
   toEquip = ""
@@ -155,7 +157,9 @@ func EquipSet(set)
   SetEquipL(set[0])
   SetEquipR(set[1])
 func ActivateItem()
-  shouldActivate = true
+  shouldActivateR = true
+func ActivateLeft()
+  shouldActivateL = true
 func EquipItems()
   ?toEquipL
     equipL @toEquipL@
@@ -164,8 +168,10 @@ func EquipItems()
   ?toEquip
     equip @toEquip@
 func ActivateItems()
-  ?shouldActivate & CanUseItem()
+  ?shouldActivateR & CanUseItem()
     activate R
+  ?shouldActivateL & CanUseItem()
+    activate L
 var mdc = 0
 func MoondialIf(set, condition)
   ?condition
@@ -255,7 +261,10 @@ func EquipSwordSet(rune)
   EquipSet(DictVal(elementalSwordDict,rune))
 func PickupWhenClose()
   ?pickup.distance < 10
-    SetEquipR("star")
+    ?loopCount = 0 & shouldPermaPot
+      SetEquipL("star")
+    :
+      SetEquipR("star")
 func CanApplyDebuf(debuff)
   ?(foe = "immune_to_" + debuff)
     return false
@@ -324,21 +333,30 @@ func FireTalisman()
     ActivateItem()
     return true
   return false
-func AetherTalisman()
+func AetherTalisman(leftHand)
   var cooldown = ItemCD("aether_talisman")
   ?cooldown > 130
-    SetEquipR("aether talisman")
+    ?leftHand
+      SetEquipL("aether talisman")
+    :
+      SetEquipR("aether talisman")
     return true
   ?summon.count = 0 & cooldown <= 0 &
   ^CanUseItem()
-    SetEquipR("aether talisman")
-    ActivateItem()
+    ?leftHand
+      SetEquipL("aether talisman")
+      ActivateLeft()
+    :
+      SetEquipR("aether talisman")
+      ActivateItem()
     return true
   return false
 func MaskAbility()
   ?ItemCD("mask") <= 0 
     SetEquip("mask")
     ActivateItem()
+    return true
+  return false
 func RunAAC()
   ?item.left.state = 3
     equipL *0 wand 
@@ -454,15 +472,15 @@ func FindDysaWeakness()
   :
     return "poison"
 func Deadwood()
-  BrewLucky()
+  shouldPermaPot = true
+  BrewBerserk()
   ?shouldPermaPot
     ?loopCount = 0 
       UsePot()
     :?time > 2000 
       UsePot()
-  ?loopCount ! 0 | !shouldPermaPot
-    ?AetherTalisman()
-      return
+  ?AetherTalisman(loopCount = 0)
+    return
   SetEquipL("triskelion")
   SetEquipR("compound shield")
   PickupWhenClose()
@@ -473,8 +491,6 @@ func Deadwood()
   ?foe = boss & FoeWithin(16)
     DeadwoodBoss()
     return
-  ?loopCount ! 0 | !shouldPermaPot
-    DoubleBlade()
   ?FoeWithin(16)   
     ?EquipDashInRange()
       return
@@ -484,33 +500,58 @@ func Deadwood()
       :
         SetEquipL("stone wand")
     :
-      SetEquip("ice staff")
+      DeadwoodStutterStep()
+func DeadwoodStutterStep()
+  ?foe.distance <= 6
+    SetEquip("skeleton")
+  :?foe.distance <= 10
+    ?time % 2 = 0
+      SetEquipR("triskelion")
+      SetEquipL("sword")
+    :
+      SetEquipR("hatchet")
+      SetEquipL("sword")
+  :
+    SetEquipL("triskelion")
 func DeadwoodMinibosss()
   ?EquipDashInRange()
     return
-  activate voidweaver
-  EquipSet(chillWands)
+  ?loopCount = 0
+    activate voidweaver
+  :
+    DeadwoodStutterStep()
 func DeadwoodBoss()
   ?foe = poena
-    ?foe.state = 1
-      ?BardicheAbility()
-        return
-    ?InDashRange()
-      ?ItemCD("dash") <= 0
-        SetEquipR("dashing shield")
-        return
-    UsePot()
-    MoondialSet(fireSwords)
-    ?PotionIs("health") & hp ! maxhp
-      activate potion
+    DeadwoodWitchBoss()
   :?foe = tree_boss
-    ?EquipDashInRange()
-      return  
+    DeadwoodTreeBoss()
+func DeadwoodWitchBoss()
+  ?foe.state = 1
+    ?MaskAbility()
+      return
+    ?BardicheAbility()
+      return
+  ?InDashRange()
+    ?ItemCD("dash") <= 0
+      SetEquipR("dashing shield")
+      return
+  ?loopCount = 0
+    EquipSet(stunlock)
+  :
+    SetEquip("skeleton")
+func DeadwoodTreeBoss()
+  ?EquipDashInRange()
+    return  
+  ?loopCount = 0
+    ?canChill
+      SetEquipL("ice sword dI")
+    :
+      SetEquipL("fire sword")
+  :
     ?canChill
       MoondialSet(chillSwords)
     :
-      MoondialSet(fireSwords)
-    MaskAbility()
+      SetEquip("skeleton")
 func Caves()
   BrewLucky()
   SetEquipL("triskelion")
@@ -545,7 +586,7 @@ func Mushroom()
   BrewLucky()
   SetEquipL("triskelion")
   SetEquipR("poison shield")
-  ?AetherTalisman()
+  ?AetherTalisman(false)
     return
   ?EquipDashInRange()
     return

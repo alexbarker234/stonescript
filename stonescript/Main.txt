@@ -3,8 +3,8 @@
 // Weapon setups
 // D Wands
 var vigorWands = [
-  "vigor wand D +11", 
-  "vigor wand D +12"]
+  "vigor wand D +16", 
+  "vigor wand D +17"]
 var aetherWands = [
   "aether wand D +12", 
   "aether wand D +10"]
@@ -85,6 +85,7 @@ var abilityHUDNames = [
 // Globals
 var hasEncountedBoss = false
 var shouldPermaPot = false
+var toSummon = "wisp"
 var canChill
 canChill = CanApplyDebuf("debuff_chill")
 var canPoison
@@ -406,6 +407,20 @@ func AetherTalisman(leftHand)
     return true
   return false
 
+func SummonTheGuy()
+  ?toSummon = "none"
+    return
+  :?toSummon = "wisp"
+    // TODO: left hand wisp
+    ?shouldPermaPot & loopCount = 0
+      return
+    FireTalisman()
+    return
+  :?toSummon = "voidweaver"
+    AetherTalisman(shouldPermaPot &
+    ^ loopCount = 0)
+    return
+
 func MaskAbility()
   ?ItemCD("mask") <= 0 
     SetEquip("mask")
@@ -588,6 +603,7 @@ func FindDysaWeakness()
 func Deadwood()
 
   shouldPermaPot = true
+  toSummon = "voidweaver"
   BrewBerserk()
 
   ?shouldPermaPot
@@ -597,9 +613,6 @@ func Deadwood()
     // find a better way to do this
     :?time > 2000 
       UsePot()
-    
-  ?AetherTalisman(loopCount = 0)
-    return
 
   SetEquipL("triskelion")
   SetEquipR("compound shield")
@@ -755,11 +768,10 @@ func CavesBoss()
 func Mushroom()
   BrewLucky()
 
+  toSummon = "voidweaver"
+
   SetEquipL("triskelion")
   SetEquipR("poison shield")
-
-  ?AetherTalisman(false)
-    return
 
   ?EquipDashInRange()
     return
@@ -814,7 +826,10 @@ func Halls()
   // Miniboss
   ?foe = spawner & foe = boss &
   ^FoeWithin(16)
-    EquipChillSwordsOr(vigorSwords)
+    ?EquipDashInRange()
+      return
+
+    SetEquip("vigor crossbow")
     return
 
   // General
@@ -824,7 +839,10 @@ func Halls()
     return
 
   ?FoeWithin(16) 
-    EquipSet(chillWands)
+    ?smiteStack > 0
+      EquipSet(chillWands)
+    :
+      EquipSet(vigorWands)
 
 // Optimised for 5* - barely faster
 func Halls5()
@@ -850,11 +868,14 @@ func HallsBoss()
   ?EquipDashInRange()
     return
 
-  EquipChillSwordsOr(vigorSwords)
-
+  ?canChill
+    MoondialSet(chillSwords)
+  :
+    SetEquip("vigor crossbow")
+    
   // deal with skellys
   ?foe.count > 2
-    SetEquip("bardiche")
+    EquipSet(vigorWands)
 
   BardicheAbility()   
 
@@ -1260,19 +1281,19 @@ func HUD()
   CooldownHUD()
 
   // Misc states
-  >`0,6,State: @foe.state@ Time: @foe.time@
+  >`0,6,foe: @foe@
+  >`0,7,State: @foe.state@ Time: @foe.time@
   ^ Damage: @foe.damage@
-  >`0,7,Dist: @foe.distance@
-  >`0,8,X: @pos.x@
-  >`0,9,Foe Count: @foe.count@
-  >`0,10,Loop GP: @runGP@
-  >`0,11,Potion: @PotionHUD()@
-  >`0,12,DPS: @CalculateDPS()@ 
+  >`0,8,Dist: @foe.distance@
+  >`0,9,X: @pos.x@
+  >`0,10,Foe Count: @foe.count@
+  >`0,11,Loop GP: @runGP@
+  >`0,12,Potion: @PotionHUD()@
+  >`0,13,DPS: @CalculateDPS()@ 
 
   // More debuggy stuff
   // >`0,13,L: @toEquipL@ R: @toEquipR@ B: 
   // ^@toEquip@
-  // >`0,14,foe: @foe@
 
   // Item GPs
   //ItemGPHUD()
@@ -1330,9 +1351,7 @@ func Main()
     ?loc ! Rocky
       QtrDash()
 
-    // No deadwood - poena bites 
-    ?loc ! Deadwood & loc ! Mushroom
-      FireTalisman()
+  SummonTheGuy()
 
   EquipItems()
   ActivateItems()

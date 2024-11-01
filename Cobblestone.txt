@@ -22,8 +22,8 @@ func CalculateDPS()
   dpsLastHP = eHP
   return total / (dmgHistory.Count() / 30.0)
 var vigorWands = [
-  "vigor wand D +11", 
-  "vigor wand D +12"]
+  "vigor wand D +16", 
+  "vigor wand D +17"]
 var aetherWands = [
   "aether wand D +12", 
   "aether wand D +10"]
@@ -90,6 +90,7 @@ var abilityHUDNames = [
 ]
 var hasEncountedBoss = false
 var shouldPermaPot = false
+var toSummon = "wisp"
 var canChill
 canChill = CanApplyDebuf("debuff_chill")
 var canPoison
@@ -351,6 +352,18 @@ func AetherTalisman(leftHand)
       ActivateItem()
     return true
   return false
+func SummonTheGuy()
+  ?toSummon = "none"
+    return
+  :?toSummon = "wisp"
+    ?shouldPermaPot & loopCount = 0
+      return
+    FireTalisman()
+    return
+  :?toSummon = "voidweaver"
+    AetherTalisman(shouldPermaPot &
+    ^ loopCount = 0)
+    return
 func MaskAbility()
   ?ItemCD("mask") <= 0 
     SetEquip("mask")
@@ -473,14 +486,13 @@ func FindDysaWeakness()
     return "poison"
 func Deadwood()
   shouldPermaPot = true
+  toSummon = "voidweaver"
   BrewBerserk()
   ?shouldPermaPot
     ?loopCount = 0 
       UsePot()
     :?time > 2000 
       UsePot()
-  ?AetherTalisman(loopCount = 0)
-    return
   SetEquipL("triskelion")
   SetEquipR("compound shield")
   PickupWhenClose()
@@ -584,10 +596,9 @@ func CavesBoss()
   SetEquip("ice crossbow")
 func Mushroom()
   BrewLucky()
+  toSummon = "voidweaver"
   SetEquipL("triskelion")
   SetEquipR("poison shield")
-  ?AetherTalisman(false)
-    return
   ?EquipDashInRange()
     return
   ?IsMushroomBoss() & FoeWithin(16)
@@ -620,13 +631,18 @@ func Halls()
     return
   ?foe = spawner & foe = boss &
   ^FoeWithin(16)
-    EquipChillSwordsOr(vigorSwords)
+    ?EquipDashInRange()
+      return
+    SetEquip("vigor crossbow")
     return
   DoubleBlade()
   ?EquipDashInRange()
     return
   ?FoeWithin(16) 
-    EquipSet(chillWands)
+    ?smiteStack > 0
+      EquipSet(chillWands)
+    :
+      EquipSet(vigorWands)
 func Halls5()
   BrewBerserk()
   ?EquipDashInRange()
@@ -643,9 +659,12 @@ func HallsBoss()
   MaskAbility()
   ?EquipDashInRange()
     return
-  EquipChillSwordsOr(vigorSwords)
+  ?canChill
+    MoondialSet(chillSwords)
+  :
+    SetEquip("vigor crossbow")
   ?foe.count > 2
-    SetEquip("bardiche")
+    EquipSet(vigorWands)
   BardicheAbility()   
 func Mine()
   ?loc.stars <= 10
@@ -930,14 +949,15 @@ func CalculateFPS()
 func HUD()
   disable hud u 
   CooldownHUD()
-  >`0,6,State: @foe.state@ Time: @foe.time@
+  >`0,6,foe: @foe@
+  >`0,7,State: @foe.state@ Time: @foe.time@
   ^ Damage: @foe.damage@
-  >`0,7,Dist: @foe.distance@
-  >`0,8,X: @pos.x@
-  >`0,9,Foe Count: @foe.count@
-  >`0,10,Loop GP: @runGP@
-  >`0,11,Potion: @PotionHUD()@
-  >`0,12,DPS: @CalculateDPS()@ 
+  >`0,8,Dist: @foe.distance@
+  >`0,9,X: @pos.x@
+  >`0,10,Foe Count: @foe.count@
+  >`0,11,Loop GP: @runGP@
+  >`0,12,Potion: @PotionHUD()@
+  >`0,13,DPS: @CalculateDPS()@ 
   CalculateFPS()
   >`28,@screen.h - 1@,@fps@ FPS
   TimeHUD()
@@ -973,8 +993,7 @@ func Main()
   :
     ?loc ! Rocky
       QtrDash()
-    ?loc ! Deadwood & loc ! Mushroom
-      FireTalisman()
+  SummonTheGuy()
   EquipItems()
   ActivateItems()
   ManageGP()

@@ -21,18 +21,9 @@ fs.access(filePath, fs.constants.F_OK, (err) => {
 });
 
 app.get("/", (req, res) => {
-    let content = "";
-    try {
-        content = fs.readFileSync(filePath, "utf8");
-    } catch (err) {
-        console.error("Error reading file:", err);
-    }
-
     var page = "";
     try {
         page = fs.readFileSync(index, "utf8");
-        page = page.replace("{{ content }}", content);
-        page = page.replace("{{ lastCopy }}", lastCopy.toISOString());
     } catch (err) {
         console.error("Error reading file:", err);
     }
@@ -66,6 +57,7 @@ app.get("/fetch", (req, res) => {
     const response = {
         lastCopy: lastCopy.toISOString(),
         content,
+        hash: crypto.createHash("md5").update(content).digest("hex"),
     };
     res.send(response);
 });

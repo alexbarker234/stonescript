@@ -53,11 +53,11 @@
     <div>║                                                 ║</div>
     <div>╚═════════════════════════════════════════════════╝</div>
   </button>
-  <div>Last Updated: <span id="updated">{{ lastCopy }}</span></div>
-  <div>Hash: <span id="hash">{{ hash }}</span></div>
+  <div>Last Updated: <span id="updated"></span></div>
+  <div>Hash: <span id="hash"></span></div>
 
   <!-- easiest way to store text with symbols -->
-  <textarea id="text-area" style="display: none;">{{ content }}</textarea>
+  <textarea id="text-area" style="display: none;"></textarea>
 
   <script>
     const textArea = document.getElementById('text-area')
@@ -95,9 +95,9 @@
       setInterval(updateLastCopy, 500)
     }
 
-    function updateHash(hash) {
+    function updateHash(hashValue) {
       var hash = document.getElementById("hash")
-      hash.innerHTML = hash
+      hash.innerHTML = hashValue
     }
 
     function updateLastCopy() {

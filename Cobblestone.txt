@@ -673,7 +673,7 @@ func HallsBoss()
     return
   ?EquipDashInRange()
     return
-  UsePot()
+  UsePot() 
   ?hp < 30 & foe = skeleton_boss
     EquipSet(healingSwords)
     return

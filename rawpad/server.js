@@ -20,25 +20,6 @@ fs.access(filePath, fs.constants.F_OK, (err) => {
     if (err) fs.writeFile(filePath, "", () => {});
 });
 
-const formatDate = (date) => {
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
-
-    const units = [
-        { unit: "day", value: 86400 },
-        { unit: "hour", value: 3600 },
-        { unit: "minute", value: 60 },
-        { unit: "second", value: 1 },
-    ];
-
-    for (const { unit, value } of units) {
-        const diff = Math.floor(diffInSeconds / value);
-        if (diff >= 1) {
-            return `${diff} ${unit}${diff > 1 ? "s" : ""} ago`;
-        }
-    }
-    return "just now";
-};
 app.get("/", (req, res) => {
     let content = "";
     try {
@@ -51,7 +32,7 @@ app.get("/", (req, res) => {
     try {
         page = fs.readFileSync(index, "utf8");
         page = page.replace("{{ content }}", content);
-        page = page.replace("{{ lastCopy }}", formatDate(lastCopy));
+        page = page.replace("{{ lastCopy }}", lastCopy.toISOString());
     } catch (err) {
         console.error("Error reading file:", err);
     }

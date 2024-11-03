@@ -22,8 +22,8 @@ func CalculateDPS()
   dpsLastHP = eHP
   return total / (dmgHistory.Count() / 30.0)
 var vigorWands = [
-  "vigor wand D +16", 
-  "vigor wand D +17"]
+  "vigor wand D shiny", 
+  "vigor wand D -shiny"]
 var aetherWands = [
   "aether wand D +12", 
   "aether wand D +10"]
@@ -619,53 +619,71 @@ func MushroomBoss()
   BardicheAbility()   
   ?foe ! mushroom_boss
     QtrDash()
+var fightingPallas = false
 func Halls()
+  ?loc.loop
+    fightingPallas = false
   BrewLucky()
+  toSummon = "voidweaver"
   SetEquipL("triskelion")
   SetEquipR("vigor shield")
-  ?loc.stars <= 5
-    Halls5()
-    return
+  PickupWhenClose()
   ?foe = pallas & FoeWithin(16)
+    fightingPallas = true
+  ?fightingPallas & foe.count > 0
     HallsBoss()
     return
-  ?foe = spawner & foe = boss &
-  ^FoeWithin(16)
-    ?EquipDashInRange()
-      return
-    SetEquip("vigor crossbow")
+  ?HallsMiniboss()
     return
   DoubleBlade()
   ?EquipDashInRange()
     return
+  ?foe.count > 6
+    activate voidweaver
   ?FoeWithin(16) 
     ?smiteStack > 0
       EquipSet(chillWands)
     :
-      EquipSet(vigorWands)
-func Halls5()
-  BrewBerserk()
-  ?EquipDashInRange()
-    return
-  ?foe = boss & FoeWithin(16)
-    UsePot()
-    MaskAbility()
-    EquipSet(vigorSwords)
-    return
-  ?FoeWithin(16)
-    EquipSet(vigorWands)
+      ?foe.count = 1 & foe ! immune_to_physical
+        MoondialSet(vigorSwords)
+      :
+        EquipSet(vigorWands)   
+var fightingRIP = false
+var oldKi = 0
+func HallsMiniboss()
+  ?foe = big_tomb
+    oldKi = res.ki
+    fightingRIP = true
+  ?fightingRIP
+    >h-1,-2,rip!
+    ?EquipDashInRange()
+      return
+    ?res.ki = oldKi
+      SetEquip("vigor crossbow")
+    :
+      fightingRIP = false
+    ?foe.count = 0
+      fightingRIP = false
+    return true
+  return false
 func HallsBoss()
-  UsePot()
-  MaskAbility()
+  ?BardicheAbility()   
+    return
+  ?MaskAbility()
+    return
   ?EquipDashInRange()
+    return
+  UsePot()
+  ?hp < 30 & foe = skeleton_boss
+    EquipSet(healingSwords)
+    return
+  ?foe.count > 1 & foe = skeleton_boss_stage_2
+    EquipSet(vigorWands)
     return
   ?canChill
     MoondialSet(chillSwords)
   :
-    SetEquip("vigor crossbow")
-  ?foe.count > 2
-    EquipSet(vigorWands)
-  BardicheAbility()   
+    MoondialSet(vigorSwords)
 func Mine()
   ?loc.stars <= 10
     BrewBerserk()
@@ -949,7 +967,7 @@ func CalculateFPS()
 func HUD()
   disable hud u 
   CooldownHUD()
-  >`0,6,foe: @foe@
+  >`0,6,foe: @foe.id@
   >`0,7,State: @foe.state@ Time: @foe.time@
   ^ Damage: @foe.damage@
   >`0,8,Dist: @foe.distance@
@@ -958,11 +976,14 @@ func HUD()
   >`0,11,Loop GP: @runGP@
   >`0,12,Potion: @PotionHUD()@
   >`0,13,DPS: @CalculateDPS()@ 
+  >`0,14,L: @toEquipL@ R: @toEquipR@ B: 
+  ^@toEquip@
   CalculateFPS()
   >`28,@screen.h - 1@,@fps@ FPS
   TimeHUD()
   DysaSplitHUD()
 func Main()
+  disable npcDialog
   RunAAC()
   ?loc.begin | loc.loop
     ResetGlobals()

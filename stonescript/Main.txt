@@ -3,8 +3,8 @@
 // Weapon setups
 // D Wands
 var vigorWands = [
-  "vigor wand D +16", 
-  "vigor wand D +17"]
+  "vigor wand D shiny", 
+  "vigor wand D -shiny"]
 var aetherWands = [
   "aether wand D +12", 
   "aether wand D +10"]
@@ -808,28 +808,28 @@ func MushroomBoss()
 // ===================
 // Haunted Halls
 // ===================
+var fightingPallas = false
 func Halls()
+  ?loc.loop
+    fightingPallas = false
+
   BrewLucky()
+  toSummon = "voidweaver"
 
   SetEquipL("triskelion")
   SetEquipR("vigor shield")
-
-  ?loc.stars <= 5
-    Halls5()
-    return
+  PickupWhenClose()
 
   // Boss
   ?foe = pallas & FoeWithin(16)
+    fightingPallas = true
+
+  ?fightingPallas & foe.count > 0
     HallsBoss()
     return
 
   // Miniboss
-  ?foe = spawner & foe = boss &
-  ^FoeWithin(16)
-    ?EquipDashInRange()
-      return
-
-    SetEquip("vigor crossbow")
+  ?HallsMiniboss()
     return
 
   // General
@@ -838,46 +838,64 @@ func Halls()
   ?EquipDashInRange()
     return
 
+  ?foe.count > 6
+    activate voidweaver
+
   ?FoeWithin(16) 
     ?smiteStack > 0
       EquipSet(chillWands)
     :
-      EquipSet(vigorWands)
+      ?foe.count = 1 & foe ! immune_to_physical
+        MoondialSet(vigorSwords)
+      :
+        EquipSet(vigorWands)   
 
-// Optimised for 5* - barely faster
-func Halls5()
-  BrewBerserk()
+var fightingRIP = false
+var oldKi = 0
+func HallsMiniboss()
+  ?foe = big_tomb
+    oldKi = res.ki
+    fightingRIP = true
 
-  ?EquipDashInRange()
-    return
+  ?fightingRIP
+    >h-1,-2,rip!
+    ?EquipDashInRange()
+      return
 
-  ?foe = boss & FoeWithin(16)
-    UsePot()
-    MaskAbility()
-    EquipSet(vigorSwords)
-    return
-
-  ?FoeWithin(16)
-    EquipSet(vigorWands)
+    ?res.ki = oldKi
+      SetEquip("vigor crossbow")
+    // We have gained ki (defeated RIP)
+    :
+      fightingRIP = false
+    // failsafe
+    ?foe.count = 0
+      fightingRIP = false
+    return true
+  return false
 
 func HallsBoss()
+  ?BardicheAbility()   
+    return
+  ?MaskAbility()
+    return
+  ?EquipDashInRange()
+    return
+
   UsePot()
 
-  MaskAbility()
+  ?hp < 30 & foe = skeleton_boss
+    EquipSet(healingSwords)
+    return
 
-  ?EquipDashInRange()
+  // skelly bums
+  ?foe.count > 1 & foe = skeleton_boss_stage_2
+    EquipSet(vigorWands)
     return
 
   ?canChill
     MoondialSet(chillSwords)
   :
-    SetEquip("vigor crossbow")
-    
-  // deal with skellys
-  ?foe.count > 2
-    EquipSet(vigorWands)
-
-  BardicheAbility()   
+    MoondialSet(vigorSwords)
 
 // ===================
 // Boiling Mine
@@ -1281,7 +1299,7 @@ func HUD()
   CooldownHUD()
 
   // Misc states
-  >`0,6,foe: @foe@
+  >`0,6,foe: @foe.id@
   >`0,7,State: @foe.state@ Time: @foe.time@
   ^ Damage: @foe.damage@
   >`0,8,Dist: @foe.distance@
@@ -1292,8 +1310,8 @@ func HUD()
   >`0,13,DPS: @CalculateDPS()@ 
 
   // More debuggy stuff
-  // >`0,13,L: @toEquipL@ R: @toEquipR@ B: 
-  // ^@toEquip@
+  >`0,14,L: @toEquipL@ R: @toEquipR@ B: 
+  ^@toEquip@
 
   // Item GPs
   //ItemGPHUD()
@@ -1305,6 +1323,8 @@ func HUD()
   DysaSplitHUD()
 
 func Main()
+  disable npcDialog
+
   // Always run animation cancel
   RunAAC()
 
@@ -1337,10 +1357,6 @@ func Main()
     Temple()
 
   var ppRun = shouldPermaPot & loopCount = 0
-
-  // always use potion when available
-  // ?shouldPermaPot
-  //   UsePot()
 
   // mask when permapotting
   ?ppRun

@@ -64,7 +64,7 @@ app.get("/fetch", (req, res) => {
         console.error("Error reading file:", err);
     }
     const response = {
-        lastCopy: formatDate(lastCopy),
+        lastCopy: lastCopy.toISOString(),
         content,
     };
     res.send(response);

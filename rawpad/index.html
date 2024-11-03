@@ -66,7 +66,7 @@
 
     const formatDate = (date) => {
       if (!date) return ""
-      
+
       const now = new Date();
       const diffInSeconds = Math.floor((now - date) / 1000);
   
@@ -109,7 +109,7 @@
       fetch('/fetch')
         .then(response => response.json())
       .then(data => {
-        scriptData = data.content
+        textArea.value = data.content
         var e = document.getElementById("updated")
         lastCopy = new Date(data.lastCopy)
         updateLastCopy()

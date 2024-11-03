@@ -1,6 +1,7 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+const { createHash } = require("node:crypto");
 
 require("dotenv").config();
 
@@ -57,7 +58,7 @@ app.get("/fetch", (req, res) => {
     const response = {
         lastCopy: lastCopy.toISOString(),
         content,
-        hash: crypto.createHash("md5").update(content).digest("hex"),
+        hash: createHash("md5").update(content).digest("hex"),
     };
     res.send(response);
 });

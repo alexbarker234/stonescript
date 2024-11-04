@@ -365,8 +365,6 @@ func SummonTheGuy()
   ?toSummon = "none"
     return
   :?toSummon = "wisp"
-    ?shouldPermaPot & loopCount = 0
-      return
     FireTalisman(shouldPermaPot &
     ^ loopCount = 0)
     return
@@ -637,10 +635,6 @@ func Halls()
   toSummon = "voidweaver"
   shouldPermaPot = true
   UsePot()
-  ?foe = pallas
-    ?FireTalisman(loopCount = 0)
-      >"talismanning"
-      return
   SetEquipL("triskelion")
   ?foe.GetCount(30) = 0
     SetEquipR("compound shield")
@@ -675,7 +669,7 @@ var oldKi = 0
 func HallsMiniboss()
   ?shouldPermaPot & loopCount = 0
     return
-  ?foe = big_tomb
+  ?foe = big_tomb & foe.distance < 10
     oldKi = res.ki
     fightingRIP = true
   ?fightingRIP
@@ -691,13 +685,9 @@ func HallsMiniboss()
     return true
   return false
 func HallsBoss()
-  ?loopCount ! 0
-    ?BardicheAbility()   
-      return
+  toSummon = "wisp"
   ?MaskAbility()
     return
-  ?foe.count = 0
-    UsePot()
   ?foe.count > 1 & pallasStage = 2 
     EquipSet(vigorWands)
     ?foe.distance < 6 & ItemCD("mind") <= 0

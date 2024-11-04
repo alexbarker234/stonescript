@@ -42,11 +42,15 @@
     .ascii-button:hover {
       color: grey;
     }
+    .ascii-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 
 <body onfocus="fetchData()">
-  <button class="ascii-button" onclick="copyToClipboard()">
+  <button id="copy-button" class="ascii-button" onclick="copyToClipboard()" disabled>
     <div>╔═════════════════════════════════════════════════╗</div>
     <div>║                                                 ║</div>
     <div>║                 Copy to clipboard               ║</div>
@@ -91,7 +95,7 @@
     }
 
     function onLoad() {
-      updateHash()
+      fetchData()
       setInterval(updateLastCopy, 500)
     }
 
@@ -114,6 +118,7 @@
         lastCopy = new Date(data.lastCopy)
         updateLastCopy()
         updateHash(data.hash)
+        document.getElementById("copy-button").disabled = false
       })
       .catch(error => console.error('Error fetching data:', error));
     }

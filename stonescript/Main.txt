@@ -39,8 +39,8 @@ var chillSwords = [
   "ice sword dI shiny", 
   "ice sword dI -shiny"]
 var healingSwords = [
-  "vigor sword dL +16",
-  "vigor sword dL +11"]
+  "vigor sword dL +18",
+  "vigor sword dL +13"]
 
 // D Swords
 var poisonSwords = [
@@ -376,15 +376,23 @@ func DoubleBlade()
     return true
   return scrolling > 0
 
-func FireTalisman()
+func FireTalisman(leftHand)
   var cooldown = ItemCD("fire_talisman")
   ?cooldown > 130
-    SetEquipR("fire talisman")
+    ?leftHand
+      SetEquipL("fire talisman")
+    :
+      SetEquipR("fire talisman")
     return true
-  ?summon.count = 0 & cooldown <= 0 &
-  ^CanUseItem()
-    SetEquipR("fire talisman")
-    ActivateItem()
+  ?(summon.count = 0 | 
+  ^summon.GetId() ! "cinderwisp")
+  ^& cooldown <= 0 & CanUseItem()
+    ?leftHand
+      SetEquipL("fire talisman")
+      ActivateLeft()
+    :
+      SetEquipR("fire talisman")
+      ActivateItem()
     return true
   return false
 
@@ -396,8 +404,9 @@ func AetherTalisman(leftHand)
     :
       SetEquipR("aether talisman")
     return true
-  ?summon.count = 0 & cooldown <= 0 &
-  ^CanUseItem()
+  ?(summon.count = 0 | 
+  ^summon.GetId() ! "voidweaver")
+  ^& cooldown <= 0 & CanUseItem()
     ?leftHand
       SetEquipL("aether talisman")
       ActivateLeft()
@@ -414,7 +423,8 @@ func SummonTheGuy()
     // TODO: left hand wisp
     ?shouldPermaPot & loopCount = 0
       return
-    FireTalisman()
+    FireTalisman(shouldPermaPot &
+    ^ loopCount = 0)
     return
   :?toSummon = "voidweaver"
     AetherTalisman(shouldPermaPot &
@@ -808,51 +818,68 @@ func MushroomBoss()
 // ===================
 // Haunted Halls
 // ===================
-var fightingPallas = false
+var pallasStage = 0
 func Halls()
   ?loc.loop
-    fightingPallas = false
+    pallasStage = 0
 
-  BrewLucky()
+  BrewBerserk()
   toSummon = "voidweaver"
+  shouldPermaPot = true
+  UsePot()
+ 
+  // do not unmake pallas!
+  ?foe = pallas
+    ?FireTalisman(loopCount = 0)
+      >"talismanning"
+      return
 
   SetEquipL("triskelion")
-  SetEquipR("vigor shield")
+  ?foe.GetCount(30) = 0
+    SetEquipR("compound shield")
+  :
+    SetEquipR("vigor shield")
   PickupWhenClose()
 
   // Boss
-  ?foe = pallas & FoeWithin(16)
-    fightingPallas = true
+  ?FoeWithin(16)
+    ?foe = skeleton_boss_stage_2
+      pallasStage = 2
+    :?foe = skeleton_boss
+      pallasStage = 1
 
-  ?fightingPallas & foe.count > 0
+  ?pallasStage ! 0 & foe.count > 0
     HallsBoss()
     return
+
+  ?foe.count > 4
+    activate voidweaver
 
   // Miniboss
   ?HallsMiniboss()
     return
 
-  // General
-  DoubleBlade()
-
   ?EquipDashInRange()
     return
-
-  ?foe.count > 6
-    activate voidweaver
-
+ 
   ?FoeWithin(16) 
     ?smiteStack > 0
       EquipSet(chillWands)
     :
       ?foe.count = 1 & foe ! immune_to_physical
-        MoondialSet(vigorSwords)
+        ^& !(shouldPermaPot & loopCount = 0)
+        MoondialSet(vigorSwords) 
       :
         EquipSet(vigorWands)   
 
 var fightingRIP = false
 var oldKi = 0
 func HallsMiniboss()
+  // Loop 1
+  ?shouldPermaPot & loopCount = 0
+    return
+
+  // Looping
   ?foe = big_tomb
     oldKi = res.ki
     fightingRIP = true
@@ -874,28 +901,32 @@ func HallsMiniboss()
   return false
 
 func HallsBoss()
-  ?BardicheAbility()   
-    return
+  ?loopCount ! 0
+    ?BardicheAbility()   
+      return
   ?MaskAbility()
     return
+
+  ?foe.count = 0
+    UsePot()
+
+  // skelly bums
+  ?foe.count > 1 & pallasStage = 2 
+    EquipSet(vigorWands)
+
+    ?foe.distance < 6 & ItemCD("mind") <= 0
+      SetEquipL("mind")
+    return
+
   ?EquipDashInRange()
     return
 
-  UsePot() 
-
-  ?hp < 30 & foe = skeleton_boss
-    EquipSet(healingSwords)
-    return
-
-  // skelly bums
-  ?foe.count > 1 & foe = skeleton_boss_stage_2
-    EquipSet(vigorWands)
-    return
-
   ?canChill
-    MoondialSet(chillSwords)
+    MoondialIf(chillSwords, loopCount ! 0)
+  :?hp < maxhp
+    EquipSet(healingSwords)
   :
-    MoondialSet(vigorSwords)
+    MoondialIf(vigorSwords, loopCount ! 0)
 
 // ===================
 // Boiling Mine
@@ -1334,11 +1365,6 @@ func Main()
   ?loc.loop
     loopCount++
 
-  // Default 
-  SetEquipL("triskelion")
-  SetEquipR("ouroboros")
-  PickupWhenClose()
-
   ?loc = Rocky
     Rocky()
   :?loc = Deadwood
@@ -1359,7 +1385,7 @@ func Main()
   var ppRun = shouldPermaPot & loopCount = 0
 
   // mask when permapotting
-  ?ppRun
+  ?ppRun & totaltime > 2
     SetEquipR("mask")
   // abilities when not permapotting
   :

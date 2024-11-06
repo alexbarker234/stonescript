@@ -656,14 +656,11 @@ func Halls()
   ?EquipDashInRange()
     return
   ?FoeWithin(16) 
-    ?smiteStack > 0
-      EquipSet(chillWands)
+    ?foe.count = 1 & foe ! immune_to_physical
+      ^& !(shouldPermaPot & loopCount = 0)
+      MoondialSet(vigorSwords) 
     :
-      ?foe.count = 1 & foe ! immune_to_physical
-        ^& !(shouldPermaPot & loopCount = 0)
-        MoondialSet(vigorSwords) 
-      :
-        EquipSet(vigorWands)   
+      EquipSet(vigorWands)   
 var fightingRIP = false
 var oldKi = 0
 func HallsMiniboss()
@@ -680,7 +677,8 @@ func HallsMiniboss()
       SetEquip("vigor crossbow")
     :
       fightingRIP = false
-    ?foe.count = 0
+    ?foe.count = 0 | 
+    ^(foe.GetCount(10) = 1 & foe ! big_tomb)
       fightingRIP = false
     return true
   return false

@@ -854,14 +854,11 @@ func Halls()
     return
  
   ?FoeWithin(16) 
-    ?smiteStack > 0
-      EquipSet(chillWands)
+    ?foe.count = 1 & foe ! immune_to_physical
+      ^& !(shouldPermaPot & loopCount = 0)
+      MoondialSet(vigorSwords) 
     :
-      ?foe.count = 1 & foe ! immune_to_physical
-        ^& !(shouldPermaPot & loopCount = 0)
-        MoondialSet(vigorSwords) 
-      :
-        EquipSet(vigorWands)   
+      EquipSet(vigorWands)   
 
 var fightingRIP = false
 var oldKi = 0
@@ -885,8 +882,9 @@ func HallsMiniboss()
     // We have gained ki (defeated RIP)
     :
       fightingRIP = false
-    // failsafe
-    ?foe.count = 0
+    // failsafes
+    ?foe.count = 0 | 
+    ^(foe.GetCount(10) = 1 & foe ! big_tomb)
       fightingRIP = false
     return true
   return false
@@ -894,7 +892,7 @@ func HallsMiniboss()
 func HallsBoss()
   // do not unmake pallas!
   toSummon = "wisp"
-  
+
   ?MaskAbility()
     return
 
